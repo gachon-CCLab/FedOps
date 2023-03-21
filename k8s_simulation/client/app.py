@@ -36,7 +36,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # client pod number 추출
 pod_name = os.environ['MY_POD_ID'].split('-')
-client_num = int(pod_name[3]) # client 번호
+client_num = int(pod_name[2]) # client 번호
 print('pod_name: ', pod_name)
 print('client_num: ', client_num)
 
