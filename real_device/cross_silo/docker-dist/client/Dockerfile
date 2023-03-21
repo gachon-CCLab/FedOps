@@ -10,7 +10,7 @@ ENV RUN_HOST=0.0.0.0
 RUN apt-get -y update
 # RUN apt-get -y install git
 RUN apt-get -y install gcc
-RUN apt-get -y install python3.9-dev
+RUN apt-get -y install python3.8-dev
 RUN apt-get -y install python3-pip
 COPY ./docker-dist/client/requirements.txt requirements.txt
 RUN pip install -r requirements.txt
