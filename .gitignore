@@ -1,4 +1,5 @@
 .docker_file
+*.Dockerfile
 
 .idea
 .gitignore
