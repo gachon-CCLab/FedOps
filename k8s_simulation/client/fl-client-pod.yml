@@ -51,7 +51,7 @@ spec:
               mountPath: /model #read/write
 
           - name: client-manager
-            image: docker.io/tpah30/git_clone:2.0
+            image: docker.io/tpah30/git_clone:2.1
             resources:
               limits:
                 memory: "2Gi"
