@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fl-server-st
+  name: fl-server-st-test
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: fl-server-st
+      run: fl-server-st-test
   template:
     metadata:
       labels:
-        run: fl-server-st
+        run: fl-server-st-test
     spec:
       containers:
-        - name: server-status-informer
+        - name: server-manager
           image: docker.io/hoo0681/gitclone_python:0.1
           resources:
             limits:
-              memory: "2Gi"
+              memory: "1Gi"
               cpu: "500m"
           ports:
             - containerPort: 8000
