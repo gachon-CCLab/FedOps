@@ -20,7 +20,7 @@ spec:
           emptyDir: {}
       containers:
           - name: client
-            image: docker.io/hoo0681/airflowkubepodimage:0.1
+            image: docker.io/tpah30/fl_client:1.0
             resources:
               requests:
                 memory: "2Gi"
@@ -35,7 +35,7 @@ spec:
             - name: REPO_URL
               value: "https://github.com/gachon-CCLab/FedOps.git"
             - name: GIT_DIR
-              value: "FedOps/client"
+              value: "FedOps/k8s_simulation/client"
             - name: GIT_TAG
               value: "main"
             - name: GRPC_POLL_STRATEGY
@@ -62,7 +62,7 @@ spec:
             - name: REPO_URL
               value: "https://github.com/gachon-CCLab/FedOps.git"
             - name: GIT_DIR
-              value: "FedOps/client_manager"
+              value: "FedOps/k8s_simulation/client_manager"
             - name: GIT_TAG
               value: "main"
             volumeMounts:

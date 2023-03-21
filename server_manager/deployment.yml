@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: server-manager
-          image: docker.io/tpah30/git_clone:1.1
+          image: docker.io/tpah30/git_clone:1.2
           resources:
             limits:
               memory: "1Gi"
