@@ -21,7 +21,7 @@ spec:
       containers:
 
           - name: client-manager
-            image: docker.io/tpah30/git_clone:1.0
+            image: docker.io/tpah30/git_clone:1.1
             resources:
               limits:
                 memory: "2Gi"
@@ -40,7 +40,7 @@ spec:
                 mountPath: /model #write
 
           - name: client
-            image: docker.io/tpah30/fl_client:1.0
+            image: docker.io/tpah30/fl_client:1.1
             resources:
               requests:
                 memory: "2Gi"
