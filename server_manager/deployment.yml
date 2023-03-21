@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fl-server-st-test
+  name: fl-server-st
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: fl-server-st-test
+      run: fl-server-st
   template:
     metadata:
       labels:
-        run: fl-server-st-test
+        run: fl-server-st
     spec:
       containers:
         - name: server-manager
