@@ -25,6 +25,6 @@ spec:
           - name: REPO_URL
             value: "https://github.com/gachon-CCLab/FedOps.git"
           - name: GIT_DIR
-            value: "server_manager"
+            value: "/server_manager"
           - name: GIT_TAG
             value: "main"
