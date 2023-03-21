@@ -35,7 +35,7 @@ spec:
             - name: REPO_URL
               value: "https://github.com/gachon-CCLab/FedOps.git"
             - name: GIT_DIR
-              value: /k8s_simulation/client
+              value: "FedOps/client"
             - name: GIT_TAG
               value: "main"
             - name: GRPC_POLL_STRATEGY
@@ -51,7 +51,7 @@ spec:
               mountPath: /model #read/write
 
           - name: client-manager
-            image: docker.io/hoo0681/gitclone_python:0.1
+            image: docker.io/tpah30/git_clone:1.0
             resources:
               limits:
                 memory: "2Gi"
@@ -62,7 +62,7 @@ spec:
             - name: REPO_URL
               value: "https://github.com/gachon-CCLab/FedOps.git"
             - name: GIT_DIR
-              value: /k8s_simulation/client_manager
+              value: "FedOps/client_manager"
             - name: GIT_TAG
               value: "main"
             volumeMounts:
