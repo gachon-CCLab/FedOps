@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: server-manager
-          image: docker.io/hoo0681/gitclone_python:0.1
+          image: docker.io/tpah30/git_clone:1.0
           resources:
             limits:
               memory: "1Gi"
@@ -25,6 +25,6 @@ spec:
           - name: REPO_URL
             value: "https://github.com/gachon-CCLab/FedOps.git"
           - name: GIT_DIR
-            value: "/server_manager"
+            value: "FedOps/server_manager"
           - name: GIT_TAG
             value: "main"
