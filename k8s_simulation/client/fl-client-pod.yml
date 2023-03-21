@@ -19,39 +19,9 @@ spec:
         - name: shared-model # 모델 저장용
           emptyDir: {}
       containers:
-          - name: client
-            image: docker.io/tpah30/fl_client:2.0
-            resources:
-              requests:
-                memory: "2Gi"
-                cpu: "1000m"
-                # nvidia.com/gpu: "1"
-              # limits:
-              #   memory: "4Gi"
-              #   cpu: "2500m"
-            ports:
-              - containerPort: 8002
-            env:
-            - name: REPO_URL
-              value: "https://github.com/gachon-CCLab/FedOps.git"
-            - name: GIT_DIR
-              value: "FedOps/k8s_simulation/client"
-            - name: GIT_TAG
-              value: "main"
-            - name: GRPC_POLL_STRATEGY
-              value: "epoll1"
-            - name: MY_POD_ID
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            volumeMounts:
-            - name: shared-train-data
-              mountPath: /traindata #read
-            - name: shared-model
-              mountPath: /model #read/write
 
           - name: client-manager
-            image: docker.io/tpah30/git_clone:2.1
+            image: docker.io/tpah30/git_clone:1.0
             resources:
               limits:
                 memory: "2Gi"
@@ -68,3 +38,34 @@ spec:
             volumeMounts:
               - name: shared-model
                 mountPath: /model #write
+
+          - name: client
+            image: docker.io/tpah30/fl_client:1.0
+            resources:
+              requests:
+                memory: "2Gi"
+                cpu: "1000m"
+                # nvidia.com/gpu: "1"
+              # limits:
+              #   memory: "4Gi"
+              #   cpu: "2500m"
+            ports:
+              - containerPort: 8002
+            env:
+              - name: REPO_URL
+                value: "https://github.com/gachon-CCLab/FedOps.git"
+              - name: GIT_DIR
+                value: "FedOps/k8s_simulation/client"
+              - name: GIT_TAG
+                value: "main"
+              - name: GRPC_POLL_STRATEGY
+                value: "epoll1"
+              - name: MY_POD_ID
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+            volumeMounts:
+              - name: shared-train-data
+                mountPath: /traindata #read
+              - name: shared-model
+                mountPath: /model #read/write
