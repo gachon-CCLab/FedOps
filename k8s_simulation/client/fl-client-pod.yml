@@ -20,7 +20,7 @@ spec:
           emptyDir: {}
       containers:
           - name: client
-            image: docker.io/tpah30/fl_client:1.0
+            image: docker.io/tpah30/fl_client:1.2
             resources:
               requests:
                 memory: "2Gi"
