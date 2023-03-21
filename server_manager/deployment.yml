@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fl-server-st
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: fl-server-st
+  template:
+    metadata:
+      labels:
+        run: fl-server-st
+    spec:
+      containers:
+        - name: server-status-informer
+          image: docker.io/hoo0681/gitclone_python:0.1
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8000
+          env:
+          - name: REPO_URL
+            value: "https://github.com/gachon-CCLab/FedOps.git"
+          - name: GIT_DIR
+            value: /server_manager
+          - name: GIT_TAG
+            value: "main"

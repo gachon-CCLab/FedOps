@@ -1,0 +1,9 @@
+flwr==1.0.0
+fastapi==0.70.1
+uvicorn[standard]==0.16.0
+requests==2.26.0
+pydantic
+tensorflow==2.10.0rc3
+keras==2.10.0rc1
+sklearn
+numpy
