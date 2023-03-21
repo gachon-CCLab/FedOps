@@ -28,3 +28,4 @@ spec:
             value: "FedOps/server_manager"
           - name: GIT_TAG
             value: "main"
+          imagePullPolicy: Always

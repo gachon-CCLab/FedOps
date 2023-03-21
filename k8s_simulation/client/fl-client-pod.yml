@@ -19,7 +19,6 @@ spec:
         - name: shared-model # 모델 저장용
           emptyDir: {}
       containers:
-
           - name: client-manager
             image: docker.io/tpah30/git_clone:1.1
             resources:
@@ -38,6 +37,7 @@ spec:
             volumeMounts:
               - name: shared-model
                 mountPath: /model #write
+            imagePullPolicy: Always
 
           - name: client
             image: docker.io/tpah30/fl_client:1.1
@@ -69,3 +69,4 @@ spec:
                 mountPath: /traindata #read
               - name: shared-model
                 mountPath: /model #read/write
+            imagePullPolicy: Always
