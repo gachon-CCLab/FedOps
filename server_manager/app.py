@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 import uvicorn
 from fastapi import FastAPI
+from typing import Optional
 import json, logging
 import datetime
 
@@ -9,6 +10,14 @@ import datetime
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
+
+class FLTask(BaseModel):
+    FL_task_ID: str = ''
+    Device_mac: str = ''
+    Device_hostname: str = ''
+    Device_online: bool = False
+    Device_training: bool = False
+    Device_time: str = ''
 
 # Server Status Object
 class ServerStatus(BaseModel):
@@ -18,11 +27,9 @@ class ServerStatus(BaseModel):
     Play_datetime: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0 #모델버전
-    FL_task: list = []
+    FL_task: Optional[FLTask] = None
 
-
-# init client_list object
-client_list= []
+FL_task_list = []
 
 # create App
 app = FastAPI()
@@ -44,12 +51,12 @@ def read_status():
 
 
 @app.put("/FLSe/RegisterFLTask")
-def register_fl_task(FLTask: list):
+def register_fl_task(FLTask: Optional[FLTask]):
     global FLSe
 
     client_fl_task = FLTask
 
-    FLSe.FL_task.append(client_fl_task)
+    FL_task_list.append(client_fl_task)
 
     logging.info(f'registered_fl_task_list: {client_fl_task}')
 
