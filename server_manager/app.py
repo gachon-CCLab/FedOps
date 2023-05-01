@@ -24,7 +24,7 @@ class ServerStatus(BaseModel):
 
     S3_bucket: str = 'fl-gl-model'
     Latest_GL_Model: str = '' # 모델 가중치 파일 이름
-    Play_datetime: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0 #모델버전
 
@@ -42,7 +42,7 @@ def read_status():
 
     # server_status_result = {"S3_bucket": FLSe.S3_bucket, "Latest_GL_Model": FLSe.Latest_GL_Model, "Play_datetime": FLSe.Play_datetime,
     #                         "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
-    server_status_result = {"Play_datetime": FLSe.Play_datetime, "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
+    server_status_result = {"Play_datetime": FLSe.Server_manager_start, "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
     json_server_status_result = json.dumps(server_status_result)
     logging.info(f'server_status - {json_server_status_result}')
     # print(FLSe)
