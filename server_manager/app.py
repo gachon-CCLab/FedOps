@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import uvicorn
 from fastapi import FastAPI
 import json, logging
+import datetime
 
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
@@ -12,11 +13,12 @@ logger = logging.getLogger(__name__)
 # Server Status Object
 class ServerStatus(BaseModel):
 
-    S3_bucket: str = 'fl-gl-model'
-    Latest_GL_Model: str = '' # 모델 가중치 파일 이름
-    Play_datetime: str = ''
+    # S3_bucket: str = 'fl-gl-model'
+    # Latest_GL_Model: str = '' # 모델 가중치 파일 이름
+    Play_datetime: str = datetime.datetime.now()
     FLSeReady: bool = False
     GL_Model_V: int = 0 #모델버전
+    FL_task: list[list] = []
 
 
 # init client_list object
@@ -28,30 +30,32 @@ app = FastAPI()
 # create Object
 FLSe = ServerStatus()
 
+
+
 @app.get("/FLSe/info")
 def read_status():
     global FLSe
 
-    server_status_result = {"S3_bucket": FLSe.S3_bucket, "Latest_GL_Model": FLSe.Latest_GL_Model, "Play_datetime": FLSe.Play_datetime,
-                            "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
+    # server_status_result = {"S3_bucket": FLSe.S3_bucket, "Latest_GL_Model": FLSe.Latest_GL_Model, "Play_datetime": FLSe.Play_datetime,
+    #                         "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
+    server_status_result = {"Play_datetime": FLSe.Play_datetime, "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V, "FL_task": FLSe.FL_task}
     json_server_status_result = json.dumps(server_status_result)
     logging.info(f'server_status - {json_server_status_result}')
     # print(FLSe)
     return {"Server_Status": FLSe}
 
 
-@app.put("/FLSe/RegisterClient")
-def register_client(ClientName: str):
+@app.put("/FLSe/RegisterFLTask")
+def register_fl_task(FLTask: list):
     global FLSe
-    if ClientName in client_list:
-        client_num = client_list.index(ClientName)
-    else: 
-        client_list.append(ClientName)
-        client_num = client_list.index(ClientName)
 
-    logging.info(f'registered_client_list: {client_list}')
+    client_fl_task = FLTask
 
-    return {'client_num':client_num}
+    FLSe.FL_task.append(client_fl_task)
+
+    logging.info(f'registered_fl_task_list: {client_fl_task}')
+
+    return {"Server_Status": FLSe}
 
 
 @app.put("/FLSe/FLSeUpdate")
