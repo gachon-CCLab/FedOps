@@ -18,7 +18,7 @@ class ServerStatus(BaseModel):
     Play_datetime: str = datetime.datetime.now()
     FLSeReady: bool = False
     GL_Model_V: int = 0 #모델버전
-    FL_task: list[list] = []
+    FL_task: list = []
 
 
 # init client_list object
