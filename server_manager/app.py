@@ -51,14 +51,14 @@ def read_status():
 
 
 @app.put("/FLSe/RegisterFLTask")
-def register_fl_task(FLTask: Optional[FLTask]):
+def register_fl_task(task: FLTask):
     global FLSe
 
-    client_fl_task = FLTask
+    FLSe.FL_task = task
 
-    FL_task_list.append(client_fl_task)
+    FL_task_list.append(FLSe.FL_task)
 
-    logging.info(f'registered_fl_task_list: {client_fl_task}')
+    logging.info(f'registered_fl_task_list: {FLSe.FL_task}')
 
     return {"Server_Status": FLSe}
 
