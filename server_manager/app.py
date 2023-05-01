@@ -15,8 +15,8 @@ class FLTask(BaseModel):
     FL_task_ID: str = ''
     Device_mac: str = ''
     Device_hostname: str = ''
-    Device_online: bool = False
-    Device_training: bool = False
+    Device_online: str = False
+    Device_training: str = False
     Device_time: str = ''
 
 # Server Status Object
