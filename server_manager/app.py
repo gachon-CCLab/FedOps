@@ -17,7 +17,7 @@ class FLTask(BaseModel):
     Device_hostname: str = ''
     Device_online: bool = False
     Device_training: bool = False
-    Device_time: str = ''
+    # Device_time: str = ''
 
 # Server Status Object
 class ServerStatus(BaseModel):
@@ -52,7 +52,7 @@ def read_status():
 @app.put("/FLSe/RegisterFLTask")
 def register_fl_task(task: FLTask):
     global FLSe
-    task.Device_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # task.Device_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FL_task_list.append(task)
 
     logging.info(f'registered_fl_task_list: {task}')
