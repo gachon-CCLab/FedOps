@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
                     handlers=[logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
+FL_task_list = []
 class FLTask(BaseModel):
     FL_task_ID: str = ''
     Device_mac: str = ''
@@ -28,8 +29,6 @@ class ServerStatus(BaseModel):
     Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0  # 모델버전
-
-FL_task_list = []
 
 # create App
 app = FastAPI()
@@ -50,11 +49,27 @@ def read_status():
     return {"Server_Status": FLSe}
 
 
+def update_or_append_task(new_task):
+    global FL_task_list
+    found = False
+    for task in FL_task_list:
+        if task.Device_mac == new_task.Device_mac:
+            task.Device_hostname = new_task.Device_hostname
+            task.Device_online = new_task.Device_online
+            task.Device_training = new_task.Device_training
+            found = True
+            break
+
+    if not found:
+        FL_task_list.append(new_task)
+
+
+
 @app.put("/FLSe/RegisterFLTask")
 def register_fl_task(task: FLTask):
     global FLSe, FL_task_list
     # task.Device_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    FL_task_list.append(task)
+    update_or_append_task(task)
 
     logging.info(f'registered_fl_task_list: {task}')
     logging.info(f'registered_fl_task_lists: {FL_task_list}')
@@ -62,11 +77,23 @@ def register_fl_task(task: FLTask):
     return FL_task_list
 
 
-@app.put("/FLSe/GetFLTask")
-def get_fl_tasks():
+@app.get("/FLSe/GetFLTask/{FL_task_ID}")
+def get_fl_task(FL_task_ID: str):
     global FL_task_list
-    # Convert the list of FLTask instances to a JSON-compatible array
-    tasks_json = jsonable_encoder(FL_task_list)
+    matching_tasks = []
+
+    # Find the matching FLTask instances
+    for task in FL_task_list:
+        if task.FL_task_ID == FL_task_ID:
+            matching_tasks.append(task)
+
+    # Convert the matching FLTask instances to a JSON-compatible list
+    tasks_json = jsonable_encoder(matching_tasks)
+
+    # If no matching instances are found, return an error message
+    if not tasks_json:
+        return {"error": "No matching FLTask found for the provided FL_task_ID"}
+
     return tasks_json
 
 
