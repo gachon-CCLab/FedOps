@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
 from typing import Optional
 import json, logging
 import datetime
@@ -23,10 +24,10 @@ class FLTask(BaseModel):
 class ServerStatus(BaseModel):
 
     S3_bucket: str = 'fl-gl-model'
-    Latest_GL_Model: str = '' # 모델 가중치 파일 이름
+    Latest_GL_Model: str = ''  # 모델 가중치 파일 이름
     Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
-    GL_Model_V: int = 0 #모델버전
+    GL_Model_V: int = 0  # 모델버전
 
 FL_task_list = []
 
@@ -51,7 +52,7 @@ def read_status():
 
 @app.put("/FLSe/RegisterFLTask")
 def register_fl_task(task: FLTask):
-    global FLSe
+    global FLSe, FL_task_list
     # task.Device_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FL_task_list.append(task)
 
@@ -59,6 +60,14 @@ def register_fl_task(task: FLTask):
     logging.info(f'registered_fl_task_lists: {FL_task_list}')
 
     return FL_task_list
+
+
+@app.put("/FLSe/GetFLTask")
+def get_fl_tasks():
+    global FL_task_list
+    # Convert the list of FLTask instances to a JSON-compatible array
+    tasks_json = jsonable_encoder(FL_task_list)
+    return tasks_json
 
 
 @app.put("/FLSe/FLSeUpdate")
