@@ -2,3 +2,4 @@ fastapi
 uvicorn[standard]
 pydantic
 requests==2.26.0
+kubernetes==22.6.0

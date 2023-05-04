@@ -7,6 +7,7 @@ from typing import Optional
 import json, logging
 import datetime
 
+from utils import server_operator
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=[logging.StreamHandler()])
@@ -29,6 +30,10 @@ class ServerStatus(BaseModel):
     Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0  # 모델버전
+
+class StartingTaskData(BaseModel):
+    task_id: str
+    devices: List[str]
 
 # create App
 app = FastAPI()
@@ -64,7 +69,6 @@ def update_or_append_task(new_task):
         FL_task_list.append(new_task)
 
 
-
 @app.put("/FLSe/RegisterFLTask")
 def register_fl_task(task: FLTask):
     global FLSe, FL_task_list
@@ -95,6 +99,19 @@ def get_fl_task(FL_task_ID: str):
         return {"error": "No matching FLTask found for the provided FL_task_ID"}
 
     return tasks_json
+
+# {
+#   "task_id": "some_task_id",
+#   "devices": [
+#     "device_mac_1",
+#     "device_mac_2",
+#     "device_mac_3"
+#   ]
+# }
+@app.post("/FLSe/startTask")
+def start_task(task_data: StartingTaskData):
+    # print(task_data.task_id)
+    # print(task_data.devices)
 
 
 @app.put("/FLSe/FLSeUpdate")
