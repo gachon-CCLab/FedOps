@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fl-server-st
+  namespace: fedops
 spec:
   replicas: 1
   selector:
@@ -12,6 +13,7 @@ spec:
       labels:
         run: fl-server-st
     spec:
+      serviceAccountName: fedops-sa
       containers:
         - name: server-manager
           image: docker.io/tpah30/git_clone:1.1

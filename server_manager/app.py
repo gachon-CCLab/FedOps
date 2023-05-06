@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from typing import Optional
-import json, logging
+import json
+import logging
 import datetime
 
 from utils import server_operator
@@ -14,6 +15,11 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
 logger = logging.getLogger(__name__)
 
 FL_task_list = []
+
+# Create a dictionary to store the statuses of the tasks
+fl_server_status = {}
+
+
 class FLTask(BaseModel):
     FL_task_ID: str = ''
     Device_mac: str = ''
@@ -22,24 +28,27 @@ class FLTask(BaseModel):
     Device_training: bool = False
     # Device_time: str = ''
 
+
 # Server Status Object
 class ServerStatus(BaseModel):
-
     S3_bucket: str = 'fl-gl-model'
     Latest_GL_Model: str = ''  # 모델 가중치 파일 이름
     Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0  # 모델버전
 
+
 class StartingTaskData(BaseModel):
     task_id: str
-    devices: List[str]
+    devices: list[str]
+
 
 # create App
 app = FastAPI()
 
 # create Object
 FLSe = ServerStatus()
+
 
 @app.get("/FLSe/info")
 def read_status():
@@ -100,6 +109,15 @@ def get_fl_task(FL_task_ID: str):
 
     return tasks_json
 
+
+async def manage_task_status(task_id: str):
+    # Add your logic to manage the task's status here
+    print(f"Managing task {task_id} status...")
+    await asyncio.sleep(5)  # Simulate some work
+
+    print(f"Task {task_id} has finished.")
+
+
 # {
 #   "task_id": "some_task_id",
 #   "devices": [
@@ -109,9 +127,20 @@ def get_fl_task(FL_task_ID: str):
 #   ]
 # }
 @app.post("/FLSe/startTask")
-def start_task(task_data: StartingTaskData):
-    # print(task_data.task_id)
-    # print(task_data.devices)
+def start_task(task_data: StartingTaskData, background_tasks: BackgroundTasks):
+    # Start the task and create a background task to manage its status
+    background_tasks.add_task(server_operator.create_fl_server, task_data.task_id, fl_server_status)
+
+    return {"status": "Task started."}
+
+
+@app.get("/FLSe/status/{task_id}")
+def get_fl_server_status(task_id: str):
+    status = fl_server_status.get(task_id)
+    if status:
+        return {"task_id": task_id, "status": status}
+    else:
+        return {"error": f"No task with id {task_id} found"}
 
 
 @app.put("/FLSe/FLSeUpdate")
@@ -119,6 +148,7 @@ def update_status(Se: ServerStatus):
     global FLSe
     FLSe = Se
     return {"Server_Status": FLSe}
+
 
 @app.put("/FLSe/FLRoundFin")
 def update_ready(FLSeReady: bool):
@@ -137,7 +167,5 @@ def server_closed(FLSeReady: bool):
     return {"Server_Status": FLSe}
 
 
-
-if __name__ == "__main__":    
-
+if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
