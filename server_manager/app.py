@@ -7,6 +7,7 @@ from typing import Optional
 import json
 import logging
 import datetime
+from typing import List
 
 from utils import server_operator
 
@@ -40,7 +41,7 @@ class ServerStatus(BaseModel):
 
 class StartingTaskData(BaseModel):
     task_id: str
-    devices: list[str]
+    devices: List[str]
 
 
 # create App
