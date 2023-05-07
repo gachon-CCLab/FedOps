@@ -20,6 +20,9 @@ FL_task_list = []
 # Create a dictionary to store the statuses of the tasks
 fl_server_status = {}
 
+# Create a dictionary to store the ServerStatus objects for each task
+FLSe_dict = {}
+
 
 class FLTask(BaseModel):
     FL_task_ID: str = ''
@@ -37,6 +40,7 @@ class ServerStatus(BaseModel):
     Server_manager_start: str = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     FLSeReady: bool = False
     GL_Model_V: int = 0  # 모델버전
+    Task_status: FLTask = None
 
 
 class StartingTaskData(BaseModel):
@@ -51,15 +55,54 @@ app = FastAPI()
 FLSe = ServerStatus()
 
 
-@app.get("/FLSe/info")
-def read_status():
-    global FLSe
+# Create a function to get or create a ServerStatus object for a task
+def get_or_create_FLSe(task_id: str):
+    if task_id not in FLSe_dict:
+        FLSe_dict[task_id] = ServerStatus()
+    return FLSe_dict[task_id]
 
-    # server_status_result = {"S3_bucket": FLSe.S3_bucket, "Latest_GL_Model": FLSe.Latest_GL_Model, "Play_datetime": FLSe.Play_datetime,
-    #                         "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
-    server_status_result = {"Play_datetime": FLSe.Server_manager_start, "FLSeReady": FLSe.FLSeReady, "GL_Model_V": FLSe.GL_Model_V}
-    json_server_status_result = json.dumps(server_status_result)
-    logging.info(f'server_status - {json_server_status_result}')
+
+@app.get("/FLSe/info/{task_id}/{device_mac}")
+def read_status(task_id: str, device_mac: str):
+    global FLSe, FL_task_list
+    FLSe = get_or_create_FLSe(task_id)
+
+    # Filter the FL_task_list based on task_id and device_mac
+    matching_tasks = [task for task in FL_task_list if task.FL_task_ID == task_id and task.Device_mac == device_mac]
+
+    if not matching_tasks:
+        server_status_result = {
+            "Play_datetime": FLSe.Server_manager_start,
+            "FLSeReady": FLSe.FLSeReady,
+            "GL_Model_V": FLSe.GL_Model_V,
+            "Task_Status": None
+        }
+        json_server_status_result = json.dumps(server_status_result)
+        logging.info(f'server_status - {json_server_status_result}')
+        FLSe.Task_status = None
+        # return {"error": "No matching tasks found for the provided task_id and device_mac"}
+    else:
+        # Get the first matching task
+        matching_task = matching_tasks[0]
+
+        # server_status_result = {"S3_bucket": FLSe.S3_bucket,
+        #                         "Latest_GL_Model": FLSe.Latest_GL_Model,
+        #                         "Play_datetime": FLSe.Play_datetime,
+        #                         "FLSeReady": FLSe.FLSeReady,
+        #                         "GL_Model_V": FLSe.GL_Model_V}
+
+        server_status_result = {
+            "Play_datetime": FLSe.Server_manager_start,
+            "FLSeReady": FLSe.FLSeReady,
+            "GL_Model_V": FLSe.GL_Model_V,
+            "Task_Status": matching_task
+        }
+
+        json_server_status_result = json.dumps(server_status_result)
+        logging.info(f'server_status - {json_server_status_result}')
+
+        FLSe.Task_status = matching_task
+
     # print(FLSe)
     return {"Server_Status": FLSe}
 
@@ -81,8 +124,7 @@ def update_or_append_task(new_task):
 
 @app.put("/FLSe/RegisterFLTask")
 def register_fl_task(task: FLTask):
-    global FLSe, FL_task_list
-    # task.Device_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    global FL_task_list
     update_or_append_task(task)
 
     logging.info(f'registered_fl_task_list: {task}')
@@ -91,14 +133,14 @@ def register_fl_task(task: FLTask):
     return FL_task_list
 
 
-@app.get("/FLSe/GetFLTask/{FL_task_ID}")
-def get_fl_task(FL_task_ID: str):
+@app.get("/FLSe/GetFLTask/{task_id}")
+def get_fl_task(task_id: str):
     global FL_task_list
     matching_tasks = []
 
     # Find the matching FLTask instances
     for task in FL_task_list:
-        if task.FL_task_ID == FL_task_ID:
+        if task.FL_task_ID == task_id:
             matching_tasks.append(task)
 
     # Convert the matching FLTask instances to a JSON-compatible list
@@ -109,14 +151,6 @@ def get_fl_task(FL_task_ID: str):
         return {"error": "No matching FLTask found for the provided FL_task_ID"}
 
     return tasks_json
-
-
-async def manage_task_status(task_id: str):
-    # Add your logic to manage the task's status here
-    print(f"Managing task {task_id} status...")
-    await asyncio.sleep(5)  # Simulate some work
-
-    print(f"Task {task_id} has finished.")
 
 
 # {
@@ -144,25 +178,33 @@ def get_fl_server_status(task_id: str):
         return {"error": f"No task with id {task_id} found"}
 
 
-@app.put("/FLSe/FLSeUpdate")
-def update_status(Se: ServerStatus):
-    global FLSe
-    FLSe = Se
+@app.put("/FLSe/FLSeUpdate/{task_id}")
+def update_status(task_id: str, Se: ServerStatus):
+    global FLSe_dict
+    FLSe = get_or_create_FLSe(task_id)
+    FLSe.S3_bucket = Se.S3_bucket
+    FLSe.Latest_GL_Model = Se.Latest_GL_Model
+    FLSe.Server_manager_start = Se.Server_manager_start
+    FLSe.FLSeReady = Se.FLSeReady
+    FLSe.GL_Model_V = Se.GL_Model_V
+    FLSe.Task_status = Se.Task_status
     return {"Server_Status": FLSe}
 
 
-@app.put("/FLSe/FLRoundFin")
-def update_ready(FLSeReady: bool):
-    global FLSe
+@app.put("/FLSe/FLRoundFin/{task_id}")
+def update_ready(task_id: str, FLSeReady: bool):
+    global FLSe_dict
+    FLSe = get_or_create_FLSe(task_id)
     FLSe.FLSeReady = FLSeReady
     if FLSeReady==False:
         FLSe.GL_Model_V += 1
     return {"Server_Status": FLSe}
 
 
-@app.put("/FLSe/FLSeClosed")
-def server_closed(FLSeReady: bool):
+@app.put("/FLSe/FLSeClosed/{task_id}")
+def server_closed(task_id: str, FLSeReady: bool):
     global FLSe
+    FLSe = get_or_create_FLSe(task_id)
     print('server closed')
     FLSe.FLSeReady = FLSeReady
     return {"Server_Status": FLSe}

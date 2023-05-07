@@ -1,4 +1,5 @@
 from kubernetes import client, config, watch
+from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 
 
 def load_config():
@@ -48,6 +49,22 @@ def create_fl_server(task_id: str, fl_server_status: dict):
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
 
+    env_vars = [V1EnvVar(name="REPO_URL", value='https://github.com/gachon-CCLab/FedOps-Training-Server.git'),
+                V1EnvVar(name="GIT_TAG", value="master"),
+                V1EnvVar(name="ENV", value="init"),
+                V1EnvVar(name="TASK_ID", value=task_id),
+
+                # Use existing Kubernetes secrets for environment variables
+                V1EnvVar(name="ACCESS_KEY_ID",
+                         value_from=V1EnvVarSource(
+                             secret_key_ref=V1SecretKeySelector(name='s3secret', key='ACCESS_KEY_ID'))),
+                V1EnvVar(name="ACCESS_SECRET_KEY",
+                         value_from=V1EnvVarSource(
+                             secret_key_ref=V1SecretKeySelector(name='s3secret', key='ACCESS_SECRET_KEY'))),
+                V1EnvVar(name="BUCKET_NAME",
+                         value_from=V1EnvVarSource(
+                             secret_key_ref=V1SecretKeySelector(name='s3secret', key='BUCKET_NAME')))]
+
     job = client.V1Job(
         api_version="batch/v1",
         kind="Job",
@@ -58,16 +75,23 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             template=client.V1PodTemplateSpec(
                 metadata=client.V1ObjectMeta(
                     generate_name=pod_name_prefix,
-                    labels={"app": "fl-server", "task_id": task_id}  # Add this line
+                    labels={"run": "fl-server", "task_id": task_id}  # Add this line
                 ),
                 spec=client.V1PodSpec(
                     containers=[
                         client.V1Container(
                             name="fl-server",
-                            image="your_image",
+                            image="docker.io/hoo0681/airflowkubepodimage:0.1",
                             ports=[
                                 client.V1ContainerPort(container_port=8080)
-                            ]
+                            ],
+                            command=["/bin/sh", "-c"],
+                            args=[
+                                "git clone -b ${GIT_TAG} ${REPO_URL} /app; "
+                                "python3 -m pip install -r /app/requirements.txt; "
+                                "python3 /app/app.py;"
+                            ],
+                            env=env_vars,
                         )
                     ],
                     restart_policy="Never"
