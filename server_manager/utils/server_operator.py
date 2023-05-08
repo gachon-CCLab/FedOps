@@ -24,19 +24,33 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     api_instance = client.NetworkingV1Api()
     ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
 
-    # Add a new path with the given task_id
-    new_path = client.V1HTTPIngressPath(
-        path=f"/fedops/server/fl-server/{task_id}(/|$)(.*)",
-        path_type="Prefix",
-        backend=client.V1IngressBackend(
-            service=client.V1IngressServiceBackend(
-                name=service_name,
-                port=client.V1ServiceBackendPort(number=80)
+    new_path_str = f"/fedops/server/fl-server/{task_id}(/|$)(.*)"
+
+    # Check if a similar path already exists
+    existing_path = None
+    for path in ingress.spec.rules[0].http.paths:
+        if path.path.startswith(f"/fedops/server/fl-server/{task_id}"):
+            existing_path = path
+            break
+
+    if existing_path:
+        print(f"Found existing path for task_id: {task_id}. Updating it.")
+        existing_path.path = new_path_str
+        existing_path.backend.service.name = service_name
+    else:
+        # Add a new path with the given task_id
+        new_path = client.V1HTTPIngressPath(
+            path=new_path_str,
+            path_type="Prefix",
+            backend=client.V1IngressBackend(
+                service=client.V1IngressServiceBackend(
+                    name=service_name,
+                    port=client.V1ServiceBackendPort(number=80)
+                )
             )
         )
-    )
 
-    ingress.spec.rules[0].http.paths.append(new_path)
+        ingress.spec.rules[0].http.paths.append(new_path)
 
     # Update the Ingress resource
     api_instance.replace_namespaced_ingress(ingress_name, namespace, ingress)
