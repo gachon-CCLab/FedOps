@@ -97,7 +97,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     restart_policy="Never"
                 )
             ),
-            backoff_limit=1
+            backoff_limit=5
         )
     )
 
