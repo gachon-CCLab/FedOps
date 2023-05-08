@@ -170,7 +170,7 @@ def start_task(task_data: StartingTaskData, background_tasks: BackgroundTasks):
     if task_data.task_id in fl_server_status:
         return {"status": "already started"}
 
-    fl_server_status[task_data.task_id]["status"] = "Initializing"
+    fl_server_status[task_data.task_id] = {"status": "Initializing"}
 
     # Start the task and create a background task to manage its status
     background_tasks.add_task(server_operator.create_fl_server, task_data.task_id, fl_server_status)
