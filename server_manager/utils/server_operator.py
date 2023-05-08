@@ -49,6 +49,18 @@ def create_fl_server(task_id: str, fl_server_status: dict):
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
 
+    # Check if a job with the same name already exists
+    api_instance = client.BatchV1Api()
+    namespace = "fedops"
+    existing_jobs = api_instance.list_namespaced_job(
+        namespace,
+        field_selector=f"metadata.name={job_name}"
+    )
+
+    if len(existing_jobs.items) > 0:
+        print(f"Job with name {job_name} already exists. Skipping job creation.")
+        return
+
     env_vars = [V1EnvVar(name="REPO_URL", value='https://github.com/gachon-CCLab/FedOps-Training-Server.git'),
                 V1EnvVar(name="GIT_TAG", value="main"),
                 V1EnvVar(name="ENV", value="init"),
