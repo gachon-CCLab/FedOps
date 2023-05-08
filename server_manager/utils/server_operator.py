@@ -75,7 +75,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             template=client.V1PodTemplateSpec(
                 metadata=client.V1ObjectMeta(
                     generate_name=pod_name_prefix,
-                    labels={"run": "fl-server", "task_id": task_id}  # Add this line
+                    labels={"run": "fl-server", "task_id": task_id}
                 ),
                 spec=client.V1PodSpec(
                     containers=[

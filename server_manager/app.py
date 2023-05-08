@@ -203,11 +203,24 @@ def update_ready(task_id: str, FLSeReady: bool):
 
 @app.put("/FLSe/FLSeClosed/{task_id}")
 def server_closed(task_id: str, FLSeReady: bool):
-    global FLSe
+    global FLSe, FL_task_list, fl_server_status, FLSe_dict
     FLSe = get_or_create_FLSe(task_id)
+
+    # Clear FL_task_list for matching task_id
+    FL_task_list = [task for task in FL_task_list if task.FL_task_ID != task_id]
+
+    # Clear fl_server_status for matching task_id
+    if task_id in fl_server_status:
+        del fl_server_status[task_id]
+
+    # Clear FLSe_dict for matching task_id
+    # if task_id in FLSe_dict:
+    #     del FLSe_dict[task_id]
+
     print('server closed')
     FLSe.FLSeReady = FLSeReady
     return {"Server_Status": FLSe}
+
 
 
 if __name__ == "__main__":
