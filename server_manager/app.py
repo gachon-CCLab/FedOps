@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 import uvicorn
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from typing import Optional
@@ -108,7 +108,6 @@ def read_status(task_id: str, device_mac: str):
         return {"error": str(e)}
 
 
-
 def update_or_append_task(new_task):
     global FL_task_list
     found = False
@@ -165,6 +164,14 @@ def get_fl_task(task_id: str):
 # }
 @app.post("/FLSe/startTask")
 def start_task(task_data: StartingTaskData, background_tasks: BackgroundTasks):
+    global fl_server_status
+
+    # Check if the task with the same task_id is already running
+    if task_data.task_id in fl_server_status:
+        return {"status": "already started"}
+
+    fl_server_status[task_data.task_id]["status"] = "Initializing"
+
     # Start the task and create a background task to manage its status
     background_tasks.add_task(server_operator.create_fl_server, task_data.task_id, fl_server_status)
 

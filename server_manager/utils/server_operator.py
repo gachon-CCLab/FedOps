@@ -162,7 +162,11 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                 # When the job has completed or failed, delete the job
                 if current_job.status.succeeded == 1 or current_job.status.failed:
                     print("Deleting job")
-                    api_instance.delete_namespaced_job(name=job_name, namespace=namespace, body=client.V1DeleteOptions())
+                    api_instance.delete_namespaced_job(
+                        name=job_name,
+                        namespace=namespace,
+                        body=client.V1DeleteOptions()
+                    )
                     break
     except Exception as e:
         print(f"Error while monitoring job status: {e}")
