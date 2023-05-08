@@ -16,6 +16,10 @@ def load_config():
     return config
 
 
+# Add this new variable at the beginning of the script
+base_path = "/fedops/server/fl-server"
+
+
 def update_ingress_with_service(task_id: str, service_name: str, namespace: str):
     load_config()
     ingress_name = "fl-server-ingress"
@@ -29,7 +33,7 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     # Check if a similar path already exists
     existing_path = None
     for path in ingress.spec.rules[0].http.paths:
-        if path.path.startswith(f"/fedops/server/fl-server/{task_id}"):
+        if path.path == new_path_str:
             existing_path = path
             break
 
@@ -145,7 +149,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
         kind="Service",
         metadata=client.V1ObjectMeta(name=service_name),
         spec=client.V1ServiceSpec(
-            selector={"app": "fl-server", "task_id": task_id},
+            selector={"run": "fl-server", "task_id": task_id},
             ports=[client.V1ServicePort(port=80, target_port=8080)],
             type="LoadBalancer",  # Change the service type to LoadBalancer
         ),
