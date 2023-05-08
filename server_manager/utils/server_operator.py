@@ -50,7 +50,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
     pod_name_prefix = "fl-server-"
 
     env_vars = [V1EnvVar(name="REPO_URL", value='https://github.com/gachon-CCLab/FedOps-Training-Server.git'),
-                V1EnvVar(name="GIT_TAG", value="master"),
+                V1EnvVar(name="GIT_TAG", value="main"),
                 V1EnvVar(name="ENV", value="init"),
                 V1EnvVar(name="TASK_ID", value=task_id),
 
