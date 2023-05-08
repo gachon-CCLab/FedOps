@@ -1,5 +1,6 @@
 from kubernetes import client, config, watch
 from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
+import time
 
 
 def load_config():
@@ -25,7 +26,7 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
 
     # Add a new path with the given task_id
     new_path = client.V1HTTPIngressPath(
-        path=f"/{task_id}(/|$)(.*)",
+        path=f"/fedops/server/fl-server/{task_id}(/|$)(.*)",
         path_type="Prefix",
         backend=client.V1IngressBackend(
             service=client.V1IngressServiceBackend(
@@ -132,13 +133,41 @@ def create_fl_server(task_id: str, fl_server_status: dict):
         spec=client.V1ServiceSpec(
             selector={"app": "fl-server", "task_id": task_id},
             ports=[client.V1ServicePort(port=80, target_port=8080)],
-            type="ClusterIP",
+            type="LoadBalancer",  # Change the service type to LoadBalancer
         ),
     )
 
     core_v1_api = client.CoreV1Api()
-    core_v1_api.create_namespaced_service(namespace=namespace, body=service)
-    print(f"Service {service_name} created.")
+
+    # Check if the service already exists
+    try:
+        existing_service = core_v1_api.read_namespaced_service(namespace=namespace, name=service_name)
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            existing_service = None
+        else:
+            raise e
+
+    if existing_service:
+        # Update the existing service
+        service.metadata.resource_version = existing_service.metadata.resource_version
+        core_v1_api.replace_namespaced_service(name=service_name, namespace=namespace, body=service)
+        print(f"Updated service: {service_name}")
+    else:
+        # Create a new service
+        core_v1_api.create_namespaced_service(namespace=namespace, body=service)
+        print(f"Created service: {service_name}")
+
+    # Wait until the load balancer has assigned an external IP to the service
+    while True:
+        service = core_v1_api.read_namespaced_service(namespace=namespace, name=service_name)
+        if service.status.load_balancer.ingress:
+            external_ip = service.status.load_balancer.ingress[0].ip
+            print(f"External IP of the LoadBalancer: {external_ip}")
+            break
+        else:
+            print("Waiting for external IP...")
+            time.sleep(1)  # Wait for 1 seconds before checking again
 
     # Update the Ingress resource to route traffic to the newly created service
     update_ingress_with_service(task_id, service_name, namespace)
