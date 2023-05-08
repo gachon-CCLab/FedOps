@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import uvicorn
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from typing import Optional
 import json
 import logging
@@ -42,6 +43,9 @@ class ServerStatus(BaseModel):
     GL_Model_V: int = 0  # 모델버전
     Task_status: FLTask = None
 
+    def to_json(self):
+        return jsonable_encoder(self)
+
 
 class StartingTaskData(BaseModel):
     task_id: str
@@ -64,8 +68,8 @@ def get_or_create_FLSe(task_id: str):
 
 @app.get("/FLSe/info/{task_id}/{device_mac}")
 def read_status(task_id: str, device_mac: str):
-    global FLSe, FL_task_list
     try:
+        global FLSe, FL_task_list
         FLSe = get_or_create_FLSe(task_id)
 
         # Filter the FL_task_list based on task_id and device_mac
@@ -78,37 +82,31 @@ def read_status(task_id: str, device_mac: str):
                 "GL_Model_V": FLSe.GL_Model_V,
                 "Task_Status": None
             }
-            json_server_status_result = json.dumps(server_status_result)
-            logging.info(f'server_status - {json_server_status_result}')
+            logging.info(f'server_status - {server_status_result}')
             FLSe.Task_status = None
-            # return {"error": "No matching tasks found for the provided task_id and device_mac"}
         else:
             # Get the first matching task
             matching_task = matching_tasks[0]
 
-            # server_status_result = {"S3_bucket": FLSe.S3_bucket,
-            #                         "Latest_GL_Model": FLSe.Latest_GL_Model,
-            #                         "Play_datetime": FLSe.Play_datetime,
-            #                         "FLSeReady": FLSe.FLSeReady,
-            #                         "GL_Model_V": FLSe.GL_Model_V}
+            # Convert the matching_task to a JSON-serializable format
+            matching_task_json = jsonable_encoder(matching_task)
 
             server_status_result = {
                 "Play_datetime": FLSe.Server_manager_start,
                 "FLSeReady": FLSe.FLSeReady,
                 "GL_Model_V": FLSe.GL_Model_V,
-                "Task_Status": matching_task
+                "Task_Status": matching_task_json
             }
 
-            json_server_status_result = json.dumps(server_status_result)
-            logging.info(f'server_status - {json_server_status_result}')
+            logging.info(f'server_status - {server_status_result}')
 
             FLSe.Task_status = matching_task
 
-        # print(FLSe)
-        return {"Server_Status": FLSe}
+        return JSONResponse(content={"Server_Status": FLSe.to_json()})
     except Exception as e:
         logging.error(f"Error in read_status: {str(e)}")
         return {"error": str(e)}
+
 
 
 def update_or_append_task(new_task):
@@ -224,7 +222,6 @@ def server_closed(task_id: str, FLSeReady: bool):
     print('server closed')
     FLSe.FLSeReady = FLSeReady
     return {"Server_Status": FLSe}
-
 
 
 if __name__ == "__main__":
