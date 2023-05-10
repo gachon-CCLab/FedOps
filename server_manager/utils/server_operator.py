@@ -29,7 +29,7 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
 
     new_rule = client.V1IngressRule(
-        host=f"{task_id}.ccljhub.ac.kr",
+        host=f"{task_id}.ccljhub.gachon.ac.kr",
         http=client.V1HTTPIngressRuleValue(
             paths=[
                 client.V1HTTPIngressPath(
