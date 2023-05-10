@@ -28,7 +28,7 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     api_instance = client.NetworkingV1Api()
     ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
 
-    hosts = [f"{task_id}-210-102-181-208-nip.io", f"{task_id}-192-9-201-228-nip.io"]
+    hosts = [f"{task_id}-210-102-181-208.nip.io", f"{task_id}-192-9-201-228.nip.io"]
 
     for host in hosts:
         new_rule = client.V1IngressRule(
