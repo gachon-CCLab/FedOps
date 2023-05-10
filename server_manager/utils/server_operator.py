@@ -28,37 +28,40 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     api_instance = client.NetworkingV1Api()
     ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
 
-    new_rule = client.V1IngressRule(
-        host=f"{task_id}.ccljhub.gachon.ac.kr",
-        http=client.V1HTTPIngressRuleValue(
-            paths=[
-                client.V1HTTPIngressPath(
-                    path="/",
-                    path_type="Prefix",
-                    backend=client.V1IngressBackend(
-                        service=client.V1IngressServiceBackend(
-                            name=service_name,
-                            port=client.V1ServiceBackendPort(number=80)
+    hosts = [f"{task_id}-210-102-181-208-nip.io", f"{task_id}-192-9-201-228-nip.io"]
+
+    for host in hosts:
+        new_rule = client.V1IngressRule(
+            host=host,
+            http=client.V1HTTPIngressRuleValue(
+                paths=[
+                    client.V1HTTPIngressPath(
+                        path="/",
+                        path_type="Prefix",
+                        backend=client.V1IngressBackend(
+                            service=client.V1IngressServiceBackend(
+                                name=service_name,
+                                port=client.V1ServiceBackendPort(number=80)
+                            )
                         )
                     )
-                )
-            ]
+                ]
+            )
         )
-    )
 
-    # Check if a rule with the same host already exists
-    existing_rule = None
-    for rule in ingress.spec.rules:
-        if rule.host == new_rule.host:
-            existing_rule = rule
-            break
+        # Check if a rule with the same host already exists
+        existing_rule = None
+        for rule in ingress.spec.rules:
+            if rule.host == new_rule.host:
+                existing_rule = rule
+                break
 
-    if existing_rule:
-        print(f"Found existing rule for task_id: {task_id}. Updating it.")
-        existing_rule.http = new_rule.http
-    else:
-        # Add a new rule with the given task_id
-        ingress.spec.rules.append(new_rule)
+        if existing_rule:
+            print(f"Found existing rule for host: {host}. Updating it.")
+            existing_rule.http = new_rule.http
+        else:
+            # Add a new rule with the given host
+            ingress.spec.rules.append(new_rule)
 
     # Update the Ingress resource
     api_instance.replace_namespaced_ingress(ingress_name, namespace, ingress)
