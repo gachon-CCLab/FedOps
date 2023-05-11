@@ -1,6 +1,36 @@
 from kubernetes import client, config, watch
 from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 import time
+import random
+
+# Keep track of assigned ports
+assigned_ports = set()
+
+
+def find_available_port(namespace: str, min_port: int = 40021, max_port: int = 40040):
+    ingress_name = "fl-server-ingress"
+
+    # Load the existing Ingress resource
+    api_instance = client.NetworkingV1Api()
+    ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
+
+    used_ports = set()
+    for rule in ingress.spec.rules:
+        if rule.host == "ccljhub.gachon.ac.kr":
+            for path in rule.http.paths:
+                used_port = int(path.path.strip('/'))
+                used_ports.add(used_port)
+
+    for port in range(min_port, max_port + 1):
+        if port not in used_ports:
+            return port
+
+    raise ValueError("No available port found within the specified range")
+
+
+def release_assigned_port(port: int):
+    global assigned_ports
+    assigned_ports.discard(port)
 
 
 def load_config():
@@ -20,7 +50,7 @@ def load_config():
 base_path = "/fedops/server/fl-server"
 
 
-def update_ingress_with_service(task_id: str, service_name: str, namespace: str):
+def update_ingress_with_service(task_id: str, service_name: str, namespace: str, assigned_port: int):
     load_config()
     ingress_name = "fl-server-ingress"
 
@@ -28,41 +58,40 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str)
     api_instance = client.NetworkingV1Api()
     ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
 
-    # hosts = [f"{task_id}-210-102-181-208.nip.io", f"{task_id}-192-9-201-228.nip.io"]
-    hosts = [f"{task_id}-192-9-100-18.nip.io"]
+    # Modify the host to include the assigned port
+    host = f"ccljhub.gachon.ac.kr:{assigned_port}"
 
-    for host in hosts:
-        new_rule = client.V1IngressRule(
-            host=host,
-            http=client.V1HTTPIngressRuleValue(
-                paths=[
-                    client.V1HTTPIngressPath(
-                        path="/",
-                        path_type="Prefix",
-                        backend=client.V1IngressBackend(
-                            service=client.V1IngressServiceBackend(
-                                name=service_name,
-                                port=client.V1ServiceBackendPort(number=80)
-                            )
+    new_rule = client.V1IngressRule(
+        host=host,
+        http=client.V1HTTPIngressRuleValue(
+            paths=[
+                client.V1HTTPIngressPath(
+                    path="/",
+                    path_type="Prefix",
+                    backend=client.V1IngressBackend(
+                        service=client.V1IngressServiceBackend(
+                            name=service_name,
+                            port=client.V1ServiceBackendPort(number=80)
                         )
                     )
-                ]
-            )
+                )
+            ]
         )
+    )
 
-        # Check if a rule with the same host already exists
-        existing_rule = None
-        for rule in ingress.spec.rules:
-            if rule.host == new_rule.host:
-                existing_rule = rule
-                break
+    # Check if a rule with the same host already exists
+    existing_rule = None
+    for rule in ingress.spec.rules:
+        if rule.host == new_rule.host:
+            existing_rule = rule
+            break
 
-        if existing_rule:
-            print(f"Found existing rule for host: {host}. Updating it.")
-            existing_rule.http = new_rule.http
-        else:
-            # Add a new rule with the given host
-            ingress.spec.rules.append(new_rule)
+    if existing_rule:
+        print(f"Found existing rule for host: {host}. Updating it.")
+        existing_rule.http = new_rule.http
+    else:
+        # Add a new rule with the given host
+        ingress.spec.rules.append(new_rule)
 
     # Update the Ingress resource
     api_instance.replace_namespaced_ingress(ingress_name, namespace, ingress)
@@ -195,8 +224,11 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             print("Waiting for external IP...")
             time.sleep(1)  # Wait for 1 seconds before checking again
 
+    # Find an available port
+    available_port = find_available_port('fedops')
+
     # Update the Ingress resource to route traffic to the newly created service
-    update_ingress_with_service(task_id, service_name, namespace)
+    update_ingress_with_service(task_id, service_name, namespace, available_port)
 
     # Start watching for the job status
     w = watch.Watch()
