@@ -1,13 +1,10 @@
 from pydantic import BaseModel
 
 import uvicorn
-from fastapi import FastAPI, BackgroundTasks
-from fastapi.encoders import jsonable_encoder
-from typing import Optional
-import json
+from fastapi import FastAPI
+
 import logging
-import datetime
-from typing import List
+
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=[logging.StreamHandler()])
