@@ -16,7 +16,7 @@ class TrainResult(BaseModel):
     round: int = 0
     train_loss: float = 0
     train_acc: float = 0
-    execution_time: float = 0
+    train_time: float = 0
     next_gl_model_v: int = 0
 
 class TestResult(BaseModel):
@@ -69,7 +69,7 @@ def train_result_put(task_id: str, Train: TrainResult):
     train_result.round = Train.round
     train_result.train_loss = Train.train_loss
     train_result.train_acc = Train.train_acc
-    train_result.execution_time = Train.execution_time
+    train_result.train_time = Train.train_time
     train_result.next_gl_model_v = Train.next_gl_model_v
 
     logging.info(f'train_result: {train_result}')
