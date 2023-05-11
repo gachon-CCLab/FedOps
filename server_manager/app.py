@@ -187,6 +187,20 @@ def get_fl_server_status(task_id: str):
         return {"error": f"No task with id {task_id} found"}
 
 
+@app.get("/FLSe/getPort/{task_id}")
+async def get_fl_server_port(task_id: str):
+    global fl_server_status
+
+    if task_id in fl_server_status:
+        port = fl_server_status[task_id].get("port", None)
+        if port:
+            return {"task_id": task_id, "port": port}
+        else:
+            return {"error": f"No port assigned for task_id {task_id}"}
+    else:
+        return {"error": f"Task ID {task_id} not found"}
+
+
 @app.put("/FLSe/FLSeUpdate/{task_id}")
 def update_status(task_id: str, Se: ServerStatus):
     global FLSe_dict

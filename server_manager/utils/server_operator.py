@@ -4,11 +4,13 @@ import time
 import random
 
 # Keep track of assigned ports
-assigned_ports = set()
+assigned_ports = None
 
 
-def find_available_port(namespace: str, min_port: int = 40021, max_port: int = 40040):
+def find_available_port(fl_server_status: dict, task_id: str, namespace: str):
     ingress_name = "fl-server-ingress"
+    min_port: int = 40021
+    max_port: int = 40040
 
     # Load the existing Ingress resource
     api_instance = client.NetworkingV1Api()
@@ -16,16 +18,17 @@ def find_available_port(namespace: str, min_port: int = 40021, max_port: int = 4
 
     used_ports = set()
     for rule in ingress.spec.rules:
-        if rule.host == "ccljhub.gachon.ac.kr":
-            for path in rule.http.paths:
-                used_port = int(path.path.strip('/'))
-                used_ports.add(used_port)
+        if "ccljhub.gachon.ac.kr" in rule.host:
+            used_port = int(rule.host.split(':')[1])
+            used_ports.add(used_port)
 
     for port in range(min_port, max_port + 1):
         if port not in used_ports:
+            fl_server_status[task_id]["port"] = port
             return port
 
     raise ValueError("No available port found within the specified range")
+
 
 
 def release_assigned_port(port: int):
@@ -101,6 +104,7 @@ def update_ingress_with_service(task_id: str, service_name: str, namespace: str,
 def create_fl_server(task_id: str, fl_server_status: dict):
     load_config()
     fl_server_status[task_id]["status"] = "Creating"
+    fl_server_status[task_id]["port"]: int
 
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
@@ -225,7 +229,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             time.sleep(1)  # Wait for 1 seconds before checking again
 
     # Find an available port
-    available_port = find_available_port('fedops')
+    available_port = find_available_port(fl_server_status, task_id, 'fedops')
 
     # Update the Ingress resource to route traffic to the newly created service
     update_ingress_with_service(task_id, service_name, namespace, available_port)
