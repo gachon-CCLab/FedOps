@@ -60,7 +60,7 @@ test_result = TestResult()
 client_time_result = ClientTimeResult()
 client_system = ClientSystem()
 
-@app.put("client_perf/train_result/{task_id}")
+@app.put("/client_perf/train_result/{task_id}")
 def train_result_put(task_id: str, Train: TrainResult):
     global train_result
 
@@ -77,7 +77,7 @@ def train_result_put(task_id: str, Train: TrainResult):
     return {"train_result": train_result}
 
 
-@app.put("client_perf/test_result/{task_id}")
+@app.put("/client_perf/test_result/{task_id}")
 def test_result_put(task_id: str, Test: TestResult):
     global test_result
 
@@ -92,7 +92,7 @@ def test_result_put(task_id: str, Test: TestResult):
 
     return {"test_result": test_result}
 
-@app.put("client_perf/client_time_result/{task_id}")
+@app.put("/client_perf/client_time_result/{task_id}")
 def client_time_result_put(task_id: str, Time: ClientTimeResult):
     global client_time_result
 
@@ -105,7 +105,7 @@ def client_time_result_put(task_id: str, Time: ClientTimeResult):
 
     return {"client_time_result": client_time_result}
 
-@app.put("client_perf/client_system/{task_id}")
+@app.put("/client_perf/client_system/{task_id}")
 def client_system_put(task_id: str, System: ClientSystem):
     global client_system
 
