@@ -75,7 +75,9 @@ def train_result_put(task_id: str, Train: TrainResult):
     train_result.execution_time = Train.execution_time
     train_result.next_gl_model_v = Train.next_gl_model_v
 
-    return train_result
+    logging.info(f'train_result: {train_result}')
+
+    return {"train_result": train_result}
 
 
 @app.put("client_perf/test_result/{task_id}")
@@ -89,7 +91,9 @@ def test_result_put(task_id: str, Test: TestResult):
     test_result.test_acc = Test.train_acc
     test_result.next_gl_model_v = Test.next_gl_model_v
 
-    return test_result
+    logging.info(f'test_result: {test_result}')
+
+    return {"test_result": test_result}
 
 @app.put("client_perf/client_time_result/{task_id}")
 def client_time_result_put(task_id: str, Time: ClientTimeResult):
@@ -100,8 +104,9 @@ def client_time_result_put(task_id: str, Time: ClientTimeResult):
     client_time_result.operation_time = Time.operation_time
     client_time_result.next_gl_model_v = Time.next_gl_model_v
 
-    return client_time_result
+    logging.info(f'client_time_result: {client_time_result}')
 
+    return {"client_time_result": client_time_result}
 
 @app.put("client_perf/client_system/{task_id}")
 def client_system_put(task_id: str, System: ClientSystem):
@@ -124,7 +129,9 @@ def client_system_put(task_id: str, System: ClientSystem):
     client_system.gpu_power_usage = System.gpu_power_usage
     client_system.next_gl_model_v = System.next_gl_model_v
 
-    return client_system
+    logging.info(f'client_system: {client_system}')
+
+    return {"client_system": client_system}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8001, reload=True)
