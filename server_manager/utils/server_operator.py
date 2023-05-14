@@ -66,7 +66,7 @@ def get_unused_port(namespace: str = 'fedops'):
     used_ports = []
     if isinstance(virtual_service["spec"]["tcp"], list):
         for route in virtual_service["spec"]["tcp"]:
-            port = route["match"][0]["port"]
+            port = route["match"][0]["port"]["number"]
             task_id = route["route"][0]["destination"]["host"].split('-')[3]
             # If the task for this port is not running, remove the route
             if task_id not in running_tasks:
@@ -202,7 +202,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             api_instance.delete_namespaced_job(
                 name=job_name,
                 namespace=namespace,
-                body=client.V1DeleteOptions()
+                body=client.V1DeleteOptions(propagation_policy='Background')
             )
             # Wait for the job to be deleted
             w = watch.Watch()
@@ -359,7 +359,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     api_instance.delete_namespaced_job(
                         name=job_name,
                         namespace=namespace,
-                        body=client.V1DeleteOptions()
+                        body=client.V1DeleteOptions(propagation_policy='Background')
                     )
 
                     # Delete the corresponding service
