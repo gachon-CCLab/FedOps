@@ -1,39 +1,6 @@
 from kubernetes import client, config, watch
 from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 import time
-import random
-
-# Keep track of assigned ports
-assigned_ports = None
-
-
-def find_available_port(fl_server_status: dict, task_id: str, namespace: str):
-    ingress_name = "fl-server-ingress"
-    min_port: int = 40021
-    max_port: int = 40040
-
-    # Load the existing Ingress resource
-    api_instance = client.NetworkingV1Api()
-    ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
-
-    used_ports = set()
-    for rule in ingress.spec.rules:
-        if "ccljhub.gachon.ac.kr" in rule.host:
-            used_port = int(rule.host.split(':')[1])
-            used_ports.add(used_port)
-
-    for port in range(min_port, max_port + 1):
-        if port not in used_ports:
-            fl_server_status[task_id]["port"] = port
-            return port
-
-    raise ValueError("No available port found within the specified range")
-
-
-
-def release_assigned_port(port: int):
-    global assigned_ports
-    assigned_ports.discard(port)
 
 
 def load_config():
@@ -49,62 +16,165 @@ def load_config():
     return config
 
 
-# Add this new variable at the beginning of the script
-base_path = "/fedops/server/fl-server"
-
-
-def update_ingress_with_service(task_id: str, service_name: str, namespace: str, assigned_port: int):
+def get_running_tasks(namespace: str = 'fedops'):
     load_config()
-    ingress_name = "fl-server-ingress"
 
-    # Load the existing Ingress resource
-    api_instance = client.NetworkingV1Api()
-    ingress = api_instance.read_namespaced_ingress(ingress_name, namespace)
+    # Initialize the Kubernetes client
+    api_instance = client.CoreV1Api()
 
-    # Modify the host to include the assigned port
-    host = f"ccljhub.gachon.ac.kr:{assigned_port}"
+    # List all pods in the namespace
+    pods = api_instance.list_namespaced_pod(namespace)
 
-    new_rule = client.V1IngressRule(
-        host=host,
-        http=client.V1HTTPIngressRuleValue(
-            paths=[
-                client.V1HTTPIngressPath(
-                    path="/",
-                    path_type="Prefix",
-                    backend=client.V1IngressBackend(
-                        service=client.V1IngressServiceBackend(
-                            name=service_name,
-                            port=client.V1ServiceBackendPort(number=80)
-                        )
-                    )
-                )
-            ]
+    running_tasks = []
+
+    for pod in pods.items:
+        # Check if the pod is a 'fl-server-job-' pod and if it is running
+        # if pod.metadata.name.startswith('fl-server-job-') and pod.status.phase == 'Running':
+        if pod.metadata.name.startswith('fl-server-job-'):
+            # The task_id is the third part of the pod name when split by '-'
+            task_id = pod.metadata.name.split('-')[3]
+            running_tasks.append(task_id)
+
+    return running_tasks
+
+
+def get_unused_port(namespace: str = 'fedops'):
+    load_config()
+
+    running_tasks = get_running_tasks(namespace)
+
+    api_instance = client.CustomObjectsApi()
+
+    virtual_service_name = 'fedops-virtualservice'
+
+    try:
+        # Try to get the existing VirtualService
+        virtual_service = api_instance.get_namespaced_custom_object(
+            group="networking.istio.io",
+            version="v1alpha3",
+            namespace=namespace,
+            plural="virtualservices",
+            name=virtual_service_name
         )
-    )
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            # If the VirtualService does not exist, no ports are being used
+            return 40021
+        else:
+            raise e
 
-    # Check if a rule with the same host already exists
-    existing_rule = None
-    for rule in ingress.spec.rules:
-        if rule.host == new_rule.host:
-            existing_rule = rule
-            break
+    used_ports = []
+    if isinstance(virtual_service["spec"]["tcp"], list):
+        for route in virtual_service["spec"]["tcp"]:
+            port = route["match"][0]["port"]
+            task_id = route["route"][0]["destination"]["host"].split('-')[3]
+            # If the task for this port is not running, remove the route
+            if task_id not in running_tasks:
+                virtual_service["spec"]["tcp"].remove(route)
+            else:
+                used_ports.append(port)
 
-    if existing_rule:
-        print(f"Found existing rule for host: {host}. Updating it.")
-        existing_rule.http = new_rule.http
+    # Update the VirtualService to remove the routes for the non-running tasks
+    try:
+        api_instance.patch_namespaced_custom_object(
+            group="networking.istio.io",
+            version="v1alpha3",
+            namespace=namespace,
+            plural="virtualservices",
+            name=virtual_service_name,
+            body=virtual_service,
+        )
+        print("Updated Istio VirtualService")
+    except client.exceptions.ApiException as e:
+        raise e
+
+    # Return the first unused port in the range
+    for port in range(40021, 40041):
+        if port not in used_ports:
+            return port
+
+    raise Exception("No unused ports available")
+
+
+def update_virtual_service(task_id: str, service_name: str, namespace: str):
+    load_config()
+    port = get_unused_port()
+
+    api_instance = client.CustomObjectsApi()
+
+    virtual_service_name = 'fedops-virtualservice'
+    try:
+        # Try to get the existing VirtualService
+        virtual_service = api_instance.get_namespaced_custom_object(
+            group="networking.istio.io",
+            version="v1alpha3",
+            namespace=namespace,
+            plural="virtualservices",
+            name=virtual_service_name
+        )
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            # If the VirtualService does not exist, create a new one
+            virtual_service = {
+                "apiVersion": "networking.istio.io/v1alpha3",
+                "kind": "VirtualService",
+                "metadata": {
+                    "name": virtual_service_name,
+                    "namespace": namespace
+                },
+                "spec": {
+                    "hosts": ["*"],
+                    "tcp": []
+                }
+            }
+        else:
+            raise e
+
+    # Add the new route to the VirtualService
+    new_route = {
+        "match": [{"port": port}],
+        "route": [
+            {
+                "destination": {
+                    "host": f"{service_name}.{namespace}.svc.cluster.local",
+                    "port": {"number": 80}
+                }
+            }
+        ]
+    }
+    if isinstance(virtual_service["spec"]["tcp"], list):
+        virtual_service["spec"]["tcp"].append(new_route)
     else:
-        # Add a new rule with the given host
-        ingress.spec.rules.append(new_rule)
+        virtual_service["spec"]["tcp"] = [new_route]
 
-    # Update the Ingress resource
-    api_instance.replace_namespaced_ingress(ingress_name, namespace, ingress)
-    print(f"Updated Ingress with task_id: {task_id}")
+    # Update or create the VirtualService
+    try:
+        api_instance.patch_namespaced_custom_object(
+            group="networking.istio.io",
+            version="v1alpha3",
+            namespace=namespace,
+            plural="virtualservices",
+            name=virtual_service_name,
+            body=virtual_service,
+        )
+        print(f"Updated Istio VirtualService for task_id: {task_id}")
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            api_instance.create_namespaced_custom_object(
+                group="networking.istio.io",
+                version="v1alpha3",
+                namespace=namespace,
+                plural="virtualservices",
+                body=virtual_service,
+            )
+            print(f"Created Istio VirtualService for task_id: {task_id}")
+        else:
+            raise e
 
 
 def create_fl_server(task_id: str, fl_server_status: dict):
     load_config()
     fl_server_status[task_id]["status"] = "Creating"
-    fl_server_status[task_id]["port"]: int
 
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
@@ -228,11 +298,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             print("Waiting for external IP...")
             time.sleep(1)  # Wait for 1 seconds before checking again
 
-    # Find an available port
-    available_port = find_available_port(fl_server_status, task_id, 'fedops')
-
-    # Update the Ingress resource to route traffic to the newly created service
-    update_ingress_with_service(task_id, service_name, namespace, available_port)
+    update_virtual_service(task_id, service_name, namespace)
 
     # Start watching for the job status
     w = watch.Watch()
