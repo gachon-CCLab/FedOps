@@ -124,6 +124,7 @@ def update_virtual_service(task_id: str, service_name: str, namespace: str):
                 },
                 "spec": {
                     "hosts": ["*"],
+                    "protocol": "tcp",
                     "tcp": []
                 }
             }
