@@ -84,8 +84,8 @@ def test_result_put(task_id: str, Test: TestResult):
     test_result.fl_task_id = task_id
     test_result.client_mac = Test.client_mac
     test_result.round = Test.round
-    test_result.test_loss = Test.train_loss
-    test_result.test_acc = Test.train_acc
+    test_result.test_loss = Test.test_loss
+    test_result.test_acc = Test.test_acc
     test_result.next_gl_model_v = Test.next_gl_model_v
 
     logging.info(f'test_result: {test_result}')
