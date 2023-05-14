@@ -72,7 +72,7 @@ def get_unused_port(namespace: str = 'fedops'):
         for route in virtual_service["spec"]["tcp"]:
             port = route["match"][0]["port"]
             # Avoid removing the example route
-            if port == 0:
+            if port == 40000:
                 new_routes.append(route)
                 continue
             task_id = route["route"][0]["destination"]["host"].split('-')[3]

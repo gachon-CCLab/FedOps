@@ -183,6 +183,8 @@ def start_task(task_data: StartingTaskData, background_tasks: BackgroundTasks):
 
 @app.get("/FLSe/status/{task_id}")
 def get_fl_server_status(task_id: str):
+    global fl_server_status
+
     status = fl_server_status.get(task_id)
     if status:
         return {"task_id": task_id, "status": status}
