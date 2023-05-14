@@ -66,7 +66,7 @@ def get_unused_port(namespace: str = 'fedops'):
     used_ports = []
     if isinstance(virtual_service["spec"]["tcp"], list):
         for route in virtual_service["spec"]["tcp"]:
-            port = route["match"][0]["port"]["number"]
+            port = route["match"][0]["port"]
             task_id = route["route"][0]["destination"]["host"].split('-')[3]
             # If the task for this port is not running, remove the route
             if task_id not in running_tasks:
