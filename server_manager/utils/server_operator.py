@@ -64,29 +64,44 @@ def get_unused_port(namespace: str = 'fedops'):
             raise e
 
     used_ports = []
+    new_routes = []
     if isinstance(virtual_service["spec"]["tcp"], list):
         for route in virtual_service["spec"]["tcp"]:
             port = route["match"][0]["port"]
             task_id = route["route"][0]["destination"]["host"].split('-')[3]
-            # If the task for this port is not running, remove the route
-            if task_id not in running_tasks:
-                virtual_service["spec"]["tcp"].remove(route)
-            else:
+            # If the task for this port is running, add it to the new list
+            if task_id in running_tasks:
+                new_routes.append(route)
                 used_ports.append(port)
 
+    virtual_service["spec"]["tcp"] = new_routes
+
     # Update the VirtualService to remove the routes for the non-running tasks
-    try:
-        api_instance.patch_namespaced_custom_object(
-            group="networking.istio.io",
-            version="v1alpha3",
-            namespace=namespace,
-            plural="virtualservices",
-            name=virtual_service_name,
-            body=virtual_service,
-        )
-        print("Updated Istio VirtualService")
-    except client.exceptions.ApiException as e:
-        raise e
+    if not virtual_service["spec"]["tcp"]:
+        try:
+            api_instance.delete_namespaced_custom_object(
+                group="networking.istio.io",
+                version="v1alpha3",
+                namespace=namespace,
+                plural="virtualservices",
+                name=virtual_service_name,
+            )
+            print("Deleted Istio VirtualService")
+        except client.exceptions.ApiException as e:
+            raise e
+    else:
+        try:
+            api_instance.patch_namespaced_custom_object(
+                group="networking.istio.io",
+                version="v1alpha3",
+                namespace=namespace,
+                plural="virtualservices",
+                name=virtual_service_name,
+                body=virtual_service,
+            )
+            print("Updated Istio VirtualService")
+        except client.exceptions.ApiException as e:
+            raise e
 
     # Return the first unused port in the range
     for port in range(40021, 40041):
@@ -94,6 +109,7 @@ def get_unused_port(namespace: str = 'fedops'):
             return port
 
     raise Exception("No unused ports available")
+
 
 
 def update_virtual_service(task_id: str, service_name: str, port: int, namespace: str):
@@ -123,7 +139,6 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
                 },
                 "spec": {
                     "hosts": ["*"],
-                    "protocol": "tcp",
                     "tcp": []
                 }
             }
