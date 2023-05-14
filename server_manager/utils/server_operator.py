@@ -75,6 +75,7 @@ def get_unused_port(namespace: str = 'fedops'):
                 used_ports.append(port)
 
     virtual_service["spec"]["tcp"] = new_routes
+    print(route)
 
     # Update the VirtualService to remove the routes for the non-running tasks
     if not virtual_service["spec"]["tcp"]:
