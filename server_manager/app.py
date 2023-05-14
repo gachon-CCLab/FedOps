@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+import asyncio
 from typing import Optional
 import json
 import logging
@@ -31,6 +32,7 @@ class FLTask(BaseModel):
     Device_hostname: str = ''
     Device_online: bool = False
     Device_training: bool = False
+    last_request_time: datetime.datetime = datetime.datetime.now()
     # Device_time: str = ''
 
 
@@ -87,6 +89,7 @@ def read_status(task_id: str, device_mac: str):
         else:
             # Get the first matching task
             matching_task = matching_tasks[0]
+            matching_task.last_request_time = datetime.datetime.now()
 
             # Convert the matching_task to a JSON-serializable format
             matching_task_json = jsonable_encoder(matching_task)
@@ -245,5 +248,15 @@ def server_closed(task_id: str, FLSeReady: bool):
     return {"Server_Status": FLSe}
 
 
+async def monitor_task():
+    while True:
+        current_time = datetime.datetime.now()
+        global FL_task_list
+        FL_task_list = [task for task in FL_task_list if (current_time - task.last_request_time).total_seconds() <= 300]
+        await asyncio.sleep(60)  # wait for 60 seconds
+
+
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.create_task(monitor_task())
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
