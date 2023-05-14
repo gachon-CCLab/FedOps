@@ -190,13 +190,10 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
             raise e
 
 
-
 def create_fl_server(task_id: str, fl_server_status: dict):
     load_config()
 
     fl_server_status[task_id]["status"] = "Creating"
-
-
 
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
