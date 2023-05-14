@@ -65,6 +65,9 @@ def get_unused_port(namespace: str = 'fedops'):
 
     used_ports = []
     new_routes = []
+
+    print("virtual_service['spec']['tcp']:", virtual_service["spec"]["tcp"])
+
     if isinstance(virtual_service["spec"]["tcp"], list):
         for route in virtual_service["spec"]["tcp"]:
             port = route["match"][0]["port"]
@@ -76,6 +79,8 @@ def get_unused_port(namespace: str = 'fedops'):
 
             virtual_service["spec"]["tcp"] = new_routes
             print("route - ", route)
+    else:
+        print("virtual_service['spec']['tcp'] is not a list")
 
     # Update the VirtualService to remove the routes for the non-running tasks
     if not virtual_service["spec"]["tcp"]:
@@ -110,6 +115,7 @@ def get_unused_port(namespace: str = 'fedops'):
             return port
 
     raise Exception("No unused ports available")
+
 
 
 
