@@ -155,7 +155,7 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
     # Add the new route to the VirtualService
     new_route = {
         "match": [{
-            "port": {"number": port}
+            "port": port
         }],
         "route": [
             {
@@ -199,10 +199,10 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
 
 def create_fl_server(task_id: str, fl_server_status: dict):
     load_config()
-    port = get_unused_port()
 
     fl_server_status[task_id]["status"] = "Creating"
-    fl_server_status[task_id]["port"] = port
+
+
 
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
@@ -349,6 +349,9 @@ def create_fl_server(task_id: str, fl_server_status: dict):
         else:
             print("Waiting for external IP...")
             time.sleep(1)  # Wait for 1 seconds before checking again
+
+    port = get_unused_port()
+    fl_server_status[task_id]["port"] = port
 
     update_virtual_service(task_id, service_name, port, namespace)
 
