@@ -71,31 +71,24 @@ def get_unused_port(namespace: str = 'fedops'):
     if isinstance(virtual_service["spec"]["tcp"], list):
         for route in virtual_service["spec"]["tcp"]:
             port = route["match"][0]["port"]
+            # Avoid removing the example route
+            if port == 0:
+                new_routes.append(route)
+                continue
             task_id = route["route"][0]["destination"]["host"].split('-')[3]
             # If the task for this port is running, add it to the new list
             if task_id in running_tasks:
                 new_routes.append(route)
                 used_ports.append(port)
-
-            virtual_service["spec"]["tcp"] = new_routes
             print("route - ", route)
     else:
         print("virtual_service['spec']['tcp'] is not a list")
 
+    # Replace the "tcp" field with the new routes
+    virtual_service["spec"]["tcp"] = new_routes
+
     # Update the VirtualService to remove the routes for the non-running tasks
-    if not virtual_service["spec"]["tcp"]:
-        try:
-            api_instance.delete_namespaced_custom_object(
-                group="networking.istio.io",
-                version="v1alpha3",
-                namespace=namespace,
-                plural="virtualservices",
-                name=virtual_service_name,
-            )
-            print("Deleted Istio VirtualService")
-        except client.exceptions.ApiException as e:
-            raise e
-    else:
+    if virtual_service["spec"]["tcp"]:
         try:
             api_instance.patch_namespaced_custom_object(
                 group="networking.istio.io",
@@ -115,8 +108,6 @@ def get_unused_port(namespace: str = 'fedops'):
             return port
 
     raise Exception("No unused ports available")
-
-
 
 
 def update_virtual_service(task_id: str, service_name: str, port: int, namespace: str):
@@ -145,7 +136,7 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
                     "namespace": namespace
                 },
                 "spec": {
-                    "hosts": ["*"],
+                    "hosts": ["fedops.svc.cluster.local"],
                     "tcp": []
                 }
             }
@@ -173,7 +164,7 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
 
     # Update or create the VirtualService
     try:
-        api_instance.patch_namespaced_custom_object(
+        api_instance.create_namespaced_custom_object(
             group="networking.istio.io",
             version="v1alpha3",
             namespace=namespace,
@@ -181,20 +172,20 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
             name=virtual_service_name,
             body=virtual_service,
         )
-        print(f"Updated Istio VirtualService for task_id: {task_id}")
+        print(f"Created Istio VirtualService for task_id: {task_id}")
     except client.exceptions.ApiException as e:
-        if e.status == 404:
-            api_instance.create_namespaced_custom_object(
+        if e.status == 409:
+            api_instance.patch_namespaced_custom_object(
                 group="networking.istio.io",
                 version="v1alpha3",
                 namespace=namespace,
                 plural="virtualservices",
+                name=virtual_service_name,
                 body=virtual_service,
             )
-            print(f"Created Istio VirtualService for task_id: {task_id}")
+            print(f"Updated Istio VirtualService for task_id: {task_id}")
         else:
             raise e
-
 
 
 def create_fl_server(task_id: str, fl_server_status: dict):
