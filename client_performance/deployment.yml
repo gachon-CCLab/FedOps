@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fl-client-perf
+  namespace: fedops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: fl-client-perf
+  template:
+    metadata:
+      labels:
+        run: fl-client-perf
+    spec:
+      serviceAccountName: fedops-sa
+      containers:
+        - name: client-perf
+          image: docker.io/tpah30/git_clone:1.1
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          ports:
+            - containerPort: 8000
+          env:
+          - name: REPO_URL
+            value: "https://github.com/gachon-CCLab/FedOps.git"
+          - name: GIT_DIR
+            value: "FedOps/client_performance"
+          - name: GIT_TAG
+            value: "main"
+          imagePullPolicy: Always

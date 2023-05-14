@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+pydantic
+requests==2.26.0
