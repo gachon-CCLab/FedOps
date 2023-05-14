@@ -132,7 +132,9 @@ def update_virtual_service(task_id: str, service_name: str, namespace: str):
 
     # Add the new route to the VirtualService
     new_route = {
-        "match": [{"port": port}],
+        "match": [{
+            "portNumber": port
+        }],
         "route": [
             {
                 "destination": {
@@ -170,6 +172,7 @@ def update_virtual_service(task_id: str, service_name: str, namespace: str):
             print(f"Created Istio VirtualService for task_id: {task_id}")
         else:
             raise e
+
 
 
 def create_fl_server(task_id: str, fl_server_status: dict):
