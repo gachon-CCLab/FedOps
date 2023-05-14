@@ -96,9 +96,8 @@ def get_unused_port(namespace: str = 'fedops'):
     raise Exception("No unused ports available")
 
 
-def update_virtual_service(task_id: str, service_name: str, namespace: str):
+def update_virtual_service(task_id: str, service_name: str, port: int, namespace: str):
     load_config()
-    port = get_unused_port()
 
     api_instance = client.CustomObjectsApi()
 
@@ -134,7 +133,7 @@ def update_virtual_service(task_id: str, service_name: str, namespace: str):
     # Add the new route to the VirtualService
     new_route = {
         "match": [{
-            "portNumber": port
+            "port": {"number": port}
         }],
         "route": [
             {
@@ -178,7 +177,10 @@ def update_virtual_service(task_id: str, service_name: str, namespace: str):
 
 def create_fl_server(task_id: str, fl_server_status: dict):
     load_config()
+    port = get_unused_port()
+
     fl_server_status[task_id]["status"] = "Creating"
+    fl_server_status[task_id]["port"] = port
 
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
@@ -326,7 +328,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             print("Waiting for external IP...")
             time.sleep(1)  # Wait for 1 seconds before checking again
 
-    update_virtual_service(task_id, service_name, namespace)
+    update_virtual_service(task_id, service_name, port, namespace)
 
     # Start watching for the job status
     w = watch.Watch()
