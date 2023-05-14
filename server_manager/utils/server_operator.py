@@ -202,7 +202,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             api_instance.delete_namespaced_job(
                 name=job_name,
                 namespace=namespace,
-                body=client.V1DeleteOptions(propagation_policy='Background')
+                body=client.V1DeleteOptions(propagation_policy='Foreground')
             )
             # Wait for the job to be deleted
             w = watch.Watch()
@@ -359,7 +359,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     api_instance.delete_namespaced_job(
                         name=job_name,
                         namespace=namespace,
-                        body=client.V1DeleteOptions(propagation_policy='Background')
+                        body=client.V1DeleteOptions(propagation_policy='Foreground')
                     )
 
                     # Delete the corresponding service
