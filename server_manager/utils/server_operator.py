@@ -164,7 +164,7 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
 
     # Update or create the VirtualService
     try:
-        api_instance.create_namespaced_custom_object(
+        api_instance.patch_namespaced_custom_object(
             group="networking.istio.io",
             version="v1alpha3",
             namespace=namespace,
@@ -172,20 +172,23 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
             name=virtual_service_name,
             body=virtual_service,
         )
-        print(f"Created Istio VirtualService for task_id: {task_id}")
+        print(f"Updated Istio VirtualService for task_id: {task_id}")
     except client.exceptions.ApiException as e:
-        if e.status == 409:
-            api_instance.patch_namespaced_custom_object(
-                group="networking.istio.io",
-                version="v1alpha3",
-                namespace=namespace,
-                plural="virtualservices",
-                name=virtual_service_name,
-                body=virtual_service,
-            )
-            print(f"Updated Istio VirtualService for task_id: {task_id}")
+        if e.status == 404:
+            try:
+                api_instance.create_namespaced_custom_object(
+                    group="networking.istio.io",
+                    version="v1alpha3",
+                    namespace=namespace,
+                    plural="virtualservices",
+                    body=virtual_service,
+                )
+                print(f"Created Istio VirtualService for task_id: {task_id}")
+            except client.exceptions.ApiException as e_create:
+                raise e_create
         else:
             raise e
+
 
 
 def create_fl_server(task_id: str, fl_server_status: dict):
