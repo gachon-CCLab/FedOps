@@ -179,8 +179,13 @@ def create_fl_server(task_id: str, fl_server_status: dict):
     job_name = "fl-server-job-" + task_id
     pod_name_prefix = "fl-server-"
 
-    # Check if a job with the same name already exists
+    # Initialize the Kubernetes client for batch jobs
     api_instance = client.BatchV1Api()
+
+    # Initialize the Kubernetes client for custom objects
+    custom_api_instance = client.CustomObjectsApi()
+
+    # Check if a job with the same name already exists
     namespace = "fedops"
     existing_jobs = api_instance.list_namespaced_job(
         namespace,
@@ -199,6 +204,13 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                 namespace=namespace,
                 body=client.V1DeleteOptions()
             )
+            # Wait for the job to be deleted
+            w = watch.Watch()
+            for event in w.stream(api_instance.list_namespaced_job, namespace=namespace):
+                if event['object'].metadata.name == job_name and event['type'] == 'DELETED':
+                    print(f"Job {job_name} deleted.")
+                    w.stop()
+                    break
         else:
             print(f"Job with name {job_name} already exists and is not Complete or Failed. Skipping job creation.")
             return
@@ -341,12 +353,43 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     fl_server_status[task_id]["status"] = "Unknown"
 
                 # When the job has completed or failed, delete the job
+                # When the job has completed or failed, delete the job
                 if current_job.status.succeeded == 1 or current_job.status.failed:
                     print("Deleting job")
                     api_instance.delete_namespaced_job(
                         name=job_name,
                         namespace=namespace,
                         body=client.V1DeleteOptions()
+                    )
+
+                    # Delete the corresponding service
+                    print("Deleting service")
+                    core_v1_api.delete_namespaced_service(
+                        name=service_name,
+                        namespace=namespace,
+                        body=client.V1DeleteOptions()
+                    )
+
+                    # Remove the route from the VirtualService
+                    print("Removing route from VirtualService")
+                    virtual_service = custom_api_instance.get_namespaced_custom_object(
+                        group="networking.istio.io",
+                        version="v1alpha3",
+                        namespace=namespace,
+                        plural="virtualservices",
+                        name="fedops-virtualservice"
+                    )
+                    new_routes = [route for route in virtual_service["spec"]["tcp"]
+                                  if route["route"][0]["destination"][
+                                      "host"] != f"{service_name}.{namespace}.svc.cluster.local"]
+                    virtual_service["spec"]["tcp"] = new_routes
+                    custom_api_instance.patch_namespaced_custom_object(
+                        group="networking.istio.io",
+                        version="v1alpha3",
+                        namespace=namespace,
+                        plural="virtualservices",
+                        name="fedops-virtualservice",
+                        body=virtual_service,
                     )
                     break
     except Exception as e:
