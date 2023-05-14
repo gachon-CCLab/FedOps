@@ -188,8 +188,20 @@ def create_fl_server(task_id: str, fl_server_status: dict):
     )
 
     if len(existing_jobs.items) > 0:
-        print(f"Job with name {job_name} already exists. Skipping job creation.")
-        return
+        # A job with the same name exists
+        existing_job = existing_jobs.items[0]
+        job_status = existing_job.status.conditions[-1].type if existing_job.status.conditions else None
+        if job_status in ['Complete', 'Failed']:
+            # If the job is complete or failed, delete it before creating a new one
+            print(f"Deleting existing job with name {job_name} because its status is {job_status}.")
+            api_instance.delete_namespaced_job(
+                name=job_name,
+                namespace=namespace,
+                body=client.V1DeleteOptions()
+            )
+        else:
+            print(f"Job with name {job_name} already exists and is not Complete or Failed. Skipping job creation.")
+            return
 
     env_vars = [V1EnvVar(name="REPO_URL", value='https://github.com/gachon-CCLab/FedOps-Training-Server.git'),
                 V1EnvVar(name="GIT_TAG", value="main"),
@@ -239,7 +251,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     restart_policy="Never"
                 )
             ),
-            backoff_limit=5
+            backoff_limit=0
         )
     )
 
