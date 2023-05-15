@@ -185,6 +185,8 @@ def start_task(task_data: StartingTaskData, background_tasks: BackgroundTasks):
 def get_fl_server_status(task_id: str):
     global fl_server_status
 
+    logging.info(f"fl-server-status: {fl_server_status}")
+
     status = fl_server_status.get(task_id)
     if status:
         return {"task_id": task_id, "status": status}
@@ -195,8 +197,6 @@ def get_fl_server_status(task_id: str):
 @app.get("/FLSe/getPort/{task_id}")
 async def get_fl_server_port(task_id: str):
     global fl_server_status
-
-    print(fl_server_status)
 
     if task_id in fl_server_status:
         port = fl_server_status[task_id].get("port", None)
@@ -239,9 +239,7 @@ def server_closed(task_id: str, FLSeReady: bool):
     # Clear FL_task_list for matching task_id
     FL_task_list = [task for task in FL_task_list if task.FL_task_ID != task_id]
 
-    # Clear fl_server_status for matching task_id
-    if task_id in fl_server_status:
-        del fl_server_status[task_id]
+
 
     # Clear FLSe_dict for matching task_id
     # if task_id in FLSe_dict:

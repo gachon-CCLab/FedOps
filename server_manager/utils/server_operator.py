@@ -356,8 +356,9 @@ def create_fl_server(task_id: str, fl_server_status: dict):
 
             if current_job_name == job_name:
                 # Save the generated pod name in fl_server_status
-                pod_name = current_job.spec.template.metadata.name
-                fl_server_status[task_id]["pod_name"] = pod_name
+                # pod_name = current_job.spec.template.metadata.labels.job-name
+                # pod_name = job_name
+                # fl_server_status[task_id]["pod_name"] = pod_name
 
                 if current_job.status.succeeded == 1:
                     print("Job succeeded")
@@ -414,6 +415,9 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                         body=virtual_service,
                     )
                     break
+        # Clear fl_server_status for matching task_id
+        if task_id in fl_server_status:
+            del fl_server_status[task_id]
     except Exception as e:
         print(f"Error while monitoring job status: {e}")
         fl_server_status[task_id]["status"] = "Error"
