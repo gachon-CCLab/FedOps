@@ -196,6 +196,8 @@ def get_fl_server_status(task_id: str):
 async def get_fl_server_port(task_id: str):
     global fl_server_status
 
+    print(fl_server_status)
+
     if task_id in fl_server_status:
         port = fl_server_status[task_id].get("port", None)
         if port:

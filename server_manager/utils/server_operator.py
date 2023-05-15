@@ -356,7 +356,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
 
             if current_job_name == job_name:
                 # Save the generated pod name in fl_server_status
-                pod_name = current_job.spec.template.metadata.generate_name
+                pod_name = current_job.spec.template.metadata.name
                 fl_server_status[task_id]["pod_name"] = pod_name
 
                 if current_job.status.succeeded == 1:
