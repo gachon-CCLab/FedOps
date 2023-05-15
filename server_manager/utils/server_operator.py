@@ -75,7 +75,7 @@ def get_unused_port(namespace: str = 'fedops'):
             if port == 40000:
                 new_routes.append(route)
                 continue
-            task_id = route["route"][0]["destination"]["host"].split('-')[3]
+            task_id = route["route"][0]["destination"]["host"].split('-')[3].split('.')[0]
             # If the task for this port is running, add it to the new list
             if task_id in running_tasks:
                 new_routes.append(route)
