@@ -188,14 +188,15 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
         "network_sent": client_basic_system.network_sent,
         "network_recv": client_basic_system.network_recv,
         "disk": client_basic_system.disk,
-        "_runtime": client_basic_system.runtime,
+        "runtime": client_basic_system.runtime,
         "memory_rssMB": client_basic_system.memory_rssMB,
         "memory_availableMB": client_basic_system.memory_availableMB,
         "cpu": client_basic_system.cpu,
         "cpu_threads": client_basic_system.cpu_threads,
         "memory": client_basic_system.memory,
         "memory_percent": client_basic_system.memory_percent,
-        "_timestamp": client_basic_system.timestamp
+        "timestamp": client_basic_system.timestamp,
+        "next_gl_model_v": client_basic_system.next_gl_model_v
     }
 
     collection.insert_one(document)
