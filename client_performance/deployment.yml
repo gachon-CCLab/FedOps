@@ -30,4 +30,14 @@ spec:
             value: "FedOps/client_performance"
           - name: GIT_TAG
             value: "main"
+          - name: MONGODB_URI
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-uri
+                key: MONGODB_URI
+          - name: MONGODB_DATABASE
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-uri
+                key: MONGODB_DATABASE
           imagePullPolicy: Always
