@@ -266,7 +266,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     containers=[
                         client.V1Container(
                             name="fl-server",
-                            image="docker.io/tpah30/git_clone:1.1",
+                            image="docker.io/jianmurunner/git_clone:1.2.6",
                             ports=[
                                 client.V1ContainerPort(container_port=8080)
                             ],
