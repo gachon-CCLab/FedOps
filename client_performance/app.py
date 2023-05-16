@@ -74,7 +74,7 @@ db = client[MONGODB_DATABASE]
 
 @app.put("/client_perf/train_result/{task_id}")
 def train_result_put(task_id: str, Train: TrainResult):
-    global train_result
+    global train_result, db
 
     train_result.fl_task_id = task_id
     train_result.client_mac = Train.client_mac
@@ -106,7 +106,7 @@ def train_result_put(task_id: str, Train: TrainResult):
 
 @app.put("/client_perf/test_result/{task_id}")
 def test_result_put(task_id: str, Test: TestResult):
-    global test_result
+    global test_result, db
 
     test_result.fl_task_id = task_id
     test_result.client_mac = Test.client_mac
@@ -135,7 +135,7 @@ def test_result_put(task_id: str, Test: TestResult):
 
 @app.put("/client_perf/client_time_result/{task_id}")
 def client_time_result_put(task_id: str, Time: ClientTimeResult):
-    global client_time_result
+    global client_time_result, db
 
     client_time_result.fl_task_id = task_id
     client_time_result.client_mac = Time.client_mac
@@ -160,7 +160,7 @@ def client_time_result_put(task_id: str, Time: ClientTimeResult):
 
 @app.put("/client_perf/client_system/{task_id}")
 def client_basic_system_put(task_id: str, System: ClientBasicSystem):
-    global client_basic_system
+    global client_basic_system, db
 
     client_basic_system.network_sent = System.network_sent
     client_basic_system.network_recv = System.network_recv
