@@ -68,6 +68,10 @@ client_basic_system = ClientBasicSystem()
 MONGODB_URI = os.environ["MONGODB_URI"]
 MONGODB_DATABASE = os.environ["MONGODB_DATABASE"]
 
+logging.info(f'MONGODB_URI: {MONGODB_URI}')
+logging.info(f'MONGODB_DATABASE: {MONGODB_DATABASE}')
+
+
 # Connect MongoDB
 client = pymongo.MongoClient(MONGODB_URI)
 db = client[MONGODB_DATABASE]
