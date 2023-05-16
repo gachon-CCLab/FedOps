@@ -40,14 +40,14 @@ class ClientBasicSystem(BaseModel):
     network_sent: float = 0
     network_recv: float = 0
     disk: float = 0
-    _runtime: float = 0
+    runtime: float = 0
     memory_rssMB: float = 0
     memory_availableMB: float = 0
     cpu: float = 0
     cpu_threads: float = 0
     memory: float = 0
     memory_percent: float = 0
-    _timestamp: float = 0
+    timestamp: float = 0
 
 
 # class ClientGpuSystem(BaseModel):
@@ -165,14 +165,14 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
     client_basic_system.network_sent = System.network_sent
     client_basic_system.network_recv = System.network_recv
     client_basic_system.disk = System.disk
-    client_basic_system._runtime = System._runtime
+    client_basic_system.runtime = System.runtime
     client_basic_system.memory_rssMB = System.memory_rssMB
     client_basic_system.memory_availableMB = System.memory_availableMB
     client_basic_system.cpu = System.cpu
     client_basic_system.cpu_threads = System.cpu_threads
     client_basic_system.cpu_threads = System.memory
     client_basic_system.memory_percent = System.memory_percent
-    client_basic_system._timestamp = System._timestamp
+    client_basic_system.timestamp = System.timestamp
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
@@ -185,14 +185,14 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
         "network_sent": client_basic_system.network_sent,
         "network_recv": client_basic_system.network_recv,
         "disk": client_basic_system.disk,
-        "_runtime": client_basic_system._runtime,
+        "_runtime": client_basic_system.runtime,
         "memory_rssMB": client_basic_system.memory_rssMB,
         "memory_availableMB": client_basic_system.memory_availableMB,
         "cpu": client_basic_system.cpu,
         "cpu_threads": client_basic_system.cpu_threads,
         "memory": client_basic_system.memory,
         "memory_percent": client_basic_system.memory_percent,
-        "_timestamp": client_basic_system._timestamp
+        "_timestamp": client_basic_system.timestamp
     }
 
     collection.insert_one(document)
