@@ -162,17 +162,17 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
 
     client_basic_system.fl_task_id = task_id
     client_basic_system.client_mac = System.client_mac
-    client_basic_system.cpu_utilization = System.network_sent
-    client_basic_system.system_memory_utilization = System.network_recv
-    client_basic_system.process_memory_in_use = System.disk
-    client_basic_system.process_memory_in_use_size = System._runtime
-    client_basic_system.process_memory_available = System.memory_rssMB
-    client_basic_system.process_cpu_threads_in_use = System.memory_availableMB
-    client_basic_system.network_traffic = System.cpu
-    client_basic_system.disk_utilization = System.cpu_threads
-    client_basic_system.gpu_utilization = System.memory
-    client_basic_system.gpu_temp = System.memory_percent
-    client_basic_system.gpu_time_spent_accessing_memory = System._timestamp
+    client_basic_system.network_sent = System.network_sent
+    client_basic_system.network_recv = System.network_recv
+    client_basic_system.disk = System.disk
+    client_basic_system._runtime = System._runtime
+    client_basic_system.memory_rssMB = System.memory_rssMB
+    client_basic_system.memory_availableMB = System.memory_availableMB
+    client_basic_system.cpu = System.cpu
+    client_basic_system.cpu_threads = System.cpu_threads
+    client_basic_system.cpu_threads = System.memory
+    client_basic_system.memory_percent = System.memory_percent
+    client_basic_system._timestamp = System._timestamp
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
@@ -182,17 +182,17 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
     document = {
         "fl_task_id": task_id,
         "client_mac": client_basic_system.client_mac,
-        "cpu_utilization": client_basic_system.network_sent,
-        "system_memory_utilization": client_basic_system.network_recv,
-        "process_memory_in_use": client_basic_system.disk,
-        "process_memory_in_use_size": client_basic_system._runtime,
-        "process_memory_available": client_basic_system.memory_rssMB,
-        "process_cpu_threads_in_use": client_basic_system.memory_availableMB,
-        "network_traffic": client_basic_system.cpu,
-        "disk_utilization": client_basic_system.cpu_threads,
-        "gpu_utilization": client_basic_system.memory,
-        "gpu_temp": client_basic_system.memory_percent,
-        "gpu_time_spent_accessing_memory": client_basic_system._timestamp
+        "network_sent": client_basic_system.network_sent,
+        "network_recv": client_basic_system.network_recv,
+        "disk": client_basic_system.disk,
+        "_runtime": client_basic_system._runtime,
+        "memory_rssMB": client_basic_system.memory_rssMB,
+        "memory_availableMB": client_basic_system.memory_availableMB,
+        "cpu": client_basic_system.cpu,
+        "cpu_threads": client_basic_system.cpu_threads,
+        "memory": client_basic_system.memory,
+        "memory_percent": client_basic_system.memory_percent,
+        "_timestamp": client_basic_system._timestamp
     }
 
     collection.insert_one(document)
