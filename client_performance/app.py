@@ -35,8 +35,6 @@ class ClientTimeResult(BaseModel):
     next_gl_model_v: int = 0
 
 class ClientBasicSystem(BaseModel):
-    fl_task_id: str = ''
-    client_mac: str = ''
     network_sent: float = 0
     network_recv: float = 0
     disk: float = 0
@@ -48,6 +46,10 @@ class ClientBasicSystem(BaseModel):
     memory: float = 0
     memory_percent: float = 0
     timestamp: float = 0
+    fl_task_id: str = ''
+    client_mac: str = ''
+    next_gl_model_v: int = 0
+
 
 
 # class ClientGpuSystem(BaseModel):
@@ -160,8 +162,6 @@ def client_time_result_put(task_id: str, Time: ClientTimeResult):
 def client_basic_system_put(task_id: str, System: ClientBasicSystem):
     global client_basic_system
 
-    client_basic_system.fl_task_id = task_id
-    client_basic_system.client_mac = System.client_mac
     client_basic_system.network_sent = System.network_sent
     client_basic_system.network_recv = System.network_recv
     client_basic_system.disk = System.disk
@@ -173,6 +173,9 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
     client_basic_system.cpu_threads = System.memory
     client_basic_system.memory_percent = System.memory_percent
     client_basic_system.timestamp = System.timestamp
+    client_basic_system.fl_task_id = task_id
+    client_basic_system.client_mac = System.client_mac
+    client_basic_system.next_gl_model_v = System.next_gl_model_v
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
