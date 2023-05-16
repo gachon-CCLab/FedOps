@@ -170,7 +170,7 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
     client_basic_system.memory_availableMB = System.memory_availableMB
     client_basic_system.cpu = System.cpu
     client_basic_system.cpu_threads = System.cpu_threads
-    client_basic_system.cpu_threads = System.memory
+    client_basic_system.memory = System.memory
     client_basic_system.memory_percent = System.memory_percent
     client_basic_system.timestamp = System.timestamp
     client_basic_system.fl_task_id = task_id
