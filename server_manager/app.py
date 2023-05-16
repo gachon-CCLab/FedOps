@@ -239,8 +239,6 @@ def server_closed(task_id: str, FLSeReady: bool):
     # Clear FL_task_list for matching task_id
     FL_task_list = [task for task in FL_task_list if task.FL_task_ID != task_id]
 
-
-
     # Clear FLSe_dict for matching task_id
     # if task_id in FLSe_dict:
     #     del FLSe_dict[task_id]

@@ -30,7 +30,7 @@ def get_running_tasks(namespace: str = 'fedops'):
     for pod in pods.items:
         # Check if the pod is a 'fl-server-job-' pod and if it is running
         # if pod.metadata.name.startswith('fl-server-job-') and pod.status.phase == 'Running':
-        if pod.metadata.name.startswith('fl-server-job-'):
+        if pod.metadata.name.startswith('fl-server-job-') and pod.status.phase != 'Succeeded':
             # The task_id is the third part of the pod name when split by '-'
             task_id = pod.metadata.name.split('-')[3]
             running_tasks.append(task_id)
@@ -266,7 +266,7 @@ def create_fl_server(task_id: str, fl_server_status: dict):
                     containers=[
                         client.V1Container(
                             name="fl-server",
-                            image="docker.io/hoo0681/airflowkubepodimage:0.1",
+                            image="docker.io/tpah30/git_clone:1.1",
                             ports=[
                                 client.V1ContainerPort(container_port=8080)
                             ],
