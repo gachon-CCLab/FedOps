@@ -72,8 +72,8 @@ client_basic_system = ClientBasicSystem()
 MONGODB_URI = os.environ["MONGODB_URI"]
 MONGODB_DATABASE = os.environ["MONGODB_DATABASE"]
 
-logging.info(f'MONGODB_URI: {MONGODB_URI}')
-logging.info(f'MONGODB_DATABASE: {MONGODB_DATABASE}')
+# logging.info(f'MONGODB_URI: {MONGODB_URI}')
+# logging.info(f'MONGODB_DATABASE: {MONGODB_DATABASE}')
 
 
 # Connect MongoDB
@@ -95,7 +95,7 @@ def train_result_put(task_id: str, Train: TrainResult):
 
     logging.info(f'train_result: {train_result}')
 
-    collection = db["fl.client_train_result_log"]
+    collection = db["fl-client_train_result_log"]
 
     # input train_result data
     document = {
@@ -128,13 +128,13 @@ def test_result_put(task_id: str, Test: TestResult):
 
     logging.info(f'test_result: {test_result}')
 
-    collection = db["fl.client_test_train_log"]
+    collection = db["fl-client_test_train_log"]
 
     # input test_result data
     document = {
         "fl_task_id": task_id,
         "client_mac": test_result.client_mac,
-        "round": round,
+        "round": test_result.round,
         "test_loss": test_result.test_loss,
         "test_acc": test_result.test_acc,
         "next_gl_model_v": test_result.next_gl_model_v,
@@ -157,7 +157,7 @@ def client_time_result_put(task_id: str, Time: ClientTimeResult):
 
     logging.info(f'client_time_result: {client_time_result}')
 
-    collection = db["fl.client_time_result_log"]
+    collection = db["fl-client_time_result_log"]
 
     # input client_time_result data
     document = {
@@ -194,7 +194,7 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
-    collection = db["fl.client_basic_system"]
+    collection = db["fl-client_basic_system"]
 
     # input client_basic_system data
     document = {
