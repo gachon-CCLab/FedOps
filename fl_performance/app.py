@@ -280,7 +280,7 @@ def server_time_result_put(task_id: str, ServerTime: ServerTimeResult):
     # input train_result data
     document = {
         "fl_task_id": task_id,
-        "server_operation_time": server_time_result.operation_time,
+        "server_operation_time": server_time_result.server_operation_time,
         "next_gl_model_v": server_time_result.next_gl_model_v,
     }
 
