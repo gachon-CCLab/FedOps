@@ -190,7 +190,7 @@ def update_virtual_service(task_id: str, service_name: str, port: int, namespace
             raise e
 
 
-def create_fl_server(task_id: str, fl_server_status: dict):
+def create_fl_server(task_id: str, fl_server_status: dict, server_repo_addr):
     load_config()
 
     fl_server_status[task_id]["status"] = "Creating"
@@ -234,7 +234,10 @@ def create_fl_server(task_id: str, fl_server_status: dict):
             print(f"Job with name {job_name} already exists and is not Complete or Failed. Skipping job creation.")
             return
 
-    env_vars = [V1EnvVar(name="REPO_URL", value='https://github.com/gachon-CCLab/FedOps-Training-Server.git'),
+    if server_repo_addr == '':
+        server_repo_addr = 'https://github.com/gachon-CCLab/FedOps-Training-Server.git'
+
+    env_vars = [V1EnvVar(name="REPO_URL", value=server_repo_addr),
                 V1EnvVar(name="GIT_TAG", value="main"),
                 V1EnvVar(name="ENV", value="init"),
                 V1EnvVar(name="TASK_ID", value=task_id),
