@@ -55,6 +55,18 @@ class ClientBasicSystem(BaseModel):
     wandb_name: str = ''
 
 
+class GLModelEvaluation(BaseModel):
+    fl_task_id: str = ''
+    round: int = 0
+    gl_loss: float = 0
+    gl_acc: float = 0
+    run_time_by_round: float = 0
+    next_gl_model_v: int = 0
+
+class ServerTimeResult(BaseModel):
+    fl_task_id: str = ''
+    server_operation_time: float = 0
+    next_gl_model_v: int = 0
 
 # class ClientGpuSystem(BaseModel):
 
@@ -67,6 +79,8 @@ train_result = TrainResult()
 test_result = TestResult()
 client_time_result = ClientTimeResult()
 client_basic_system = ClientBasicSystem()
+gl_model_evaluation = GLModelEvaluation()
+server_time_result = ServerTimeResult()
 
 # MogoDB
 MONGODB_URI = os.environ["MONGODB_URI"]
@@ -219,6 +233,60 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
 
 
     return {"client_system": client_basic_system}
+
+
+@app.put("/server_perf/gl_model_evaluation/{task_id}")
+def gl_model_evaluation_put(task_id: str, Evaluation: GLModelEvaluation):
+    global gl_model_evaluation, db
+
+    gl_model_evaluation.fl_task_id = task_id
+    gl_model_evaluation.round = Evaluation.round
+    gl_model_evaluation.gl_loss = Evaluation.gl_loss
+    gl_model_evaluation.gl_acc = Evaluation.gl_acc
+    gl_model_evaluation.run_time_by_round = Evaluation.run_time_by_round
+    gl_model_evaluation.next_gl_model_v = Evaluation.next_gl_model_v
+
+    logging.info(f'gl_model_evaluation_result: {gl_model_evaluation}')
+
+    collection = db["fl-gl_model_evaluation_log"]
+
+    # input train_result data
+    document = {
+        "fl_task_id": task_id,
+        "round": gl_model_evaluation.round,
+        "gl_loss": gl_model_evaluation.gl_loss,
+        "gl_acc": gl_model_evaluation.gl_acc,
+        "run_time_by_round": gl_model_evaluation.run_time_by_round,
+        "next_gl_model_v": gl_model_evaluation.next_gl_model_v,
+    }
+
+    collection.insert_one(document)
+
+    return {"gl_model_evaluation": gl_model_evaluation}
+
+
+@app.put("/server_perf/server_time_result/{task_id}")
+def server_time_result_put(task_id: str, ServerTime: ServerTimeResult):
+    global server_time_result, db
+
+    server_time_result.fl_task_id = task_id
+    server_time_result.server_operation_time = ServerTime.server_operation_time
+    server_time_result.next_gl_model_v = ServerTime.next_gl_model_v
+
+    logging.info(f'server_time_result: {server_time_result}')
+
+    collection = db["fl-server_time_result_log"]
+
+    # input train_result data
+    document = {
+        "fl_task_id": task_id,
+        "server_operation_time": server_time_result.operation_time,
+        "next_gl_model_v": server_time_result.next_gl_model_v,
+    }
+
+    collection.insert_one(document)
+
+    return {"gl_model_evaluation": gl_model_evaluation}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8001, reload=True)

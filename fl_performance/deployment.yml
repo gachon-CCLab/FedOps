@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fl-client-perf
+  name: fl-perf
   namespace: fedops
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: fl-client-perf
+      run: fl-perf
   template:
     metadata:
       labels:
-        run: fl-client-perf
+        run: fl-perf
     spec:
       serviceAccountName: fedops-sa
       containers:
-        - name: client-perf
+        - name: fl-perf
           image: docker.io/tpah30/git_clone:1.1
           resources:
             limits:
@@ -27,7 +27,7 @@ spec:
           - name: REPO_URL
             value: "https://github.com/gachon-CCLab/FedOps.git"
           - name: GIT_DIR
-            value: "FedOps/client_performance"
+            value: "FedOps/fl_performance"
           - name: GIT_TAG
             value: "main"
           - name: MONGODB_URI
