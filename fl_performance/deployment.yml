@@ -15,7 +15,7 @@ spec:
     spec:
       serviceAccountName: fedops-sa
       containers:
-        - name: client-perf
+        - name: fl-perf
           image: docker.io/tpah30/git_clone:1.1
           resources:
             limits:
