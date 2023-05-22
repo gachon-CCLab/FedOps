@@ -142,7 +142,7 @@ def test_result_put(task_id: str, Test: TestResult):
 
     logging.info(f'test_result: {test_result}')
 
-    collection = db["fl-client_test_train_log"]
+    collection = db["fl-client_test_result_log"]
 
     # input test_result data
     document = {
@@ -208,7 +208,7 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
-    collection = db["fl-client_basic_system"]
+    collection = db["fl-client_basic_system_log"]
 
     # input client_basic_system data
     document = {
