@@ -277,7 +277,7 @@ def create_fl_server(task_id: str, fl_server_status: dict, server_repo_addr):
                             args=[
                                 "git clone -b ${GIT_TAG} ${REPO_URL} /app; "
                                 "python3 -m pip install -r /app/requirements.txt; "
-                                "python3 /app/app.py;"
+                                "python3 /app/server_task.py;"
                             ],
                             env=env_vars,
                         )

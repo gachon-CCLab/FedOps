@@ -1,0 +1,18 @@
+fl_server:
+  num_rounds: 2 # FL round
+  local_epochs: 1 # Client training epochs
+  batch_size: 32
+  val_steps: 32
+
+aggregation:
+  fedAvg:
+    fraction_fit: 1.0  # Percentage of client learning engagement
+    fraction_evaluate: 1.0  # Percentage of client assessment participation
+    min_fit_clients: 1  # Minimum number of training clients
+    min_evaluate_clients: 1  # Minimum number of evaluation clients
+    min_available_clients: 1 # Minimum number of clients
+
+# Set dataset name used by FL Task
+# Build initial global model based on data name
+data:
+  name: "cifar10"

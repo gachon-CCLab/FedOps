@@ -142,7 +142,7 @@ def test_result_put(task_id: str, Test: TestResult):
 
     logging.info(f'test_result: {test_result}')
 
-    collection = db["fl-client_test_train_log"]
+    collection = db["fl-client_test_result_log"]
 
     # input test_result data
     document = {
@@ -208,7 +208,7 @@ def client_basic_system_put(task_id: str, System: ClientBasicSystem):
 
     logging.info(f'client_basic_system: {client_basic_system}')
 
-    collection = db["fl-client_basic_system"]
+    collection = db["fl-client_basic_system_log"]
 
     # input client_basic_system data
     document = {
@@ -280,7 +280,7 @@ def server_time_result_put(task_id: str, ServerTime: ServerTimeResult):
     # input train_result data
     document = {
         "fl_task_id": task_id,
-        "server_operation_time": server_time_result.operation_time,
+        "server_operation_time": server_time_result.server_operation_time,
         "next_gl_model_v": server_time_result.next_gl_model_v,
     }
 
