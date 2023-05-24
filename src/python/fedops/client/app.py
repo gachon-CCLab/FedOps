@@ -52,7 +52,7 @@ class FLClientTask():
         try:
             # Update wandb config
             wandb_config = {"learning_rate": self.model.optimizer.learning_rate.numpy(),
-                            "optimizer": self.model.optimizer._name,
+                            "optimizer": self.model.optimizer,
                             "dataset": self.dataset, "model_architecture": self.model_name}
             wandb_run.config.update(wandb_config, allow_val_change=True)
 
