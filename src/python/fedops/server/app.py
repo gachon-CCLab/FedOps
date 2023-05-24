@@ -1,18 +1,12 @@
-# https://github.com/adap/flower/tree/main/examples/advanced_tensorflow 참조
-
 import logging
 from typing import Dict, Optional, Tuple
-
 import flwr as fl
-
-
 import datetime
 import os
-import requests, json
+import json
 import time
-
-import server_api
-import server_utils, server_task
+from . import server_api
+from . import server_utils
 
 # TF warning log filtering
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -23,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class FLServer():
-    def __init__(self, config):
+    def __init__(self, config, model, model_name, x_val, y_val):
         self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
         self.server = server_utils.FLServerStatus() # Set FLServerStatus class
         self.dataset = config['data']['name']
@@ -38,8 +32,12 @@ class FLServer():
         self.num_rounds = int(config['fl_server']['num_rounds'])
         self.val_steps = int(config['fl_server']['val_steps'])
 
-        self.x_val = None
-        self.y_val = None
+        self.init_model = model
+        self.init_model_name = model_name
+        self.next_model = None
+        self.next_model_name = None
+        self.x_val = x_val
+        self.y_val = y_val
 
 
 
@@ -49,7 +47,7 @@ class FLServer():
         if not model:
 
             logging.info('init global model making')
-            init_model, model_name = server_task.build_gl_model(self.dataset)
+            init_model, model_name = self.init_model, self.init_model_name
             print(f'init_gl_model_name: {model_name}')
 
             self.fl_server_start(init_model, model_name)
@@ -68,8 +66,6 @@ class FLServer():
         # Load and compile model for
         # 1. server-side parameter initialization
         # 2. server-side parameter evaluation
-
-
 
         strategy = fl.server.strategy.FedAvg(
             fraction_fit=self.fraction_fit,
@@ -132,8 +128,6 @@ class FLServer():
         Keep batch size fixed at 32, perform two rounds of training with one
         local epoch, increase to two local epochs afterwards.
         """
-
-
         fl_config = {
             "batch_size": self.batch_size,
             "local_epochs": self.local_epochs,
@@ -161,8 +155,6 @@ class FLServer():
         return {"val_steps": self.val_steps}
 
     def start(self):
-        # Load dataset for evaluating gl model
-        self.x_val, self.y_val = server_task.load_data(self.dataset)
 
         today = datetime.datetime.today()
         today_time = today.strftime('%Y-%m-%d %H-%M-%S')
@@ -172,7 +164,7 @@ class FLServer():
         # server.latest_gl_model_v = 0
 
         # Loaded latest global model or no global model
-        model, model_name, self.server.latest_gl_model_v = server_utils.model_download(self.task_id)
+        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download(self.task_id)
         # logging.info('Loaded latest global model or no global model')
 
         # New Global Model Version
@@ -193,7 +185,7 @@ class FLServer():
             fl_start_time = time.time()
 
             # Run fl server
-            gl_model_name = self.init_gl_model_registration(model, model_name)
+            gl_model_name = self.init_gl_model_registration(self.next_model, self.next_model_name)
 
             fl_end_time = time.time() - fl_start_time  # FL end time
 
@@ -210,7 +202,7 @@ class FLServer():
 
             logging.info(f'upload {global_model_file_name} model in s3')
 
-            # server_status error
+        # server_status error
         except Exception as e:
             logging.error('error: ', e)
             data_inform = {'FLSeReady': False}

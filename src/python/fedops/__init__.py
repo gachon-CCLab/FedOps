@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""FedOps main package."""
+"""FedOps Main Package."""
 
 from .utils.version import package_version as _package_version
 

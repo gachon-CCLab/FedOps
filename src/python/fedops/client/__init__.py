@@ -12,24 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""FedOps client."""
+"""FedOps Client."""
 
-from .app import FLClientTask
-from .client_api import ClientMangerAPI
-from .client_api import ClientServerAPI
-from .client_fl import FLClient
-from .client_fl import flower_client_start
-from .client_utils import FLClientStatus
-from .client_utils import ManagerData
+from . import client_utils as client_utils
+from . import app as app
+from . import client_fl as client_fl
+from . import client_api as client_api
+from . import client_wandb as client_wandb
 
 
 __all__ = [
-    "FLClientTask",
-    "ClientMangerAPI",
-    "ClientServerAPI",
-    "FLClient",
-    "flower_client_start",
-    "FLClientStatus",
-    "ManagerData",
-
+    "client_utils",
+    "app",
+    "client_fl",
+    "client_api",
+    "client_wandb",
 ]

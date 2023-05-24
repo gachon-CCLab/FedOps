@@ -1,5 +1,9 @@
+import logging
+import time
+
 import wandb
-import client_api
+
+from . import client_api
 
 
 def start_wandb(wandb_key, task_id, wandb_name):
@@ -24,43 +28,48 @@ def data_status_wandb(run, labels):
 
 
 def client_system_wandb(fl_task_id, client_mac, next_gl_model_v, wandb_name, wandb_account):
+    try:
+        # check client system resource usage from wandb
+        api = wandb.Api()
+        runs = api.runs(f"{wandb_account}/{fl_task_id}")
 
-    # check client system resource usage from wandb
-    api = wandb.Api()
-    runs = api.runs(f"{wandb_account}/{fl_task_id}")
+        sys_df = runs[0].history(stream="system")
 
-    sys_df = runs[0].history(stream="system")
+        col = ['system.network.sent', 'system.network.recv', 'system.disk', '_runtime', 'system.proc.memory.rssMB','system.proc.memory.availableMB', 'system.cpu', 'system.proc.cpu.threads', 'system.memory', 'system.proc.memory.percent', '_timestamp']
+        cols = [c.replace('\n', '') for c in col]
 
-    col = ['system.network.sent', 'system.network.recv', 'system.disk', '_runtime', 'system.proc.memory.rssMB','system.proc.memory.availableMB', 'system.cpu', 'system.proc.cpu.threads', 'system.memory', 'system.proc.memory.percent', '_timestamp']
+        sys_df = sys_df[cols]
 
-    sys_df = sys_df[col]
+        sys_df.rename(columns={
+            "system.network.sent": "network_sent",
+            "system.network.recv": "network_recv",
+            "system.disk": "disk",
+            "_runtime": "runtime",
+            "system.proc.memory.rssMB": "memory_rssMB",
+            "system.proc.memory.availableMB": "memory_availableMB",
+            "system.cpu": "cpu",
+            "system.proc.cpu.threads": "cpu_threads",
+            "system.memory": "memory",
+            "system.proc.memory.percent": "memory_percent",
+            "_timestamp": "timestamp",
+        }, inplace=True)
 
-    sys_df.rename(columns={
-        "system.network.sent": "network_sent",
-        "system.network.recv": "network_recv",
-        "system.disk": "disk",
-        "_runtime": "runtime",
-        "system.proc.memory.rssMB": "memory_rssMB",
-        "system.proc.memory.availableMB": "memory_availableMB",
-        "system.cpu": "cpu",
-        "system.proc.cpu.threads": "cpu_threads",
-        "system.memory": "memory",
-        "system.proc.memory.percent": "memory_percent",
-        "_timestamp": "timestamp",
-    }, inplace=True)
+        # Extract df_row by row
+        for i in range(len(sys_df)):
+            sys_df_row = sys_df.iloc[i]
+            sys_df_row['fl_task_id'] = fl_task_id
+            sys_df_row['client_mac'] = client_mac
+            sys_df_row['next_gl_model_v'] = next_gl_model_v
+            sys_df_row['wandb_name'] = wandb_name
 
-    # Extract df_row by row
-    for i in range(len(sys_df)):
-        sys_df_row = sys_df.iloc[i]
-        sys_df_row['fl_task_id'] = fl_task_id
-        sys_df_row['client_mac'] = client_mac
-        sys_df_row['next_gl_model_v'] = next_gl_model_v
-        sys_df_row['wandb_name'] = wandb_name
+            sys_df_row_json = sys_df_row.to_json()
 
-        sys_df_row_json = sys_df_row.to_json()
+            # send client_system  to client_performance pod
+            client_api.ClientServerAPI(fl_task_id).put_client_system(sys_df_row_json)
 
-        # send client_system  to client_performance pod
-        client_api.ClientServerAPI(fl_task_id).put_client_system(sys_df_row_json)
+        # close wandb
+        wandb.finish()
 
-def client_finish_wandb():
-    wandb.finish()
+    except Exception as e:
+        logging.error(f'wandb system load error: {e}')
+        wandb.finish() # close wandb

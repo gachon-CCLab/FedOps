@@ -2,15 +2,15 @@ import client_data
 import client_model
 from fedops.client import client_utils
 from fedops.client import app
-import logging, os
+import logging
 
 # set log format
 handlers_list = [logging.StreamHandler()]
 
-if os.environ["MONITORING"] == '1':
-    handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
-else:
-    pass
+# if os.environ["MONITORING"] == '1':
+#     handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
+# else:
+#     pass
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=handlers_list)
@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
 logger = logging.getLogger(__name__)
 
 # read config.yaml file
-config = client_utils.read_config()
+config_file_path = './config.yaml'
+config = client_utils.read_config(config_file_path)
 
 # FL task ID
 task_id = config['task']['name']

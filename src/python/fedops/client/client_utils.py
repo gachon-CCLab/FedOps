@@ -1,25 +1,21 @@
 import asyncio
 import os
-from collections import Counter
-from typing import Optional, Union
-
 import requests
-import torch
-from pydantic.main import BaseModel, BaseConfig
+from pydantic.main import BaseModel
 import re
 import tensorflow as tf
 import logging
 import yaml, uuid, socket
-import client_api
-import numpy as np
+
+from . import client_api
 
 # set log format
 handlers_list = [logging.StreamHandler()]
 
-if os.environ["MONITORING"] == '1':
-    handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
-else:
-    pass
+# if os.environ["MONITORING"] == '1':
+#     handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
+# else:
+#     pass
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=handlers_list)

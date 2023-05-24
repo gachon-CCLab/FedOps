@@ -1,7 +1,7 @@
 # FROM nvidia/cuda:11.7.0-base-ubuntu22.04
 FROM nvidia/cuda:11.7.0-base-ubuntu22.04
 WORKDIR /app
-ENV APP=app.py
+ENV APP=client_task.py
 ENV RUN_HOST=0.0.0.0
 # RUN apt-get -y update \
 #     && apt-get install -y software-properties-common \
@@ -19,4 +19,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8002
 COPY . .
 #ENTRYPOINT [ "python3", "/app/client/app.py", "docker-dist" ]
-ENTRYPOINT [ "python3", "/app/client/client_wandb/app.py", "docker-dist" ]
+ENTRYPOINT [ "python3", "/app/client/client_task.py", "docker-dist" ]

@@ -1,10 +1,13 @@
 import tensorflow as tf
 import numpy as np
-from tensorflow.keras.utils import to_categorical
+# from keras.utils.np_utils import to_categorical # keras==2.8.0
+from keras.utils import to_categorical # keras>=2.10.0
+
 
 from fedops.server import app
-from fedops.server import init_gl_model
 from fedops.server import server_utils
+import init_gl_model
+
 
 """
 Build initial global model based on dataset name.
@@ -60,7 +63,7 @@ def load_data(dataset):
     # Dataset for evaluating global model
     x_val, y_val = X_test[9000:10000], y_test[9000:10000]
 
-    # 전처리
+    # Preprocessing
     # x_val = x_val.astype('float32') / 255.0
 
     # y(label) one-hot encoding
@@ -71,9 +74,19 @@ def load_data(dataset):
 
 if __name__ == "__main__":
     # Read server config file
-    config = server_utils.read_config()
+    config_file_path = './config.yaml'
+    config = server_utils.read_config(config_file_path)
+
+    # Dataset Name
+    dataset = config['data']['name']
+
+    # Build model
+    model, model_name = build_gl_model(dataset)
+
+    # Load Data
+    x_val, y_val = load_data(dataset)
 
     # Start fl server
-    fl_server = app.FLServer()
+    fl_server = app.FLServer(config, model, model_name, x_val, y_val)
     fl_server.start()
 

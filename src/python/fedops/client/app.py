@@ -1,14 +1,14 @@
 import logging, json
 import time
-
 from fastapi import FastAPI, BackgroundTasks
 import asyncio
 import uvicorn
-import client_utils
-import client_fl
-import client_wandb
-import client_api
 from datetime import datetime
+
+from . import client_utils
+from . import client_fl
+from . import client_wandb
+from . import client_api
 
 class FLClientTask():
     def __init__(self, config, fl_task):
@@ -97,9 +97,6 @@ class FLClientTask():
             # Get client system result from wandb and send it to client_performance pod
             client_wandb.client_system_wandb(self.task_id, self.status.FL_client_mac, self.status.FL_next_gl_model,
                                              wandb_name, self.wandb_account)
-
-            # Close wandb
-            client_wandb.client_finish_wandb()
 
             # Delete client object
             del client
