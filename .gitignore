@@ -1,3 +1,5 @@
+*.local_model
+*.wandb
 .idea
 .gitignore
 
