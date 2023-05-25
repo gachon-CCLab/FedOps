@@ -10,10 +10,11 @@ from . import client_fl
 from . import client_wandb
 from . import client_api
 
+
 class FLClientTask():
     def __init__(self, config, fl_task):
         self.app = FastAPI()
-        
+
         self.x_train = fl_task[0]
         self.x_test = fl_task[1]
         self.y_train = fl_task[2]
@@ -27,7 +28,7 @@ class FLClientTask():
         self.validation_split = config['data']['validation_split']
         self.wandb_key = config['wandb']['api_key']
         self.wandb_account = config['wandb']['account']
-        
+
         self.status = client_utils.FLClientStatus()
 
     async def fl_client_start(self):
@@ -84,6 +85,9 @@ class FLClientTask():
             # Wandb log(Client round end time)
             wandb_run.log({"operation_time": fl_end_time, "next_gl_model_v": self.status.FL_next_gl_model},
                           step=self.status.FL_next_gl_model)
+
+            # close wandb
+            wandb_run.finish()
 
             client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.FL_client_mac,
                                       "operation_time": fl_end_time,
@@ -154,7 +158,7 @@ class FLClientTask():
             background_tasks.add_task(self.fl_client_start)
 
             return self.status
-        
+
         try:
             # create client api => to connect client manager
             uvicorn.run(self.app, host='0.0.0.0', port=8002)
@@ -167,5 +171,5 @@ class FLClientTask():
             # FL client out
             client_api.ClientMangerAPI().get_client_out()
             logging.info(f'{self.status.FL_client_mac}-client close')
-            
+
 

@@ -35,8 +35,7 @@ def client_system_wandb(fl_task_id, client_mac, next_gl_model_v, wandb_name, wan
 
         sys_df = runs[0].history(stream="system")
 
-        col = ['system.network.sent', 'system.network.recv', 'system.disk', '_runtime', 'system.proc.memory.rssMB','system.proc.memory.availableMB', 'system.cpu', 'system.proc.cpu.threads', 'system.memory', 'system.proc.memory.percent', '_timestamp']
-        cols = [c.replace('\n', '') for c in col]
+        cols = ['system.network.sent', 'system.network.recv', 'system.disk', '_runtime', 'system.proc.memory.rssMB','system.proc.memory.availableMB', 'system.cpu', 'system.proc.cpu.threads', 'system.memory', 'system.proc.memory.percent', '_timestamp']
 
         sys_df = sys_df[cols]
 
@@ -67,9 +66,6 @@ def client_system_wandb(fl_task_id, client_mac, next_gl_model_v, wandb_name, wan
             # send client_system  to client_performance pod
             client_api.ClientServerAPI(fl_task_id).put_client_system(sys_df_row_json)
 
-        # close wandb
-        wandb.finish()
-
     except Exception as e:
         logging.error(f'wandb system load error: {e}')
-        wandb.finish() # close wandb
+

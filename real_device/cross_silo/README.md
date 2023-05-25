@@ -1,109 +1,53 @@
-# Client(PC) in Federated Learning Enviroment
+# Example (PyTorch)
 
-## Run client (Docker ver.)
-- **Make sure you have installed docker compose environment**  
-You can run with **docker desktop** or **docker engine + docker compose**.  
-Install: (https://www.docker.com/products/docker-desktop/)  
-Install docs: (https://docs.docker.com/desktop/)  
-Reboot after initial installation of docker.
+This example demonstrates an advanced federated learning setup using Flower with PyTorch. It differs from the quickstart example in the following ways:
 
-- **clone this git repo**
-```bash
-# clone git repository
-$ git clone https://github.com/gachon-CCLab/fl-client.git
-$ cd fl-client
+- 10 clients (instead of just 2)
+- Each client holds a local dataset of 5000 training examples and 1000 test examples
+- Server-side model evaluation after parameter aggregation
+- Hyperparameter schedule using config functions
+- Custom return values
+- Server-side parameter initialization
+
+## Project Setup
+
+Start by cloning the example project. We prepared a single-line command that you can copy into your shell which will checkout the example for you:
+
+```shell
+git clone --depth=1 https://github.com/adap/flower.git && mv flower/examples/advanced_pytorch . && rm -rf flower && cd advanced_pytorch
 ```
 
-- **run docker compose**
-```bash
-# run docker compose
-$ docker compose up
+This will create a new directory called `advanced_pytorch` containing the following files:
 
-# or if you want to monitor client, run below
-$ docker compose -f docker-compose-monitoring.yml up
-```
-When you want to apply code changes, do `docker compose up --build`.  
-
-
-- **terminate client**
-```bash
-# press Ctrl + C to escape
-$ docker compose down
-```   
-
-*(Tested on Docker Desktop 4.15.0; Docker Compose version 2.13.0; arm64 processor(macOS))*   
-*(Tested on x86-64 processor)*
-
-
-## Run client (shell ver.)
-### **Directory configuration**
-
-- Client Dir
-    - client.py: FL Client Code (Data & Model Setting)
-    - client_utils.py: client management code
-
-- Client Manager Dir
-    - client_manager.py: client status & server status management(via API Communication)
-
-- client.sh: client.py execution shell
-- client_manager.sh: client_manager.py execution shell
-- requirments.txt: Libraries that require installation
-
-### **Pre-preparation before running**
-
-- **Clone this Git Repo**
-- **Create a new conda environment or use an existing one**
-
-```bash
-# create conda enviroment
-conda create -n fl
-
-# activate conda enviroment 
-conda activate fl
-
-# or use an existing one
-conda activate existing your conda enviroment
+```shell
+-- pyproject.toml
+-- client.py
+-- server.py
+-- README.md
+-- run.sh
 ```
 
-- **Install the requirements in your pc(conda environment)**
+Project dependencies (such as `pytorch` and `flwr`) are defined in `pyproject.toml`. We recommend [Poetry](https://python-poetry.org/docs/) to install those dependencies and manage your virtual environment ([Poetry installation](https://python-poetry.org/docs/#installation)), but feel free to use a different way of installing dependencies and managing virtual environments if you have other preferences.
 
-```bash
-# Go to clone repo
-pip install -r requirements.txt
+```shell
+poetry install
+poetry shell
 ```
 
-### Start FL Client
+Poetry will install all your dependencies in a newly created virtual environment. To verify that everything works correctly you can run the following command:
 
-- **Create two CLI and run shell file**
-
-```bash
-# One CLI => client
-sh client.sh
-
-# The other CLI => client_manager
-sh client_manager.sh
-
+```shell
+poetry run python3 -c "import flwr"
 ```
 
-## Next Work
+If you don't see any errors you're good to go!
 
-- FL Server의 Config 값을 Server-Status에 전달할 수 있도록 구성
+# Run Federated Learning with PyTorch and Flower
 
-```python
-num_rounds = 10
-local_epochs = 5
-batch_size = 128
-val_steps = 10
+The included `run.sh` will start the Flower server (using `server.py`), sleep for 2 seconds to ensure the the server is up, and then start 10 Flower clients (using `client.py`). You can simply start everything in a terminal as follows:
+
+```shell
+poetry run ./run.sh
 ```
 
-```python
-fraction_fit=1.0,  # 클라이언트 학습 참여 비율
-fraction_evaluate=1.0,  # 클라이언트 평가 참여 비율
-min_fit_clients=5,  # 최소 학습 참여 수
-min_evaluate_clients=5,  # 최소 평가 참여 수
-min_available_clients=5,  # 최소 클라이언트 연결 필요 수
-```
-
-- 현재는 cifar 10 data와 model을 수행하였지만, 다양한 data/model 구성이 가능하도록 구성
-    - FL Server도 초기에 global model을 생성하기 때문에 client에서 초기 local_model을 전달하는 방법을 고안
-    - FL Server global model 평가를 위한 dataset은 어떻게 할지 구성할지 고안
+The `run.sh` script starts processes in the background so that you don't have to open eleven terminal windows. If you experiment with the code example and something goes wrong, simply using `CTRL + C` on Linux (or `CMD + C` on macOS) wouldn't normally kill all these processes, which is why the script ends with `trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT` and `wait`. This simply allows you to stop the experiment using `CTRL + C` (or `CMD + C`). If you change the script and anyhting goes wrong you can still use `killall python` (or `killall python3`) to kill all background processes (or a more specific command if you have other Python processes running that you don't want to kill).

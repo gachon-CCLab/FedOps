@@ -1,5 +1,5 @@
 task:
-  name: "646c1d223435f314a40fed73"
+  name: "646f419d9412e787a370d614"
 data:
   name: 'cifar10'
   validation_split: 0.2
