@@ -30,6 +30,7 @@ This will create a new directory called `cross_silo` containing the following fi
 
 4. ***Customize the FedOps example code.***
    - Customize the FedOps example code to align with your FL task.
+   * [FedOps Client](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo/fl_client)
    - Client:
      - Configure settings in config.yaml for task ID, data, and WandB information.
      - Implement client_data.py for data handling.
@@ -37,10 +38,11 @@ This will create a new directory called `cross_silo` containing the following fi
      - Register data and model, and run the client using client_task.py.
 
    - Server:
+     * [FedOps Server](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo/fl_server)
      - Configure settings in config.yaml for FL/Aggregation hyperparameters and data information.
      - Implement init_gl_model.py to initialize the global model.
      - Register data (for evaluating the global model) and initialize the global model in server_task.py.
-   <br></br>
+     <br></br>
 
 5. ***Run the clients.***
    - Choose either Docker or shell(localhost) to run the clients. 
@@ -59,3 +61,6 @@ This will create a new directory called `cross_silo` containing the following fi
 8. ***Monitor data and local model performance*** 
    - Monitor the health of data and local model performance as the device administrator through the designated WandB.
    <br></br>
+
+## Support
+***For any questions or issues, please contact the FedOps support team at tpah20@gachon.ac.kr***
