@@ -1,5 +1,5 @@
 fl_server:
-  num_rounds: 2 # FL round
+  num_rounds: 20 # FL round
   local_epochs: 1 # Client training epochs
   batch_size: 32
   val_steps: 32

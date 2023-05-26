@@ -1,53 +1,61 @@
-# Example (PyTorch)
+# FedOps on Real Device
 
-This example demonstrates an advanced federated learning setup using Flower with PyTorch. It differs from the quickstart example in the following ways:
+This guide provides step-by-step instructions on executing FedOps, a Federated Learning Lifecycle Management Operations framework.
 
-- 10 clients (instead of just 2)
-- Each client holds a local dataset of 5000 training examples and 1000 test examples
-- Server-side model evaluation after parameter aggregation
-- Hyperparameter schedule using config functions
-- Custom return values
-- Server-side parameter initialization
+## Steps
 
-## Project Setup
-
-Start by cloning the example project. We prepared a single-line command that you can copy into your shell which will checkout the example for you:
+1. ***Start by cloning the FedOps.***
 
 ```shell
-git clone --depth=1 https://github.com/adap/flower.git && mv flower/examples/advanced_pytorch . && rm -rf flower && cd advanced_pytorch
+git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/real_device/cross_silo . && rm -rf FedOps && cd cross_silo
 ```
 
-This will create a new directory called `advanced_pytorch` containing the following files:
+This will create a new directory called `cross_silo` containing the following files:
 
 ```shell
--- pyproject.toml
--- client.py
--- server.py
+-- fl_client
+-- fl_server
 -- README.md
--- run.sh
 ```
 
-Project dependencies (such as `pytorch` and `flwr`) are defined in `pyproject.toml`. We recommend [Poetry](https://python-poetry.org/docs/) to install those dependencies and manage your virtual environment ([Poetry installation](https://python-poetry.org/docs/#installation)), but feel free to use a different way of installing dependencies and managing virtual environments if you have other preferences.
+2. ***Create your Git repository and add FL server code.***
+   - Set up your own Git repository and add the FL server code from the fl_server directory. 
+   This code will be used to deploy and run the FL server in CCL microk8s environment.
+   <br></br>
 
-```shell
-poetry install
-poetry shell
-```
+3. ***Create FL task on FedOps web interface.***
+   - Use the FedOps web interface to create your FL task. 
+   Specify the Git repository address for your FL server code.
+   <br></br>
 
-Poetry will install all your dependencies in a newly created virtual environment. To verify that everything works correctly you can run the following command:
+4. ***Customize the FedOps example code.***
+   - Customize the FedOps example code to align with your FL task.
+   - Client:
+     - Configure settings in config.yaml for task ID, data, and WandB information.
+     - Implement client_data.py for data handling.
+     - Build client_model.py for local model specifications.
+     - Register data and model, and run the client using client_task.py.
 
-```shell
-poetry run python3 -c "import flwr"
-```
+   - Server:
+     - Configure settings in config.yaml for FL/Aggregation hyperparameters and data information.
+     - Implement init_gl_model.py to initialize the global model.
+     - Register data (for evaluating the global model) and initialize the global model in server_task.py.
+   <br></br>
 
-If you don't see any errors you're good to go!
+5. ***Run the clients.***
+   - Choose either Docker or shell(localhost) to run the clients. 
+   Detailed instructions on running the clients can be found in the FedOps documentation.
+   <br></br>
 
-# Run Federated Learning with PyTorch and Flower
+6. ***Initiate the FL task.***
+   - Select the desired clients on the FedOps web interface and initiate the FL task by clicking the "FL start" button.
+   <br></br>
 
-The included `run.sh` will start the Flower server (using `server.py`), sleep for 2 seconds to ensure the the server is up, and then start 10 Flower clients (using `client.py`). You can simply start everything in a terminal as follows:
+7. ***Monitor and manage the FL task***
+   - Monitor the performance of local and global models, 
+   and manage/download the global model as the FL task administrator through the FedOps web interface.
+   <br></br>
 
-```shell
-poetry run ./run.sh
-```
-
-The `run.sh` script starts processes in the background so that you don't have to open eleven terminal windows. If you experiment with the code example and something goes wrong, simply using `CTRL + C` on Linux (or `CMD + C` on macOS) wouldn't normally kill all these processes, which is why the script ends with `trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT` and `wait`. This simply allows you to stop the experiment using `CTRL + C` (or `CMD + C`). If you change the script and anyhting goes wrong you can still use `killall python` (or `killall python3`) to kill all background processes (or a more specific command if you have other Python processes running that you don't want to kill).
+8. ***Monitor data and local model performance*** 
+   - Monitor the health of data and local model performance as the device administrator through the designated WandB.
+   <br></br>

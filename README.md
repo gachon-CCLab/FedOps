@@ -1,10 +1,14 @@
 # FedOps: Federated Learning Lifecycle Operations Management Platform
 
-<p align="center">
-  <a href="https://flower.dev/">
-    <img src="https://flower.dev/_next/image/?url=%2F_next%2Fstatic%2Fmedia%2Fflower_white_border.c2012e70.png&w=640&q=75" width="140px" alt="Flower Website" />
-  </a>
-</p>
+[//]: # (<p align="center">)
+
+[//]: # (  <a href="https://flower.dev/">)
+
+[//]: # (    <img src="https://flower.dev/_next/image/?url=%2F_next%2Fstatic%2Fmedia%2Fflower_white_border.c2012e70.png&w=640&q=75" width="140px" alt="Flower Website" />)
+
+[//]: # (  </a>)
+
+[//]: # (</p>)
 <p align="center">
     <a href="https://sites.google.com/view/keylee/">CCL Site</a> |
     <a href="https://www.linkedin.com/company/89975476/admin/">LinkedIn</a>
@@ -30,8 +34,11 @@ enabling code deployment to multiple clients and servers for continuous or perio
 ## FedOps on Real Device Tutorial
 
 FedOps has developed a web service to manage the lifecycle operations of federated learning on real devices.
-
-* [Start (TensorFlow)](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/example)
+* **Install FedOps Library**
+```bash
+$ pip install fedops
+```
+* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo)
 
 
 
