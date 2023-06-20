@@ -11,7 +11,7 @@ git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/real_device/cr
 ```
 
 This will create a new directory called `cross_silo` containing the following files:
-
+ 
 ```shell
 -- fl_client
 -- fl_server
