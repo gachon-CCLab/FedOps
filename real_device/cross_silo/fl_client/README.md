@@ -53,4 +53,12 @@ $ docker compose down
 ```bash
 # run client and client manager to background env
 $ sh run_shell_client.sh
+```
+or
+```bash
+# run client 
+$ sh python client/client_task.py
+
+# run client manager
+$ sh python client_manager/client_manager.py
 ```  
