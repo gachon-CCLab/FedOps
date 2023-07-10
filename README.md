@@ -10,23 +10,6 @@
 
 [//]: # (</p>)
 <p align="center">
-    <a href="http://ccl.gachon.ac.kr/fedops">FedOps</a> |
-    <a href="https://join.slack.com/t/fedopshq/shared_invite/zt-1xvo9pkm8-drLEdtOT1_vNbcXoxGmQ5A">Slack</a> |
-    <a href="https://www.linkedin.com/company/89975476/admin/">LinkedIn</a> |
-    <a href="https://sites.google.com/view/keylee/">CCL Site</a>
-    <br /><br />
-</p># FedOps: Federated Learning Lifecycle Operations Management Platform
-
-[//]: # (<p align="center">)
-
-[//]: # (  <a href="https://flower.dev/">)
-
-[//]: # (    <img src="https://flower.dev/_next/image/?url=%2F_next%2Fstatic%2Fmedia%2Fflower_white_border.c2012e70.png&w=640&q=75" width="140px" alt="Flower Website" />)
-
-[//]: # (  </a>)
-
-[//]: # (</p>)
-<p align="center">
     <a href="http://ccljhub.gachon.ac.kr:40020/">FedOps</a> |
     <a href="https://join.slack.com/t/fedopshq/shared_invite/zt-1xvo9pkm8-drLEdtOT1_vNbcXoxGmQ5A">Slack</a> |
     <a href="https://www.linkedin.com/company/89975476/admin/">LinkedIn</a> |
