@@ -1,5 +1,5 @@
 # FedOps: Federated Learning Lifecycle Operations Management Platform
-
+ 
 <p align="center">
     <a href="http://ccljhub.gachon.ac.kr:40020/">FedOps</a> |
     <a href="https://join.slack.com/t/fedopshq/shared_invite/zt-1xvo9pkm8-drLEdtOT1_vNbcXoxGmQ5A">Slack</a> |
