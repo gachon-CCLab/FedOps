@@ -8,6 +8,12 @@
     <br /><br />
 </p>
 
+
+[![GitHub license](https://img.shields.io/github/license/adap/flower)](https://github.com/gachon-CCLab/FedOps/blob/main/LICENSE)
+![Downloads](https://static.pepy.tech/badge/fedops)
+[![Slack](https://img.shields.io/badge/Chat-Slack-red)](https://join.slack.com/t/fedopshq/shared_invite/zt-1xvo9pkm8-drLEdtOT1_vNbcXoxGmQ5A)
+
+
 FedOps (`fedops`) is a platform that helps organizations effectively manage and coordinate their federated learning operations:
 
 * **FLScalize**: It simplifies the application of data and models in a FL environment by leveraging Flower's Client and Server.
