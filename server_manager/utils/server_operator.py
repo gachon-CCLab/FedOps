@@ -1,7 +1,7 @@
 from kubernetes import client, config, watch
 from kubernetes.client import V1EnvVar, V1EnvVarSource, V1SecretKeySelector
 import time
-
+from requests.exceptions import RequestException
 
 def load_config():
     try:
@@ -37,6 +37,17 @@ def get_running_tasks(namespace: str = 'fedops'):
 
     return running_tasks
 
+
+def retry_with_backoff(func, max_retries=3, backoff_factor=0.1):
+    retries = 0
+    while retries < max_retries:
+        try:
+            return func()
+        except RequestException:
+            retries += 1
+            sleep_duration = backoff_factor * (2 ** retries)
+            time.sleep(sleep_duration)
+    raise Exception("Max retries reached, operation failed")
 
 def get_unused_port(namespace: str = 'fedops'):
     load_config()
@@ -90,17 +101,35 @@ def get_unused_port(namespace: str = 'fedops'):
     # Update the VirtualService to remove the routes for the non-running tasks
     if virtual_service["spec"]["tcp"]:
         try:
-            api_instance.patch_namespaced_custom_object(
-                group="networking.istio.io",
-                version="v1alpha3",
-                namespace=namespace,
-                plural="virtualservices",
-                name=virtual_service_name,
-                body=virtual_service,
-            )
-            print("Updated Istio VirtualService")
+            def patch_virtual_service():
+                api_instance.patch_namespaced_custom_object(
+                    group="networking.istio.io",
+                    version="v1alpha3",
+                    namespace=namespace,
+                    plural="virtualservices",
+                    name=virtual_service_name,
+                    body=virtual_service,
+                )
+                print("Updated Istio VirtualService")
+
+            retry_with_backoff(patch_virtual_service)
         except client.exceptions.ApiException as e:
             raise e
+
+    # Update the VirtualService to remove the routes for the non-running tasks
+    # if virtual_service["spec"]["tcp"]:
+    #     try:
+    #         api_instance.patch_namespaced_custom_object(
+    #             group="networking.istio.io",
+    #             version="v1alpha3",
+    #             namespace=namespace,
+    #             plural="virtualservices",
+    #             name=virtual_service_name,
+    #             body=virtual_service,
+    #         )
+    #         print("Updated Istio VirtualService")
+    #     except client.exceptions.ApiException as e:
+    #         raise e
 
     # Return the first unused port in the range
     for port in range(40021, 40041):
