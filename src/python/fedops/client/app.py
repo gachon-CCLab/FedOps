@@ -117,7 +117,6 @@ class FLClientTask():
 
     def start(self):
         # Configure routes, endpoints, and other FastAPI-related logic here
-        # Example:
         @self.app.get('/online')
         async def get_info():
             return self.status

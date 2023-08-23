@@ -33,7 +33,7 @@ global inform_SE
 config: dict
 
 # Read the YAML configuration file
-config_file_path = './config.yaml'
+config_file_path = '../config.yaml'
 with open(config_file_path, 'r') as file:
     config = yaml.safe_load(file)
 
@@ -63,7 +63,7 @@ class manager_status(BaseModel):
         FL_client = 'localhost:8002'
     else:
         FL_client = 'fl-client:8002'
-    FL_server_ST: str = 'ccljhub.gachon.ac.kr:40019'
+    FL_server_ST: str = 'ccl.gachon.ac.kr:40019'
     # FL_server: str = config['task']['name'] + '-210-102-181-208.nip.io:80'
     # FL_server: str = 'ccljhub.gachon.ac.kr'
     FL_server: str = '210.102.181.208'

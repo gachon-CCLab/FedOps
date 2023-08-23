@@ -21,7 +21,8 @@ setup(
         'wandb>=0.15.0',
         'pandas>=1.5.3',
         'pyyaml>=5.0',
-        'boto3>=1.24.0'
+        'boto3>=1.24.0',
+        'numba'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

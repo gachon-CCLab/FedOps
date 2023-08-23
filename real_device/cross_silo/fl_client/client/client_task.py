@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
 logger = logging.getLogger(__name__)
 
 # read config.yaml file
-config_file_path = './config.yaml'
+config_file_path = '../config.yaml'
 config = client_utils.read_config(config_file_path)
 
 # FL task ID
