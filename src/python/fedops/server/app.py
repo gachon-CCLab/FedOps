@@ -167,7 +167,7 @@ class FLServer():
                 logging.info(f'server_eval_result - {json_server_eval}')
 
                 # send gl model evaluation to performance pod
-                # server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
+                server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
 
 
             
@@ -218,10 +218,10 @@ class FLServer():
         # server.latest_gl_model_v = 0
 
         # Loaded latest global model or no global model in s3
-        # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
+        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
         
         # Loaded latest global model or no global model in local
-        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
+        # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
 
         # logging.info('Loaded latest global model or no global model')
 
@@ -237,7 +237,7 @@ class FLServer():
             'GL_Model_V': self.server.latest_gl_model_v  # Current Global Model Version
         }
         server_status_json = json.dumps(inform_Payload)
-        # server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
+        server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
 
         try:
             fl_start_time = time.time()
@@ -252,14 +252,14 @@ class FLServer():
             json_all_time_result = json.dumps(server_all_time_result)
             logging.info(f'server_operation_time - {json_all_time_result}')
             # Send server time result to performance pod
-            # server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
+            server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
             
             # upload global model
             if self.model_type == "Tensorflow":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.h5"
             elif self.model_type =="Pytorch":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.pth"
-            # server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+            server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
 
             logging.info(f'upload {global_model_file_name} model in s3')
 
@@ -267,13 +267,13 @@ class FLServer():
         except Exception as e:
             logging.error('error: ', e)
             data_inform = {'FLSeReady': False}
-            # server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
+            server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
 
         finally:
             logging.info('server close')
 
             # Modifying the model version in server manager
-            # server_api.ServerAPI(self.task_id).put_fl_round_fin()
+            server_api.ServerAPI(self.task_id).put_fl_round_fin()
             logging.info('global model version upgrade')
             # res = server_api.ServerAPI(task_id).put_fl_round_fin()
             # if res.status_code == 200:

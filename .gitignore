@@ -10,6 +10,7 @@
 *.DS_Store
 examples/fl_data
 nedis/*
+/src/python/setup.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

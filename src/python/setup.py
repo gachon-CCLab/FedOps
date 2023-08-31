@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='fedops',
-    version='0.1.2',
+    version='0.1.0',
     author='Semo Yang',
     author_email='tpah20@gmail.com',
     description='FL Lifecycle Operations Management Platform',
@@ -15,8 +15,6 @@ setup(
         'uvicorn[standard]>=0.16.0',
         'requests>=2.26.0',
         'pydantic>=1.10.7',
-        # 'tensorflow>=2.7.0',
-        # 'keras>=2.7.0',
         'numpy>=1.23.5',
         'wandb>=0.15.0',
         'pandas>=1.5.3',

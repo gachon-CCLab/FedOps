@@ -185,7 +185,7 @@ class FLClient(fl.client.NumPyClient):
         logger.info(f'train_performance - {json_result}')
 
         # send train_result to client_performance pod
-        # client_api.ClientServerAPI(self.fl_task_id).put_train_result(json_result)
+        client_api.ClientServerAPI(self.fl_task_id).put_train_result(json_result)
 
         return parameters_prime, num_examples_train, results
 
@@ -231,7 +231,7 @@ class FLClient(fl.client.NumPyClient):
         logger.info(f'test - {json_result}')
 
         # send test_result to client_performance pod
-        # client_api.ClientServerAPI(self.fl_task_id).put_test_result(json_result)
+        client_api.ClientServerAPI(self.fl_task_id).put_test_result(json_result)
 
         # increase next round
         self.fl_round += 1

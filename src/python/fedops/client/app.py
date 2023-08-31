@@ -106,7 +106,7 @@ class FLClientTask():
             label_values = [[i, self.y_label_counter[i]] for i in range(self.label_count)]
             logging.info(f'label_values: {label_values}')
             
-            # client_wandb.data_status_wandb(wandb_run, label_values)
+            client_wandb.data_status_wandb(wandb_run, label_values)
 
             # client_start object
             client_start = client_fl.flower_client_start(self.status.FL_server_IP, client)
@@ -136,11 +136,11 @@ class FLClientTask():
             logging.info(f'client_operation_time - {json_result}')
 
             # Send client_time_result to client_performance pod
-            # client_api.ClientServerAPI(self.task_id).put_client_time_result(json_result)
+            client_api.ClientServerAPI(self.task_id).put_client_time_result(json_result)
 
             # Get client system result from wandb and send it to client_performance pod
-            # client_wandb.client_system_wandb(self.task_id, self.status.FL_client_mac, self.status.FL_next_gl_model,
-            #                                  wandb_name, self.wandb_account)
+            client_wandb.client_system_wandb(self.task_id, self.status.FL_client_mac, self.status.FL_next_gl_model,
+                                             wandb_name, self.wandb_account)
 
             # Delete client object
             del client
@@ -167,13 +167,13 @@ class FLClientTask():
         async def client_start_trigger(background_tasks: BackgroundTasks, manager_data: client_utils.ManagerData):
 
             # client_manager address
-            # client_res = client_api.ClientMangerAPI().get_info()
+            client_res = client_api.ClientMangerAPI().get_info()
 
             # # latest global model version
-            # latest_gl_model_v = client_res.json()['GL_Model_V']
+            latest_gl_model_v = client_res.json()['GL_Model_V']
 
             # next global model version
-            # self.status.FL_next_gl_model = latest_gl_model_v + 1
+            self.status.FL_next_gl_model = latest_gl_model_v + 1
             self.status.FL_next_gl_model = 1
 
             logging.info('bulid model')
@@ -186,8 +186,8 @@ class FLClientTask():
             self.status.FL_client_mac = client_utils.get_mac_address()
 
             # get the FL server IP
-            # self.status.FL_server_IP = client_api.ClientServerAPI(self.task_id).get_port()
-            self.status.FL_server_IP = "0.0.0.0:8080"
+            self.status.FL_server_IP = client_api.ClientServerAPI(self.task_id).get_port()
+            # self.status.FL_server_IP = "0.0.0.0:8080"
 
             # start FL Client
             background_tasks.add_task(self.fl_client_start)
@@ -204,7 +204,7 @@ class FLClientTask():
 
         finally:
             # FL client out
-            # client_api.ClientMangerAPI().get_client_out()
+            client_api.ClientMangerAPI().get_client_out()
             logging.info(f'{self.status.FL_client_mac}-client close')
 
 

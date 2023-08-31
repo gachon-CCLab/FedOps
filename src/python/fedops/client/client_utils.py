@@ -205,16 +205,16 @@ async def notify_fin():
     logging.info('try notify_fin')
     FL_client_start = False
 
-    # loop = asyncio.get_event_loop()
-    # future2 = loop.run_in_executor(None, requests.get, client_api.ClientMangerAPI().get_train_fin())
-    # r = await future2
+    loop = asyncio.get_event_loop()
+    future2 = loop.run_in_executor(None, requests.get, client_api.ClientMangerAPI().get_train_fin())
+    r = await future2
     
-    # if r.status_code == 200:
-    #     logging.info('trainFin')
-    # else:
-    #     logging.error(f'notify_fin error: {r.content}')
+    if r.status_code == 200:
+        logging.info('trainFin')
+    else:
+        logging.error(f'notify_fin error: {r.content}')
 
-    # return FL_client_start
+    return FL_client_start
 
 
 # check train fail info to client manager
@@ -222,13 +222,13 @@ async def notify_fail():
 
     logging.info('notify_fail start')
 
-    # FL_client_start = False
-    # loop = asyncio.get_event_loop()
-    # future1 = loop.run_in_executor(None, requests.get, client_api.ClientMangerAPI().get_train_fail())
-    # r = await future1
-    # if r.status_code == 200:
-    #     logging.error('trainFin')
-    # else:
-    #     logging.error('notify_fail error: ', r.content)
+    FL_client_start = False
+    loop = asyncio.get_event_loop()
+    future1 = loop.run_in_executor(None, requests.get, client_api.ClientMangerAPI().get_train_fail())
+    r = await future1
+    if r.status_code == 200:
+        logging.error('trainFin')
+    else:
+        logging.error('notify_fail error: ', r.content)
     
-    # return FL_client_start
+    return FL_client_start
