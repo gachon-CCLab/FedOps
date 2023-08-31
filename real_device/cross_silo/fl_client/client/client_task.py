@@ -1,9 +1,6 @@
 import client_data
 import client_model
 
-import sys
-sys.path.append('/home/ccl/Desktop/FedOps/src/python')
-
 from fedops.client import client_utils
 from fedops.client import app
 import logging
@@ -20,22 +17,6 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
                     handlers=handlers_list)
 
 logger = logging.getLogger(__name__)
-
-# read config.yaml file
-config_file_path = '../config.yaml'
-config = client_utils.read_config(config_file_path)
-
-# FL task ID
-task_id = config['task']['name']
-
-# Data name
-dataset = config['data']['name']
-
-# Label count
-label_count = config['data']['label_count']
-
-# Train validation split
-validation_split = config['data']['validation_split']
 
 def register_task():
     # Set client number
@@ -68,12 +49,37 @@ def register_task():
         # Download latest local model
         logger.info('Latest Local Model download')
         model, model_name = client_utils.download_local_model(task_id, local_list)
-
-    return x_train, x_test, y_train, y_test, y_label_counter, model, model_name
-
+    
+    
+    # Check tensorflow or torch model
+    model_type = client_utils.identify_model(model)
+    
+    # tesorflow version
+    registration = {"model_type": model_type, "x_train": x_train, "x_test": x_test, "y_train": y_train, 
+                    "y_test":y_test, "y_label_counter": y_label_counter, "model": model, "model_name":model_name}
+    
+    
+    return registration
 
 if __name__ == "__main__":
+    
+    # read config.yaml file
+    config_file_path = '../config.yaml'
+    config = client_utils.read_config(config_file_path)
+
+    # FL task ID
+    task_id = config['client']['task']['name']
+
+    # Data name
+    dataset = config['client']['data']['name']
+
+    # Label count
+    label_count = config['client']['data']['label_count']
+
+    # Train validation split
+    validation_split = config['client']['data']['validation_split']
+    
     fl_task = register_task()
-    fl_client = app.FLClientTask(config, fl_task)
+    fl_client = app.FLClientTask(config, fl_task, FL_client_port=8002)
     fl_client.start()
 

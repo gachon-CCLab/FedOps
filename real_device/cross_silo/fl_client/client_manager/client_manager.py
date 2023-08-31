@@ -66,7 +66,7 @@ class manager_status(BaseModel):
     FL_server_ST: str = 'ccl.gachon.ac.kr:40019'
     # FL_server: str = config['task']['name'] + '-210-102-181-208.nip.io:80'
     # FL_server: str = 'ccljhub.gachon.ac.kr'
-    FL_server: str = '210.102.181.208'
+    FL_server: str = 'ccl.gachon.ac.kr'
     S3_bucket: str = 'fl-gl-model'
     s3_ready: bool = False
     FL_client_num: int = 0
@@ -76,7 +76,7 @@ class manager_status(BaseModel):
     FL_client_online: bool = False  # flower client online
     FL_learning: bool = False  # flower client learning
 
-    FL_task_id: str = config['task']['name']
+    FL_task_id: str = config['client']['task']['name']
     FL_task_status: FLTask = None
 
     FL_client_mac: str = get_mac_address()
@@ -221,7 +221,7 @@ async def health_check():
         loop = asyncio.get_event_loop()
         res = await loop.run_in_executor(
             None, requests.get, (
-                    'http://' + manager.FL_server_ST + '/FLSe/info/' + config['task']['name'] + '/' + get_mac_address()
+                    'http://' + manager.FL_server_ST + '/FLSe/info/' + config['client']['task']['name'] + '/' + get_mac_address()
             )
         )
         if (res.status_code == 200) and (res.json()['Server_Status']['FLSeReady']):
