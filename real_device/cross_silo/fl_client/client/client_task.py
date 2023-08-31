@@ -1,5 +1,9 @@
 import client_data
 import client_model
+
+import sys
+sys.path.append('/home/ccl/Desktop/FedOps/src/python')
+
 from fedops.client import client_utils
 from fedops.client import app
 import logging

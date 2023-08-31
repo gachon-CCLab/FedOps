@@ -1,9 +1,15 @@
 *.local_model
-*.wandb
+# /examples/wandb
+*wandb
+*local_model
+/examples/D*
+*copy.py
 .idea
 .gitignore
 .vscode
 *.DS_Store
+examples/fl_data
+nedis/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

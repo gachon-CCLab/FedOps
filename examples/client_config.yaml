@@ -1,9 +1,9 @@
 task:
-  name: "64f02d31505feebff7c71dd2"
+  name: "646f419d9412e787a370d614"
 data:
-  name: 'cifar10'
+  name: 'SaMD'
   validation_split: 0.2
-  label_count: 10
+  label_count: 5
 wandb:
   api_key: "eb56a89a7457704c55789c584a3546c707d737f8"
   account: "yangsemo"

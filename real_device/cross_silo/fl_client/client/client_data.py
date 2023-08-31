@@ -6,8 +6,8 @@ from datetime import datetime
 
 import tensorflow as tf
 import numpy as np
-from keras.utils.np_utils import to_categorical # keras==2.8.0
-# from keras.utils import to_categorical # keras>=2.10.0
+# from keras.utils.np_utils import to_categorical # keras==2.8.0
+from keras.utils import to_categorical # keras>=2.10.0
 
 # set log format
 handlers_list = [logging.StreamHandler()]
