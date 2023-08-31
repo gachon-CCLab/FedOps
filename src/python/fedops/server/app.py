@@ -7,9 +7,11 @@ import json
 import time
 from . import server_api
 from . import server_utils
+from collections import OrderedDict
+
 
 # TF warning log filtering
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=[logging.StreamHandler()])
@@ -17,28 +19,37 @@ logger = logging.getLogger(__name__)
 
 
 class FLServer():
-    def __init__(self, config, model, model_name, x_val, y_val):
-        self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
-        self.server = server_utils.FLServerStatus() # Set FLServerStatus class
-        self.dataset = config['data']['name']
-        self.fraction_fit = float(config['aggregation']['fedAvg']['fraction_fit'])
-        self.fraction_evaluate = float(config['aggregation']['fedAvg']['fraction_evaluate'])
-        self.min_fit_clients = int(config['aggregation']['fedAvg']['min_fit_clients'])
-        self.min_evaluate_clients = int(config['aggregation']['fedAvg']['min_evaluate_clients'])
-        self.min_available_clients = int(config['aggregation']['fedAvg']['min_available_clients'])
+    def __init__(self, config, model, model_name, model_type, 
+                 criterion=None, optimizer=None, gl_val_loader=None, x_val=None, y_val=None, test_torch=None):
+        
+        # self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
+        self.task_id = "adsadsasddaads" # Set FL Task ID
 
-        self.batch_size = int(config['fl_server']['batch_size'])
-        self.local_epochs = int(config['fl_server']['local_epochs'])
-        self.num_rounds = int(config['fl_server']['num_rounds'])
-        self.val_steps = int(config['fl_server']['val_steps'])
+        self.server = server_utils.FLServerStatus() # Set FLServerStatus class
+        self.model_type = model_type
+        # self.dataset = config['data']['name']
+        self.aggregation = config['server']['aggregation']
+        
+        self.batch_size = int(config['server']['fl_round']['batch_size'])
+        self.local_epochs = int(config['server']['fl_round']['local_epochs'])
+        self.num_rounds = int(config['server']['fl_round']['num_rounds'])
+        self.val_steps = int(config['server']['fl_round']['val_steps'])
 
         self.init_model = model
         self.init_model_name = model_name
         self.next_model = None
         self.next_model_name = None
-        self.x_val = x_val
-        self.y_val = y_val
+        
+        if self.model_type=="Tensorflow":
+            self.x_val = x_val
+            self.y_val = y_val  
+               
 
+        elif self.model_type == "Pytorch":
+            self.gl_val_loader = gl_val_loader
+            self.criterion = criterion
+            self.optimizer = optimizer
+            self.test_torch = test_torch
 
 
     def init_gl_model_registration(self, model, gl_model_name) -> None:
@@ -67,17 +78,41 @@ class FLServer():
         # 1. server-side parameter initialization
         # 2. server-side parameter evaluation
 
-        strategy = fl.server.strategy.FedAvg(
-            fraction_fit=self.fraction_fit,
-            fraction_evaluate=self.fraction_evaluate,
-            min_fit_clients=self.min_fit_clients,
-            min_evaluate_clients=self.min_evaluate_clients,
-            min_available_clients=self.min_available_clients,
-            evaluate_fn=self.get_eval_fn(model, model_name),
-            on_fit_config_fn=self.fit_config,
-            on_evaluate_config_fn=self.evaluate_config,
-            initial_parameters=fl.common.ndarrays_to_parameters(model.get_weights())
-        )
+        all_keys = self.aggregation.keys()
+        all_keys_list = list(all_keys)
+        aggregation_algorithm = all_keys_list[0]
+        
+        # strategy=None
+        # model_parameters = []
+        
+        if self.model_type == "Tensorflow":
+            model_parameters = model.get_weights()
+        elif self.model_type == "Pytorch":
+            model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
+        
+        if aggregation_algorithm == 'fedAvg':
+            
+            fraction_fit = float(self.aggregation['fedAvg']['fraction_fit'])
+            fraction_evaluate = float(self.aggregation['fedAvg']['fraction_evaluate'])
+            min_fit_clients = int(self.aggregation['fedAvg']['min_fit_clients'])
+            min_evaluate_clients = int(self.aggregation['fedAvg']['min_evaluate_clients'])
+            min_available_clients = int(self.aggregation['fedAvg']['min_available_clients'])
+
+            
+            strategy = fl.server.strategy.FedAvg(
+                fraction_fit=fraction_fit,
+                fraction_evaluate=fraction_evaluate,
+                min_fit_clients=min_fit_clients,
+                min_evaluate_clients=min_evaluate_clients,
+                min_available_clients=min_available_clients,
+                evaluate_fn=self.get_eval_fn(model, model_name),
+                on_fit_config_fn=self.fit_config,
+                on_evaluate_config_fn=self.evaluate_config,
+                initial_parameters=fl.common.ndarrays_to_parameters(model_parameters)
+            )
+            
+        else:
+            pass
 
         # Start Flower server (SSL-enabled) for four rounds of federated learning
         fl.server.start_server(
@@ -97,10 +132,30 @@ class FLServer():
                 parameters: fl.common.NDArrays,
                 config: Dict[str, fl.common.Scalar],
         ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
-            # loss, accuracy, precision, recall, auc, auprc = model.evaluate(x_val, y_val)
-            loss, accuracy = model.evaluate(self.x_val, self.y_val)
+                        
+            # model path for saving local model
+            gl_model_path = f'./{model_name}_gl_model_V{self.server.next_gl_model_v}'
+            
+            if self.model_type == "Tensorflow":
+                # loss, accuracy, precision, recall, auc, auprc = model.evaluate(x_val, y_val)
+                loss, accuracy = model.evaluate(self.x_val, self.y_val)
 
-            model.set_weights(parameters)  # Update model with the latest parameters
+                model.set_weights(parameters)  # Update model with the latest parameters
+                
+                # model save
+                model.save(gl_model_path+'.h5')
+            
+            elif self.model_type == "Pytorch":
+                import torch
+                params_dict = zip(model.state_dict().keys(), parameters)
+                state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+                model.load_state_dict(state_dict, strict=True)
+            
+                # loss, accuracy = server_utils.torch_test(model, val_loader, self.criterion)
+                loss, accuracy = self.test_torch(model, self.gl_val_loader, self.criterion)
+                
+                # model save
+                torch.save(model.state_dict(), gl_model_path+'.pth')
 
             if self.server.round >= 1:
                 # fit aggregation end time
@@ -112,11 +167,10 @@ class FLServer():
                 logging.info(f'server_eval_result - {json_server_eval}')
 
                 # send gl model evaluation to performance pod
-                server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
+                # server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
 
 
-            # model save
-            model.save(f'/app/{model_name}_gl_model_V{self.server.next_gl_model_v}.h5')
+            
 
             return loss, {"accuracy": accuracy}
 
@@ -152,7 +206,7 @@ class FLServer():
         evaluation steps.
         """
 
-        return {"val_steps": self.val_steps}
+        return {"val_steps": self.val_steps, "batch_size": self.batch_size}
 
     def start(self):
 
@@ -163,8 +217,12 @@ class FLServer():
         # model = None
         # server.latest_gl_model_v = 0
 
-        # Loaded latest global model or no global model
-        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download(self.task_id)
+        # Loaded latest global model or no global model in s3
+        # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
+        
+        # Loaded latest global model or no global model in local
+        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
+
         # logging.info('Loaded latest global model or no global model')
 
         # New Global Model Version
@@ -179,7 +237,7 @@ class FLServer():
             'GL_Model_V': self.server.latest_gl_model_v  # Current Global Model Version
         }
         server_status_json = json.dumps(inform_Payload)
-        server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
+        # server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
 
         try:
             fl_start_time = time.time()
@@ -194,11 +252,14 @@ class FLServer():
             json_all_time_result = json.dumps(server_all_time_result)
             logging.info(f'server_operation_time - {json_all_time_result}')
             # Send server time result to performance pod
-            server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
-
+            # server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
+            
             # upload global model
-            global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.h5"
-            server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+            if self.model_type == "Tensorflow":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.h5"
+            elif self.model_type =="Pytorch":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.pth"
+            # server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
 
             logging.info(f'upload {global_model_file_name} model in s3')
 
@@ -206,13 +267,13 @@ class FLServer():
         except Exception as e:
             logging.error('error: ', e)
             data_inform = {'FLSeReady': False}
-            server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
+            # server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
 
         finally:
             logging.info('server close')
 
             # Modifying the model version in server manager
-            server_api.ServerAPI(self.task_id).put_fl_round_fin()
+            # server_api.ServerAPI(self.task_id).put_fl_round_fin()
             logging.info('global model version upgrade')
             # res = server_api.ServerAPI(task_id).put_fl_round_fin()
             # if res.status_code == 200:

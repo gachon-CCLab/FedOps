@@ -5,10 +5,10 @@ import requests
 class ServerAPI():
     def __init__(self, task_id):
         self.task_id = task_id
-        self.server_manager_address = '10.152.183.97'
+        self.server_manager_address = '10.102.217.157'
         self.server_manager_port = '8000'
-        self.performance_address = '10.152.183.203'
-        self.performance_port = '8001'
+        self.performance_address = '10.100.33.100'
+        self.performance_port = '8000'
 
     def put_server_status(self, server_status_json):
         # send server status to server manager

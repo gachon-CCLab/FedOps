@@ -45,7 +45,7 @@ class ClientMangerAPI():
 class ClientServerAPI():
     def __init__(self, task_id):
         self.task_id = task_id
-        self.ccl_address = 'ccljhub.gachon.ac.kr'
+        self.ccl_address = 'ccl.gachon.ac.kr'
         self.server_manager_port = '40019'
         self.client_performance_port = '40015'
 
