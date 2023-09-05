@@ -83,7 +83,7 @@ class FLServer():
         aggregation_algorithm = all_keys_list[0]
         
         # strategy=None
-        # model_parameters = []
+        model_parameters = None # Init model_parametes variable
         
         if self.model_type == "Tensorflow":
             model_parameters = model.get_weights()

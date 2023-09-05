@@ -143,3 +143,4 @@ dmypy.json
 .pyre/
 server_manager/config.txt
 src/python/setup.py
+src/python/setup.py
