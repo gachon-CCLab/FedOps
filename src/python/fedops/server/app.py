@@ -22,8 +22,8 @@ class FLServer():
     def __init__(self, config, model, model_name, model_type, 
                  criterion=None, optimizer=None, gl_val_loader=None, x_val=None, y_val=None, test_torch=None):
         
-        # self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
-        self.task_id = "adsadsasddaads" # Set FL Task ID
+        self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
+        # self.task_id = "adsadsasddaads" # Set FL Task ID
 
         self.server = server_utils.FLServerStatus() # Set FLServerStatus class
         self.model_type = model_type
@@ -83,7 +83,7 @@ class FLServer():
         aggregation_algorithm = all_keys_list[0]
         
         # strategy=None
-        model_parameters = None # Init model_parametes variable
+        # model_parameters = None # Init model_parametes variable
         
         if self.model_type == "Tensorflow":
             model_parameters = model.get_weights()
