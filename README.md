@@ -38,7 +38,7 @@ FedOps has developed a web service to manage the lifecycle operations of federat
 ```bash
 $ pip install fedops
 ```
-* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo)
+* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/examples/cross_silo)
 
 
 
