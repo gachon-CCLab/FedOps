@@ -144,3 +144,16 @@ dmypy.json
 server_manager/config.txt
 src/python/setup.py
 src/python/setup.py
+examples/cross-silo/fl_data/triage_group_hetero_1.csv
+examples/cross-silo/fl_data/triage_group_hetero_2.csv
+examples/cross-silo/fl_data/triage_group_hetero_3.csv
+examples/cross-silo/fl_data/triage_group_hetero_4.csv
+examples/cross-silo/fl_data/triage_group_hetero_5.csv
+examples/cross-silo/fl_data/triage_group_hetero_6.csv
+examples/cross-silo/fl_data/triage_group_homo_1.csv
+examples/cross-silo/fl_data/triage_group_homo_2.csv
+examples/cross-silo/fl_data/triage_group_homo_3.csv
+examples/cross-silo/fl_data/triage_group_homo_4.csv
+examples/cross-silo/fl_data/triage_group_homo_5.csv
+examples/cross-silo/fl_data/triage_group_homo_6.csv
+src/python/setup.py

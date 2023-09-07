@@ -1,10 +1,6 @@
 import argparse
 import fl_data
 import fl_model
-
-import sys
-sys.path.append('/home/ccl/Desktop/FedOps/src/python')
-
 from fedops.client import client_utils
 from fedops.client import app
 import logging
@@ -52,7 +48,7 @@ def register_task(FL_client_num):
     test_torch = fl_model.test_torch() # set torch test
 
     # Check tensorflow or torch model
-    model_type = client_utils.identify_model(model)
+    model_type, device = client_utils.identify_model(model)
 
     # Local model directory for saving local models
     task_id = config['client']['task']['name']  # FL task ID
@@ -100,7 +96,7 @@ if __name__ == "__main__":
     # FL_client_num = 2
     
     # read config.yaml file
-    config_file_path = '/home/ccl/Desktop/FedOps/examples/config.yaml'
+    config_file_path = '../config.yaml'
     config = client_utils.read_config(config_file_path)
     
     fl_task = register_task(FL_client_num)

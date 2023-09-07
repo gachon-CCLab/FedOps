@@ -1,7 +1,3 @@
-
-import sys
-sys.path.append('/home/ccl/Desktop/FedOps/src/python')
-
 from fedops.server import app
 from fedops.server import server_utils
 import fl_model
@@ -10,7 +6,7 @@ import fl_data
 
 if __name__ == "__main__":
     # Read server config file
-    config_file_path = '/home/ccl/Desktop/FedOps/examples/config.yaml'
+    config_file_path = '../config.yaml'
     config = server_utils.read_config(config_file_path)
 
     # Dataset Name

@@ -1,11 +1,8 @@
 from collections import OrderedDict
 import json, logging
-from unittest import result
 import flwr as fl
-import time, os
+import time
 from functools import partial
-import numba
-from numba import cuda
 from . import client_api
 from . import client_utils
 
@@ -51,18 +48,6 @@ class FLClient(fl.client.NumPyClient):
             self.optimizer = optimizer
             self.train_torch = train_torch
             self.test_torch = test_torch
-        
-        # Check if GPU is available
-        numba.cuda.select_device(0)
-        device = numba.cuda.get_current_device()
-
-        if device != None:
-            print("GPU is available.")
-            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-        else:
-            # CPU
-            os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-            print("GPU not available, using CPU")
 
 
     def set_parameters(self, parameters):

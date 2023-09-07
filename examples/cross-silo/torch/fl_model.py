@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from torch import optim
 from tqdm import tqdm 
@@ -38,6 +39,12 @@ def train_torch():
         """Train the network on the training set."""
         print("Starting training...")
 
+        # CUDA 지원 여부 확인
+        if torch.cuda.is_available():
+            device = torch.device("cuda")  # CUDA 디바이스를 사용하도록 설정
+        else:
+            device = torch.device("cpu")   # CPU를 사용하도록 설정
+        
         model.to(device)  # move model to GPU if available
 
         model.train()
@@ -61,8 +68,14 @@ def train_torch():
 def test_torch():
     def custom_test_torch(model, test_loader, criterion, steps: int = None, device: str = "cpu"):
         """Validate the network on the entire test set."""
-        import torch
         print("Starting evalutation...")
+        
+         # Check CUDA 
+        if torch.cuda.is_available():
+            device = torch.device("cuda")  # GPU
+        else:
+            device = torch.device("cpu")   # CPU
+        
         model.to(device)  # move model to GPU if available
         correct, loss = 0, 0.0
         model.eval()

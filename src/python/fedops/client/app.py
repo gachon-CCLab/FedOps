@@ -174,7 +174,7 @@ class FLClientTask():
 
             # next global model version
             self.status.FL_next_gl_model = latest_gl_model_v + 1
-            self.status.FL_next_gl_model = 1
+            # self.status.FL_next_gl_model = 1
 
             logging.info('bulid model')
 
