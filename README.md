@@ -38,7 +38,7 @@ FedOps has developed a web service to manage the lifecycle operations of federat
 ```bash
 $ pip install fedops
 ```
-* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo)
+* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/examples/cross-silo)
 
 
 
@@ -61,11 +61,6 @@ $ pip install fedops
   year={2023}
 }
 ```
-
-## Support
-For any questions or issues, please contact the FedOps support team at <U>***tpah20@gachon.ac.kr***</U>
-<<<<<<< Updated upstream
-=======
 
 FedOps (`fedops`) is a platform that helps organizations effectively manage and coordinate their federated learning operations:
 
@@ -90,7 +85,7 @@ FedOps has developed a web service to manage the lifecycle operations of federat
 ```bash
 $ pip install fedops
 ```
-* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/real_device/cross_silo)
+* [Start FedOps](https://github.com/gachon-CCLab/FedOps/tree/main/examples/cross_silo)
 
 
  
@@ -116,4 +111,3 @@ $ pip install fedops
 
 ## Support
 For any questions or issues, please contact the FedOps support team at <U>***tpah20@gachon.ac.kr***</U>
->>>>>>> Stashed changes
