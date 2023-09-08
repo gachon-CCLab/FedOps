@@ -29,7 +29,7 @@ This will create a new directory called `cross-silo` containing the following fi
 ```
 
 2. ***Create your Git repository and add FL server code.***
-   - Set up your own Git repository and add the FL server code (`fl_server.py, fl_model.py, fl_data.py, requirementst.txt`) from the fl_server directory. 
+   - Set up your own Git repository and add the FL server code (`fl_server.py, fl_model.py, fl_data.py, requirementst.txt, configure.yaml`) from the fl_server directory. 
    - This code will be used to deploy and run the FL server in CCL k8s environment.
    <br></br>
 
