@@ -33,7 +33,7 @@ global inform_SE
 config: dict
 
 # Read the YAML configuration file
-config_file_path = '/Users/yangsemo/VScode/FedOps/real_device/cross_silo/fl_client/config.yaml'
+config_file_path = './config.yaml'
 with open(config_file_path, 'r') as file:
     config = yaml.safe_load(file)
 

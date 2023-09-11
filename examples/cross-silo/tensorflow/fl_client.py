@@ -64,7 +64,7 @@ def register_task():
 if __name__ == "__main__":
     
     # read config.yaml file
-    config_file_path = '/Users/yangsemo/VScode/FedOps/real_device/cross_silo/fl_client/config.yaml'
+    config_file_path = './config.yaml'
     config = client_utils.read_config(config_file_path)
 
     # FL task ID
