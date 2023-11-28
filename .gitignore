@@ -11,7 +11,8 @@
 examples/fl_data
 nedis/*
 /src/python/setup.py
-/real_device
+/real_device/*
+/examples_copy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
