@@ -35,7 +35,7 @@ def register_task():
     # Local model directory for saving local models
     local_list = client_utils.local_model_directory(task_id)
 
-    if not local_list:
+    if local_list:
         # Build init local model
         logging.info('init local model')
         """
@@ -47,6 +47,7 @@ def register_task():
 
     else:
         # Download latest local model
+        print(local_list)
         logger.info('Latest Local Model download')
         model, model_name = client_utils.download_local_model(task_id, local_list)
     
@@ -64,7 +65,7 @@ def register_task():
 if __name__ == "__main__":
     
     # read config.yaml file
-    config_file_path = '/Users/yangsemo/VScode/FedOps/real_device/cross_silo/fl_client/config.yaml'
+    config_file_path = '/home/ccl/Desktop/FedOps/examples/cross-silo/config.yaml'
     config = client_utils.read_config(config_file_path)
 
     # FL task ID

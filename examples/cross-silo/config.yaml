@@ -1,17 +1,17 @@
 client:
   task:
-    name: "646f419d9412e787a370d614"
+    name: "64f99bb134a89971e54d09d9"
   data:
-    name: 'SaMD'
+    name: 'cifar10'
     validation_split: 0.2
-    label_count: 5
+    label_count: 10
   wandb:
-    api_key: "eb56a89a7457704c55789c584a3546c707d737f8"
-    account: "yangsemo"
+    api_key: "001470b62268462c3c179bb6ac7ce0dfc64b657b"
+    account: "gyom1204"
 
 server:
   fl_round:
-    num_rounds: 20 # FL round
+    num_rounds: 5 # FL round
     local_epochs: 5 # Client training epochs
     batch_size: 128
     val_steps: 32
