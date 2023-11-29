@@ -1,13 +1,13 @@
 client:
   task:
-    name: "64feb2fa34a89971e54d0acf"
+    name: "64f99bb134a89971e54d09d9"
   data:
     name: 'cifar10'
     validation_split: 0.2
     label_count: 10
   wandb:
-    api_key: "eb56a89a7457704c55789c584a3546c707d737f8"
-    account: "yangsemo"
+    api_key: "001470b62268462c3c179bb6ac7ce0dfc64b657b"
+    account: "gyom1204"
 
 server:
   fl_round:
