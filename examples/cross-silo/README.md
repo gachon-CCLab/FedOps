@@ -5,31 +5,38 @@ This guide provides step-by-step instructions on executing FedOps, a Federated L
 ## Steps
 
 1. ***Start by cloning the FedOps.***
+- Tensorflow
 
-```shell
-git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/examples/cross-silo . && rm -rf FedOps && cd cross-silo
-```
+   ```shell
+   git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/examples/cross-silo/tensorflow/* . && rm -rf FedOps
+   ```
+
+- Pytorch
+   ```shell
+   git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/examples/cross-silo/torch/* . && rm -rf FedOps
+   ```
 
 This will create a new directory called `cross-silo` containing the following files:
  
 ```shell
 - tensorflow
-   - fl_client
-   - fl_server
-   - fl_model
-   - fl_data
+   - fl_client.py
+   - fl_server.py
+   - fl_model.py
+   - fl_data.py
    - requirementst.txt (server requirement)
 - torch
-   - fl_client
-   - fl_server
-   - fl_model
-   - fl_data
+   - fl_client.py
+   - fl_server.py
+   - fl_model.py
+   - fl_data.py
    - requirementst.txt (server requirement)
+- config.yaml
 - README.md
 ```
 
 2. ***Create your Git repository and add FL server code.***
-   - Set up your own Git repository and add the FL server code (`fl_server.py, fl_model.py, fl_data.py, requirementst.txt`) from the fl_server directory. 
+   - Set up your own Git repository and add the FL server code (`fl_server.py, fl_model.py, fl_data.py, requirementst.txt, config.yaml`) from the fl_server directory. 
    - This code will be used to deploy and run the FL server in CCL k8s environment.
    <br></br>
 

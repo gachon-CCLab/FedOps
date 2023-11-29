@@ -11,6 +11,8 @@
 examples/fl_data
 nedis/*
 /src/python/setup.py
+/real_device/*
+/examples_copy
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -157,3 +159,6 @@ examples/cross-silo/fl_data/triage_group_homo_4.csv
 examples/cross-silo/fl_data/triage_group_homo_5.csv
 examples/cross-silo/fl_data/triage_group_homo_6.csv
 src/python/setup.py
+shap_value_1.png
+shap_value_KTAS.png
+shap_value_no_ KTAS.png
