@@ -9,12 +9,14 @@
 .vscode
 *.DS_Store
 examples/fl_data
-nedis/*
+*nedis/*
 *setup*
-/real_device/*
+*real_device/*
 /examples_copy
 *health*
 *dataset*
+*k8s*
+test*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

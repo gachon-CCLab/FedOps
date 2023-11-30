@@ -1,4 +1,0 @@
-fastapi==0.70.1
-uvicorn[standard]==0.16.0
-requests==2.26.0
-pydantic
