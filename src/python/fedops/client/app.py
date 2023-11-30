@@ -12,23 +12,29 @@ from . import client_api
 
 
 class FLClientTask():
-    def __init__(self, config, fl_task=None, FL_client_port=None):
+    def __init__(self, cfg, fl_task=None, FL_client_port=None):
         self.app = FastAPI()
         self.status = client_utils.FLClientStatus()
-        self.config = config
+        self.cfg = cfg
         self.client_port = FL_client_port
-        self.task_id = config['client']['task']['name']
-        self.dataset = config['client']['data']['name']
-        self.label_count = config['client']['data']['label_count']
-        self.validation_split = config['client']['data']['validation_split']
-        self.wandb_key = config['client']['wandb']['api_key']
-        self.wandb_account = config['client']['wandb']['account']
-        self.model_type = fl_task["model_type"]
+        self.task_id = cfg.task_id
+        self.client_mac = None
+        self.client_name = cfg.client.name
+        self.dataset_name = cfg.dataset.name
+        self.output_size = cfg.model.output_size
+        self.validation_split = cfg.dataset.validation_split
+        self.wandb_use = cfg.wandb.use
+        self.model_type = cfg.model_type
         self.model = fl_task["model"]
         self.model_name = fl_task["model_name"]
         self.y_label_counter = fl_task["y_label_counter"]
         
         logging.info(f'init model_type: {self.model_type}')
+        
+        if self.wandb_use:
+            self.wandb_key = cfg.wandb.key
+            self.wandb_account = cfg.wandb.account
+            self.wandb_project = cfg.wandb.project
 
         if self.model_type=="Tensorflow":
             self.x_train = fl_task["x_train"]
@@ -50,22 +56,24 @@ class FLClientTask():
         logging.info('FL learning ready')
 
         logging.info(f'fl_task_id: {self.task_id}')
-        logging.info(f'dataset: {self.dataset}')
-        logging.info(f'label_count: {self.label_count}')
+        logging.info(f'dataset: {self.dataset_name}')
+        logging.info(f'output_size: {self.output_size}')
         logging.info(f'validation_split: {self.validation_split}')
-        logging.info(f'wandb_key: {self.wandb_key}')
-        logging.info(f'wandb_account: {self.wandb_account}')
         logging.info(f'model_type: {self.model_type}')
 
         """
         Before running this code,
         set wandb api and account in the config.yaml
         """
-        # Set the name in the wandb project
-        wandb_name = f"client-v{self.status.FL_next_gl_model}({datetime.now()})"
-        # Login and init wandb project
-        wandb_run = client_wandb.start_wandb(self.wandb_key, self.task_id, wandb_name)
-        # wandb_run=None
+        if self.wandb_use:
+            logging.info(f'wandb_key: {self.wandb_key}')
+            logging.info(f'wandb_account: {self.wandb_account}')
+            # Set the name in the wandb project
+            wandb_name = f"client-v{self.status.next_gl_model}({datetime.now()})"
+            # Login and init wandb project
+            wandb_run = client_wandb.start_wandb(self.wandb_key, self.wandb_project, wandb_name)
+        else:
+            wandb_run=None
         
         # Initialize wandb_config, client object
         wandb_config = {}
@@ -78,38 +86,37 @@ class FLClientTask():
                 wandb_config = {"learning_rate": self.model.optimizer.learning_rate.numpy(),
                                 "optimizer": self.model.optimizer,
                                 "loss_function": self.model.loss,
-                                "dataset": self.dataset, "model_architecture": self.model_name}
+                                "dataset": self.dataset_name, "model_architecture": self.model_name}
 
                 client = client_fl.FLClient(model=self.model, x_train=self.x_train, y_train=self.y_train, x_test=self.x_test,
                                             y_test=self.y_test,
-                                            validation_split=self.validation_split, fl_task_id=self.task_id, client_mac=self.status.FL_client_mac,
-                                            fl_round=1, next_gl_model=self.status.FL_next_gl_model, wandb_name=wandb_name,
+                                            validation_split=self.validation_split, fl_task_id=self.task_id, client_mac=self.status.client_mac, 
+                                            client_name=self.status.client_name,
+                                            fl_round=1, next_gl_model=self.status.next_gl_model, wandb_use=self.wandb_use,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type)
 
             elif self.model_type == "Pytorch":
                 wandb_config = {"learning_rate": self.optimizer.param_groups[0]['lr'],
                                 "optimizer": self.optimizer.__class__.__name__,
                                 "loss_function": self.criterion,
-                                "dataset": self.dataset, "model_architecture": self.model_name}
+                                "dataset": self.dataset_name, "model_architecture": self.model_name}
 
                 client = client_fl.FLClient(model=self.model, validation_split=self.validation_split, 
-                                            fl_task_id=self.task_id, client_mac=self.status.FL_client_mac,
-                                            fl_round=1, next_gl_model=self.status.FL_next_gl_model, wandb_name=wandb_name,
+                                            fl_task_id=self.task_id, client_mac=self.status.client_mac, client_name=self.status.client_name,
+                                            fl_round=1, next_gl_model=self.status.next_gl_model, wandb_use=self.wandb_use,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type, 
                                             train_loader=self.train_loader, val_loader=self.val_loader, test_loader=self.test_loader, 
                                             criterion=self.criterion, optimizer=self.optimizer, 
                                             train_torch=self.train_torch, test_torch=self.test_torch)
 
 
-            wandb_run.config.update(wandb_config, allow_val_change=True)
-            # Check data fl client data status in the wandb
-            label_values = [[i, self.y_label_counter[i]] for i in range(self.label_count)]
-            logging.info(f'label_values: {label_values}')
             
-            client_wandb.data_status_wandb(wandb_run, label_values)
+            # Check data fl client data status in the wandb
+            label_values = [[i, self.y_label_counter[i]] for i in range(self.output_size)]
+            logging.info(f'label_values: {label_values}')
 
             # client_start object
-            client_start = client_fl.flower_client_start(self.status.FL_server_IP, client)
+            client_start = client_fl.flower_client_start(self.status.server_IP, client)
 
             # FL client start time
             fl_start_time = time.time()
@@ -121,38 +128,40 @@ class FLClientTask():
 
             # FL client end time
             fl_end_time = time.time() - fl_start_time
+            
+            
+            if self.wandb_use:
+                wandb_run.config.update(wandb_config, allow_val_change=True)
+                client_wandb.data_status_wandb(wandb_run, label_values)
+                # Wandb log(Client round end time)
+                wandb_run.log({"operation_time": fl_end_time, "next_gl_model_v": self.status.next_gl_model},step=self.status.next_gl_model)
+                # close wandb
+                wandb_run.finish()
+                
+                # Get client system result from wandb and send it to client_performance pod
+                client_wandb.client_system_wandb(self.task_id, self.status.client_mac, self.status.client_name, 
+                                                 self.status.next_gl_model, wandb_name, self.wandb_account)
 
-            # Wandb log(Client round end time)
-            wandb_run.log({"operation_time": fl_end_time, "next_gl_model_v": self.status.FL_next_gl_model},
-                          step=self.status.FL_next_gl_model)
-
-            # close wandb
-            wandb_run.finish()
-
-            client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.FL_client_mac,
+            client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.client_mac, "client_name": self.status.client_name,
                                       "operation_time": fl_end_time,
-                                      "next_gl_model_v": self.status.FL_next_gl_model, "wandb_name": wandb_name}
+                                      "next_gl_model_v": self.status.next_gl_model}
             json_result = json.dumps(client_all_time_result)
             logging.info(f'client_operation_time - {json_result}')
 
             # Send client_time_result to client_performance pod
             client_api.ClientServerAPI(self.task_id).put_client_time_result(json_result)
 
-            # Get client system result from wandb and send it to client_performance pod
-            client_wandb.client_system_wandb(self.task_id, self.status.FL_client_mac, self.status.FL_next_gl_model,
-                                             wandb_name, self.wandb_account)
-
             # Delete client object
             del client
 
             # Complete Client training
-            self.status.FL_client_start = await client_utils.notify_fin()
+            self.status.client_start = await client_utils.notify_fin()
             logging.info('FL Client Learning Finish')
 
         except Exception as e:
             logging.info('[E][PC0002] learning', e)
-            self.status.FL_client_fail = True
-            self.status.FL_client_start = await client_utils.notify_fail()
+            self.status.client_fail = True
+            self.status.client_start = await client_utils.notify_fail()
             raise e
 
     def start(self):
@@ -164,30 +173,30 @@ class FLClientTask():
 
         # asynchronously start client
         @self.app.post("/start")
-        async def client_start_trigger(background_tasks: BackgroundTasks, manager_data: client_utils.ManagerData):
+        async def client_start_trigger(background_tasks: BackgroundTasks):
 
             # client_manager address
             client_res = client_api.ClientMangerAPI().get_info()
 
-            # # latest global model version
+            # # # latest global model version
             latest_gl_model_v = client_res.json()['GL_Model_V']
 
-            # next global model version
-            self.status.FL_next_gl_model = latest_gl_model_v + 1
-            # self.status.FL_next_gl_model = 1
+            # # next global model version
+            self.status.next_gl_model = latest_gl_model_v + 1
+            # self.status.next_gl_model = 1
 
             logging.info('bulid model')
 
             logging.info('FL start')
-            self.status.FL_client_start = True
+            self.status.client_start = True
 
-            self.status.FL_server_IP = manager_data.server_ip
-            self.status.FL_task_id = self.task_id
-            self.status.FL_client_mac = client_utils.get_mac_address()
+            self.status.task_id = self.task_id
+            self.status.client_mac = client_utils.get_mac_address()
+            self.status.client_name = self.client_name
 
             # get the FL server IP
-            self.status.FL_server_IP = client_api.ClientServerAPI(self.task_id).get_port()
-            # self.status.FL_server_IP = "0.0.0.0:8080"
+            self.status.server_IP = client_api.ClientServerAPI(self.task_id).get_port()
+            # self.status.server_IP = "0.0.0.0:8080"
 
             # start FL Client
             background_tasks.add_task(self.fl_client_start)
@@ -205,6 +214,6 @@ class FLClientTask():
         finally:
             # FL client out
             client_api.ClientMangerAPI().get_client_out()
-            logging.info(f'{self.status.FL_client_mac}-client close')
+            logging.info(f'{self.status.client_name};{self.status.client_mac}-client close')
 
 

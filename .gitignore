@@ -3,22 +3,26 @@
 *wandb
 *local_model
 /examples/D*
-*copy.py
+*copy*
 .idea
 .gitignore
 .vscode
 *.DS_Store
 examples/fl_data
 nedis/*
-/src/python/setup.py
+*setup*
 /real_device/*
 /examples_copy
+*health*
+*dataset*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+*tensorflow*
+*outputs*
+*.pth
 # C extensions
 *.so
 

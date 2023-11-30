@@ -1,17 +1,12 @@
-from typing import Dict, Optional, Tuple, cast
+
+from typing import Dict, Tuple, cast
 from logging import WARNING
 import flwr
-import argparse
 from flwr.common import Parameters, Scalar, NDArrays, NDArray
 from flwr.common.logger import log
 from flwr.server.strategy.aggregate import aggregate
 import numpy as np
-import hydra
-from hydra.core.hydra_config import HydraConfig
-from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
 from io import BytesIO
-
 
 
 class MobileStrategy(flwr.server.strategy.FedAvg):
@@ -84,10 +79,10 @@ class MobileStrategy(flwr.server.strategy.FedAvg):
         elif rnd == 1:  # Only log this warning once
             log(WARNING, "No fit_metrics_aggregation_fn provided")
 
-        if parameters_aggregated is not None:
-            # Save weights
-            print(f"Saving round {rnd} weights...")
-            np.savez(f"round-{rnd}-weights.npz", *parameters_aggregated)
+        # if parameters_aggregated is not None:
+        #     # Save weights
+        #     print(f"Saving round {rnd} weights...")
+            # np.savez(f"round-{rnd}-weights.npz", *parameters_aggregated)
         
         return parameters_aggregated, metrics_aggregated
         
@@ -103,27 +98,3 @@ class MobileStrategy(flwr.server.strategy.FedAvg):
             return None
         loss, metrics = eval_res
         return loss, metrics
-
-
-@hydra.main(config_path="conf", config_name="config", version_base=None)
-def main(cfg: DictConfig) -> None:
-    strategy = MobileStrategy(
-        client_device = cfg.client_device,
-        min_fit_clients=cfg.clients_per_round,
-        min_evaluate_clients=cfg.clients_per_round,
-        min_available_clients=cfg.clients_per_round,
-        evaluate_fn=None,
-        on_fit_config_fn={"batch_size": cfg.batch_size, "local_epochs": cfg.num_epochs},
-    )
-
-    # Start Flower server
-    hist = flwr.server.start_server(
-        server_address=f"[::]:{cfg.server_port}",
-        config=flwr.server.ServerConfig(num_rounds=cfg.num_rounds),
-        strategy=strategy,
-    )
-    return hist
-
-
-if __name__ == "__main__":
-    hist = main()

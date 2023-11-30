@@ -1,12 +1,9 @@
 import logging
-import time
-
 import wandb
-
 from . import client_api
 
 
-def start_wandb(wandb_key, task_id, wandb_name):
+def start_wandb(wandb_key, wandb_project, wandb_name):
     wandb.login(key=wandb_key)
     config_wandb = {
         "learning_rate": 0,
@@ -17,17 +14,17 @@ def start_wandb(wandb_key, task_id, wandb_name):
         "epochs": 0,
         "num_rounds": 0
     }
-    run = wandb.init(project=task_id, name=wandb_name, config=config_wandb)
+    run = wandb.init(project=wandb_project, name=wandb_name, config=config_wandb)
 
     return run
 
 
-def data_status_wandb(run, labels):
+def data_status_wandb(run=None, labels=None):
     table = wandb.Table(data=labels, columns=["label", "data_size"])
     run.log({'Data Lable Histogram': wandb.plot.bar(table, "label", "data_size", title="Data Size Distribution")})
 
 
-def client_system_wandb(fl_task_id, client_mac, next_gl_model_v, wandb_name, wandb_account):
+def client_system_wandb(fl_task_id, client_mac, client_name, next_gl_model_v, wandb_name, wandb_account):
     try:
         # check client system resource usage from wandb
         api = wandb.Api()
@@ -55,9 +52,10 @@ def client_system_wandb(fl_task_id, client_mac, next_gl_model_v, wandb_name, wan
 
         # Extract df_row by row
         for i in range(len(sys_df)):
-            sys_df_row = sys_df.iloc[i]
+            sys_df_row = sys_df.iloc[i].copy()
             sys_df_row['fl_task_id'] = fl_task_id
             sys_df_row['client_mac'] = client_mac
+            sys_df_row['client_name'] = client_name
             sys_df_row['next_gl_model_v'] = next_gl_model_v
             sys_df_row['wandb_name'] = wandb_name
 

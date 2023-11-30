@@ -1,8 +1,5 @@
-import yaml
 import boto3
 import os, logging, re
-from abc import ABC, abstractmethod
-
 
 # FL Server Status Class
 class FLServerStatus:
@@ -13,54 +10,16 @@ class FLServerStatus:
     round = 0  # round number
 
 
-class Torch(ABC):
-    @abstractmethod
-    def torch_test(self, model, val_loader, criterion, steps: int = None, device: str = "cpu"):
-        pass
-    
-
-def read_config(file_path):
-    # Read the YAML configuration file
-    config_file_path = file_path
-    with open(config_file_path, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
-
-# Check tensorflow or torch model
-def identify_model(model):
-    try:
-        import tensorflow as tf
-        if isinstance(model, tf.keras.Model):
-            return "Tensorflow"
-    except ImportError:
-        pass
-    
-    try:
-        import torch
-        if isinstance(model, torch.nn.Module):
-            return "Pytorch"
-    except ImportError:
-        pass
-
-    return "Unknown Model"
-
 # Connect aws session
-# def aws_session(region_name='ap-northeast-2'):
-#     return boto3.session.Session(aws_access_key_id=os.environ.get('ACCESS_KEY_ID'),
-#                                  aws_secret_access_key=os.environ.get('ACCESS_SECRET_KEY'),
-#                                  region_name=region_name)
 def aws_session(region_name='ap-northeast-2'):
-    ACCESS_KEY_ID = "AKIA2ENEMY666LKZE3W4"
-    ACCESS_SECRET_KEY = "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"
-    return boto3.session.Session(aws_access_key_id=ACCESS_KEY_ID,
-                                 aws_secret_access_key=ACCESS_SECRET_KEY,
+    return boto3.session.Session(aws_access_key_id=os.environ.get('ACCESS_KEY_ID'),
+                                 aws_secret_access_key=os.environ.get('ACCESS_SECRET_KEY'),
                                  region_name=region_name)
 
 
 # Global model upload in S3
 def upload_model_to_bucket(task_id, global_model_name):
-    # bucket_name = os.environ.get('BUCKET_NAME')
-    bucket_name = "global-model"
+    bucket_name = os.environ.get('BUCKET_NAME')
 
     logging.info(f'bucket_name: {bucket_name}')
 
@@ -74,35 +33,6 @@ def upload_model_to_bucket(task_id, global_model_name):
 
     logging.info(f'Upload {global_model_name}')
 
-    # s3_url = f"https://{bucket_name}.s3.amazonaws.com/{global_model_name}"
-    # return s3_url
-
-
-
-# torch test
-def torch_test(model, val_loader, criterion, steps: int = None, device: str = "cpu"):
-    """Validate the network on the entire test set."""
-    import torch
-    print("Starting evalutation...")
-    model.to(device)  # move model to GPU if available
-    correct, loss = 0, 0.0
-    model.eval()
-    with torch.no_grad():
-        for batch_idx, (inputs, labels) in enumerate(val_loader):
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            loss += criterion(outputs, labels).item()
-            predicted = torch.argmax(outputs, dim=1)
-            labels_int = torch.argmax(labels, dim=1)
-            # logging.info(f"predicted: {predicted}")
-            # logging.info(f"labels_int: {labels_int}")
-            # _, predicted = torch.max(outputs.data, 1)
-            correct += (predicted == labels_int).sum().item()
-            if steps is not None and batch_idx == steps:
-                break
-    accuracy = correct / len(val_loader.dataset)
-    model.to("cpu")  # move model back to CPU
-    return loss, accuracy
 
 # Download the latest global model stored in s3
 def model_download_s3(task_id, model_type, model=None):
