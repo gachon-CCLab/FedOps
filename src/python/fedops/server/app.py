@@ -206,7 +206,7 @@ class FLServer():
         inform_Payload = {
             'S3_bucket': 'fl-gl-model',  # bucket name
             'Latest_GL_Model': self.server.latest_gl_model_v,  # Model Weight File Name
-            'Play_datetime': today_time,
+            'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
             'GL_Model_V': self.server.next_gl_model_v # Current Global Model Version
         }

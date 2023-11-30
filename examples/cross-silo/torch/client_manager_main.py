@@ -236,7 +236,6 @@ async def check_flclient_online():
                 manager.client_online = res_on.json()['client_online']
                 manager.client_training = res_on.json()['client_start']
                 manager.task_id = res_on.json()['task_id']
-                print('client_online: ', manager.client_online, ' client_name: ', manager.client_name)
                 logging.info('client_online')
 
             else:
