@@ -1,7 +1,0 @@
-# server requirements
-fedops
-torch
-torchvision
-tqdm
-scikit-learn
-hydra-core

@@ -189,7 +189,7 @@ class FLServer():
     def start(self):
 
         today = datetime.datetime.today()
-        today_time = today.strftime('%Y-%m-%d %H-%M-%S')
+        today_time = today.strftime('%Y-%m-%d %H:%M:%S')
 
         # Loaded latest global model or no global model in s3
         self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
@@ -205,7 +205,7 @@ class FLServer():
         # API that sends server status to server manager
         inform_Payload = {
             'S3_bucket': 'fl-gl-model',  # bucket name
-            'Latest_GL_Model': self.server.latest_gl_model_v,  # Model Weight File Name
+            'Latest_GL_Model': 'gl_model_%s_V.h5' % self.server.latest_gl_model_v,  # Model Weight File Name
             'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
             'GL_Model_V': self.server.next_gl_model_v # Current Global Model Version
