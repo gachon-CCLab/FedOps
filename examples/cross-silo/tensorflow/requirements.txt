@@ -1,5 +1,0 @@
-# server requirements
-
-fedops
-tensorflow
-keras
