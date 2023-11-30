@@ -30,9 +30,6 @@ def main(cfg: DictConfig) -> None:
     
     print(OmegaConf.to_yaml(cfg))
     
-    FL_client_name = cfg.client.name
-    FL_client_port = cfg.client.port
-    
     """
    Client data load function
    Split partition => apply each client dataset(Options)
@@ -85,7 +82,7 @@ def main(cfg: DictConfig) -> None:
     } # torch version
     
     
-    fl_client = FLClientTask(cfg, registration, FL_client_port)
+    fl_client = FLClientTask(cfg, registration)
     fl_client.start()
 
 

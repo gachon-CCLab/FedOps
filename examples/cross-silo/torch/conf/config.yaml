@@ -19,10 +19,6 @@ dataset:
     name: 'Cifar100'
     validation_split: 0.2
 
-client:
-  name: 'first client'
-  port: 8003
-
 server:
   strategy:
     _target_: flwr.server.strategy.FedAvg

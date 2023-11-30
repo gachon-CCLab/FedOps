@@ -1,4 +1,5 @@
 import logging, json
+import socket
 import time
 from fastapi import FastAPI, BackgroundTasks
 import asyncio
@@ -12,14 +13,12 @@ from . import client_api
 
 
 class FLClientTask():
-    def __init__(self, cfg, fl_task=None, FL_client_port=None):
+    def __init__(self, cfg, fl_task=None):
         self.app = FastAPI()
         self.status = client_utils.FLClientStatus()
         self.cfg = cfg
-        self.client_port = FL_client_port
+        self.client_port = 8003
         self.task_id = cfg.task_id
-        self.client_mac = None
-        self.client_name = cfg.client.name
         self.dataset_name = cfg.dataset.name
         self.output_size = cfg.model.output_size
         self.validation_split = cfg.dataset.validation_split
@@ -192,7 +191,7 @@ class FLClientTask():
 
             self.status.task_id = self.task_id
             self.status.client_mac = client_utils.get_mac_address()
-            self.status.client_name = self.client_name
+            self.status.client_name = socket.gethostname()
 
             # get the FL server IP
             self.status.server_IP = client_api.ClientServerAPI(self.task_id).get_port()
