@@ -1,4 +1,3 @@
 # server requirements
-#fedops
-fedops-test
+fedops
 torch

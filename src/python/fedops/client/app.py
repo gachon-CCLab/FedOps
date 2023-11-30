@@ -168,6 +168,9 @@ class FLClientTask():
         # Example:
         @self.app.get('/online')
         async def get_info():
+            self.status.client_name = socket.gethostname()
+            self.status.task_id = self.task_id
+            self.status.client_mac = client_utils.get_mac_address()
             return self.status
 
         # asynchronously start client
@@ -188,10 +191,6 @@ class FLClientTask():
 
             logging.info('FL start')
             self.status.client_start = True
-
-            self.status.task_id = self.task_id
-            self.status.client_mac = client_utils.get_mac_address()
-            self.status.client_name = socket.gethostname()
 
             # get the FL server IP
             self.status.server_IP = client_api.ClientServerAPI(self.task_id).get_port()

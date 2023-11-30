@@ -37,7 +37,6 @@ def main(cfg: DictConfig) -> None:
    Keep these variables.
    """
     train_loader, val_loader, test_loader, y_label_counter = data_preparation.load_partition(dataset=cfg.dataset.name, 
-                                                                        FL_client_name=FL_client_name, 
                                                                         validation_split=cfg.dataset.validation_split, 
                                                                         label_count=cfg.model.output_size,
                                                                         batch_size=cfg.batch_size) # Pytorch version

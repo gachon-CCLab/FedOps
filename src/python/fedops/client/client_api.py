@@ -20,10 +20,10 @@ class ClientMangerAPI():
         # client manager address
         if len(sys.argv) == 1:
             # When running with shell
-            self.client_manager_addr = 'http://localhost:8003'
+            self.client_manager_addr = 'http://localhost:8004'
         else:
             # When running with docker
-            self.client_manager_addr = 'http://client-manager:8003'
+            self.client_manager_addr = 'http://client-manager:8004'
 
 
     def get_info(self):

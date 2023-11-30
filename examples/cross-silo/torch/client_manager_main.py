@@ -30,14 +30,6 @@ today_str = today.strftime('%Y-%m-%d')
 
 global inform_SE
 
-config: dict
-
-# Read the YAML configuration file
-config_file_path = './config.yaml'
-with open(config_file_path, 'r') as file:
-    config = yaml.safe_load(file)
-
-
 def get_mac_address():
     mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
     return ":".join([mac[i:i + 2] for i in range(0, 12, 2)])
@@ -56,13 +48,13 @@ class FLTask(BaseModel):
 
 
 class manager_status(BaseModel):
-    global today_str, inform_SE, config
+    global today_str, inform_SE
 
-    FL_client: str = 'localhost:8003'
-    # if len(sys.argv) == 1:
-    #     FL_client = 'localhost:8003'
-    # else:
-    #     FL_client = 'fl-client:8003'
+    # FL_client: str = '0.0.0.0:8003'
+    if len(sys.argv) == 1:
+        FL_client = 'localhost:8003'
+    else:
+        FL_client = 'fl-client:8003'
     server_ST: str = 'ccl.gachon.ac.kr:40019'
     server: str = 'ccl.gachon.ac.kr'
     S3_bucket: str = 'fl-gl-model'
@@ -73,7 +65,7 @@ class manager_status(BaseModel):
     client_online: bool = False  # flower client online
     client_training: bool = False  # flower client learning
 
-    task_id: str = config['client']['task']['name']
+    task_id: str = ''
     task_status: FLTask = None
 
     client_mac: str = get_mac_address()
@@ -96,7 +88,7 @@ def startup():
     loop.set_debug(True)
     loop.create_task(check_flclient_online())
     loop.create_task(health_check())
-    loop.create_task(register_client())
+    # loop.create_task(register_client())
     loop.create_task(start_training())
 
 
@@ -104,7 +96,6 @@ def startup():
 # fl server occured error
 def fl_server_closed():
     global manager
-
     try: 
         requests.put(inform_SE + 'FLSeClosed/' + manager.task_id, params={'FLSeReady': 'false'})
         logging.info('server status FLSeReady => False')
@@ -161,33 +152,33 @@ def async_dec(awaitable_func):
 
 
 # send client name to server_status
-@async_dec
-async def register_client():
-    global manager, inform_SE
+# @async_dec
+# async def register_client():
+#     global manager, inform_SE
 
-    res = requests.put(inform_SE + 'RegisterFLTask',
-                       data=json.dumps({
-                           'FL_task_ID': manager.task_id,
-                           'Device_mac': manager.client_mac,
-                           'Device_name': manager.client_name,
-                           'Device_online': manager.client_online,
-                           'Device_training': manager.client_training,
-                       }))
+#     res = requests.put(inform_SE + 'RegisterFLTask',
+#                        data=json.dumps({
+#                            'FL_task_ID': manager.task_id,
+#                            'Device_mac': manager.client_mac,
+#                            'Device_hostname': manager.client_name,
+#                            'Device_online': manager.client_online,
+#                            'Device_training': manager.client_training,
+#                        }))
 
-    if res.status_code == 200:
-        pass
-    else:
-        logging.error('FLSe/RegisterFLTask: server_ST offline')
-        pass
+#     if res.status_code == 200:
+#         pass
+#     else:
+#         logging.error('FLSe/RegisterFLTask: server_ST offline')
+#         pass
 
-    await asyncio.sleep(14)
-    return manager
+#     await asyncio.sleep(14)
+#     return manager
 
 
 # check Server Status
 @async_dec
 async def health_check():
-    global manager, config
+    global manager
 
     health_check_result = {
         "client_name": manager.client_name,
@@ -206,7 +197,7 @@ async def health_check():
         loop = asyncio.get_event_loop()
         res = await loop.run_in_executor(
             None, requests.get, (
-                    'http://' + manager.server_ST + '/FLSe/info/' + config['client']['task']['name'] + '/' + get_mac_address()
+                    'http://' + manager.server_ST + '/FLSe/info/' + manager.task_id + '/' + get_mac_address()
             )
         )
         if (res.status_code == 200) and (res.json()['Server_Status']['FLSeReady']):
@@ -240,11 +231,11 @@ async def check_flclient_online():
     if not manager.client_training:
         try:
             loop = asyncio.get_event_loop()
-            res = await loop.run_in_executor(None, requests.get, ('http://' + manager.FL_client + '/online'))
-            if (res.status_code == 200) and (res.json()['client_online']):
-                manager.client_online = res.json()['client_online']
-                manager.client_training = res.json()['client_start']
-                manager.client_name = res.json()['client_name']
+            res_on = await loop.run_in_executor(None, requests.get, ('http://' + manager.FL_client + '/online'))
+            if (res_on.status_code == 200) and (res_on.json()['client_online']):
+                manager.client_online = res_on.json()['client_online']
+                manager.client_training = res_on.json()['client_start']
+                manager.task_id = res_on.json()['task_id']
                 print('client_online: ', manager.client_online, ' client_name: ', manager.client_name)
                 logging.info('client_online')
 
@@ -254,6 +245,22 @@ async def check_flclient_online():
         except requests.exceptions.ConnectionError:
             logging.info('client offline')
             pass
+        
+        res_task = requests.put(inform_SE + 'RegisterFLTask',
+                       data=json.dumps({
+                           'FL_task_ID': manager.task_id,
+                           'Device_mac': manager.client_mac,
+                           'Device_hostname': manager.client_name,
+                           'Device_online': manager.client_online,
+                           'Device_training': manager.client_training,
+                       }))
+
+        if res_task.status_code == 200:
+            pass
+        else:
+            logging.error('FLSe/RegisterFLTask: server_ST offline')
+            pass
+        
     else:
         pass
     
@@ -305,4 +312,4 @@ async def start_training():
 
 if __name__ == "__main__":
     # asyncio.run(training())
-    uvicorn.run("client_manager:app", host='0.0.0.0', port=8004, reload=True, loop="asyncio")
+    uvicorn.run("client_manager_main:app", host='0.0.0.0', port=8004, reload=True, loop="asyncio")

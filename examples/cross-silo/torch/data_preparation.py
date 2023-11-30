@@ -4,11 +4,9 @@ from collections import Counter
 from datetime import datetime
 
 import torch
-from torch.utils.data import DataLoader, Subset, Dataset,random_split
+from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import datasets, transforms
 
-import pandas as pd
-from sklearn.model_selection import train_test_split
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -42,7 +40,7 @@ class CustomDataset(Dataset):
         return self.data[idx], self.targets[idx]
 
 # Cifar 100
-def load_partition(dataset, FL_client_name, validation_split, label_count, batch_size):
+def load_partition(dataset, validation_split, label_count, batch_size):
     now = datetime.now()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
     fl_task = {"dataset": dataset, "start_execution_time": now_str}
@@ -56,7 +54,7 @@ def load_partition(dataset, FL_client_name, validation_split, label_count, batch
     ])
 
     # Download CIFAR-100 Dataset
-    full_dataset = datasets.CIFAR100(root='/home/ccl/Desktop/FedOps/examples/cross-silo/torch/dataset/cifar100', train=True, download=True, transform=transform)
+    full_dataset = datasets.CIFAR100(root='./dataset/cifar100', train=True, download=True, transform=transform)
 
     # Splitting the full dataset into train, validation, and test sets
     test_split=0.2
@@ -76,7 +74,7 @@ def load_partition(dataset, FL_client_name, validation_split, label_count, batch
 
     # Log data distribution information
     for i in range(label_count):  # CIFAR-100 has 100 classes
-        data_check_dict = {"FL_client_name": FL_client_name, "label_num": i, "data_size": int(y_label_counter[i])}
+        data_check_dict = {"label_num": i, "data_size": int(y_label_counter[i])}
         data_check_json = json.dumps(data_check_dict)
         logging.info(f'data_check - {data_check_json}')
 
@@ -91,7 +89,7 @@ def gl_model_torch_validation(batch_size):
     ])
 
     # Load the validation set of CIFAR-10 Dataset
-    val_dataset = datasets.CIFAR100(root='/home/ccl/Desktop/FedOps/examples/cross-silo/torch/dataset/cifar100', train=False, download=True, transform=transform)
+    val_dataset = datasets.CIFAR100(root='./dataset/cifar100', train=False, download=True, transform=transform)
 
     # DataLoader for validation
     gl_val_loader = DataLoader(val_dataset, batch_size=batch_size)
