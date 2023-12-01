@@ -34,6 +34,8 @@ class FLClientTask():
             self.wandb_key = cfg.wandb.key
             self.wandb_account = cfg.wandb.account
             self.wandb_project = cfg.wandb.project
+            self.wandb_name = f"client-v{self.status.next_gl_model}({datetime.now()})"
+
 
         if self.model_type=="Tensorflow":
             self.x_train = fl_task["x_train"]
@@ -68,9 +70,8 @@ class FLClientTask():
             logging.info(f'wandb_key: {self.wandb_key}')
             logging.info(f'wandb_account: {self.wandb_account}')
             # Set the name in the wandb project
-            wandb_name = f"client-v{self.status.next_gl_model}({datetime.now()})"
             # Login and init wandb project
-            wandb_run = client_wandb.start_wandb(self.wandb_key, self.wandb_project, wandb_name)
+            wandb_run = client_wandb.start_wandb(self.wandb_key, self.wandb_project, self.wandb_name)
         else:
             wandb_run=None
         
@@ -139,7 +140,7 @@ class FLClientTask():
                 
                 # Get client system result from wandb and send it to client_performance pod
                 client_wandb.client_system_wandb(self.task_id, self.status.client_mac, self.status.client_name, 
-                                                 self.status.next_gl_model, wandb_name, self.wandb_account)
+                                                 self.status.next_gl_model, self.wandb_name, self.wandb_account, self.wandb_project)
 
             client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.client_mac, "client_name": self.status.client_name,
                                       "operation_time": fl_end_time,
@@ -184,7 +185,7 @@ class FLClientTask():
             latest_gl_model_v = client_res.json()['GL_Model_V']
 
             # # next global model version
-            self.status.next_gl_model = latest_gl_model_v + 1
+            self.status.next_gl_model = latest_gl_model_v
             # self.status.next_gl_model = 1
 
             logging.info('bulid model')

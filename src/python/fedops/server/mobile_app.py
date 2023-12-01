@@ -66,8 +66,7 @@ class FLMobileServer():
 
     def start(self):
 
-        today = datetime.datetime.today()
-        today_time = today.strftime('%Y-%m-%d %H-%M-%S')
+        today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
 
         # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
 
@@ -78,7 +77,7 @@ class FLMobileServer():
         inform_Payload = {
             'S3_bucket': None,  # bucket name
             'Latest_GL_Model': None,  # Model Weight File Name
-            'Play_datetime': today_time,
+            'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
             'GL_Model_V': None # Current Global Model Version
         }

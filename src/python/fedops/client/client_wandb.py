@@ -24,11 +24,11 @@ def data_status_wandb(run=None, labels=None):
     run.log({'Data Lable Histogram': wandb.plot.bar(table, "label", "data_size", title="Data Size Distribution")})
 
 
-def client_system_wandb(fl_task_id, client_mac, client_name, next_gl_model_v, wandb_name, wandb_account):
+def client_system_wandb(fl_task_id, client_mac, client_name, next_gl_model_v, wandb_name, wandb_account, project):
     try:
         # check client system resource usage from wandb
         api = wandb.Api()
-        runs = api.runs(f"{wandb_account}/{fl_task_id}")
+        runs = api.runs(f"{wandb_account}/{project}")
 
         sys_df = runs[0].history(stream="system")
 

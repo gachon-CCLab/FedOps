@@ -188,8 +188,8 @@ class FLServer():
 
     def start(self):
 
-        today = datetime.datetime.today()
-        today_time = today.strftime('%Y-%m-%d %H:%M:%S')
+        today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
+
 
         # Loaded latest global model or no global model in s3
         self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
