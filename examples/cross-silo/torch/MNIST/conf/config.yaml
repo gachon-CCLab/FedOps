@@ -1,0 +1,35 @@
+
+# task_id: "646f419d9412e787a370d614" # Task ID that shows FedOps Website"
+task_id: "6568b0a7b942e2e83ec6c37c" # Input your Task Name that shows FedOps Website"
+num_epochs: 2 # number of local epochs
+batch_size: 128
+num_rounds: 3
+clients_per_round: 1
+learning_rate: 0.001
+
+
+random_seed: 42
+
+model_type: 'Pytorch'
+model:
+  _target_: models.MNISTClassifier
+  output_size: 10
+
+dataset:
+    name: 'MNIST'
+    validation_split: 0.2
+
+server:
+  strategy:
+    _target_: flwr.server.strategy.FedAvg
+    fraction_fit: 0.00001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+    fraction_evaluate: 0.000001
+    min_fit_clients: ${clients_per_round}
+    min_available_clients: ${clients_per_round}
+    min_evaluate_clients: ${clients_per_round}
+
+wandb: 
+  use: false # Whether to use wandb
+  key: 'eb56a89a7457704c55789c584a3546c707d737f8' # your wandb api key
+  account: 'yangsemo'
+  project: '${dataset.name}_${task_id}'

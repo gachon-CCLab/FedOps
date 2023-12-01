@@ -1,0 +1,44 @@
+---
+
+num_clients: 5 # total number of clients
+num_epochs: 2 # number of local epochs
+batch_size: 128
+num_rounds: 2
+clients_per_round: 5 # number of participating clients
+learning_rate: 0.001
+
+random_seed: 42
+
+# set client resource 
+client_resources:
+  num_cpus: 4
+  num_gpus: 0
+
+# server_device: cpu
+server_device: cuda:1
+
+model:
+  _target_: models.CIFAR100Classifier # set model class
+  output_size: 100 # set model output_size
+
+strategy:
+  _target_: fedops.simulation.fl_strategy.aggregation.CustomSelection 
+  fraction_fit: 0.00001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+  fraction_evaluate: 0.000001
+  min_fit_clients: ${clients_per_round}
+  min_available_clients: ${clients_per_round}
+  min_evaluate_clients: ${clients_per_round}
+  evaluate_metrics_aggregation_fn:
+    _target_: fedops.simulation.fl_strategy.aggregation.weighted_average
+    _partial_: true # we dont' want this function to be evaluated when instantiating the strategy, we treat it as a partial and evaluate it when the strategy actually calls the function (in aggregate_evaluate())
+
+  selection_use: false # Whether to use Selection Algorithm
+  selection_ratio: 0.3 # Select what % of clients
+  metric: 'loss' # Select clients based on performance criteria such as loss/acc/auc
+  standard: 'min' # Based on highest/lowest
+
+wandb: 
+  use: true # Whether to use wandb
+  key: 'eb56a89a7457704c55789c584a3546c707d737f8' # set wandb key
+  project: 'Test' # set wandb project
+  name: '${num_clients} Clients, Seed:${random_seed}' # set object name

@@ -12,23 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""FedOps Server."""
+"""FedOps Simulation."""
 
-# from .app import FLServer
-# from .server_api import ServerAPI
-# from .server_utils import FLServerStatus
 
+from . import fl_strategy
 from . import app as app
-from . import server_utils as server_utils
-from . import server_api as server_api
-from . import mobile_app as mobile_app
-from . import mobile_strategy as mobile_strategy
+
 
 
 __all__ = [
+    "fl_strategy",
     "app",
-    "server_utils",
-    "server_api",
-    "mobile_app",
-    "mobile_strategy",
 ]
