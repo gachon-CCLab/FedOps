@@ -34,7 +34,7 @@ class FLClientTask():
             self.wandb_key = cfg.wandb.key
             self.wandb_account = cfg.wandb.account
             self.wandb_project = cfg.wandb.project
-            self.wandb_name = f"client-v{self.status.next_gl_model}({datetime.now()})"
+            self.wandb_name = f"client-v{self.status.gl_model}({datetime.now()})"
 
 
         if self.model_type=="Tensorflow":
@@ -92,7 +92,7 @@ class FLClientTask():
                                             y_test=self.y_test,
                                             validation_split=self.validation_split, fl_task_id=self.task_id, client_mac=self.status.client_mac, 
                                             client_name=self.status.client_name,
-                                            fl_round=1, next_gl_model=self.status.next_gl_model, wandb_use=self.wandb_use,
+                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type)
 
             elif self.model_type == "Pytorch":
@@ -103,7 +103,7 @@ class FLClientTask():
 
                 client = client_fl.FLClient(model=self.model, validation_split=self.validation_split, 
                                             fl_task_id=self.task_id, client_mac=self.status.client_mac, client_name=self.status.client_name,
-                                            fl_round=1, next_gl_model=self.status.next_gl_model, wandb_use=self.wandb_use,
+                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type, 
                                             train_loader=self.train_loader, val_loader=self.val_loader, test_loader=self.test_loader, 
                                             criterion=self.criterion, optimizer=self.optimizer, 
@@ -134,17 +134,17 @@ class FLClientTask():
                 wandb_run.config.update(wandb_config, allow_val_change=True)
                 client_wandb.data_status_wandb(wandb_run, label_values)
                 # Wandb log(Client round end time)
-                wandb_run.log({"operation_time": fl_end_time, "next_gl_model_v": self.status.next_gl_model},step=self.status.next_gl_model)
+                wandb_run.log({"operation_time": fl_end_time, "gl_model_v": self.status.gl_model},step=self.status.gl_model)
                 # close wandb
                 wandb_run.finish()
                 
                 # Get client system result from wandb and send it to client_performance pod
                 client_wandb.client_system_wandb(self.task_id, self.status.client_mac, self.status.client_name, 
-                                                 self.status.next_gl_model, self.wandb_name, self.wandb_account, self.wandb_project)
+                                                 self.status.gl_model, self.wandb_name, self.wandb_account, self.wandb_project)
 
             client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.client_mac, "client_name": self.status.client_name,
                                       "operation_time": fl_end_time,
-                                      "next_gl_model_v": self.status.next_gl_model}
+                                      "gl_model_v": self.status.gl_model}
             json_result = json.dumps(client_all_time_result)
             logging.info(f'client_operation_time - {json_result}')
 
@@ -182,10 +182,10 @@ class FLClientTask():
             client_res = client_api.ClientMangerAPI().get_info()
 
             # # # latest global model version
-            latest_gl_model_v = client_res.json()['GL_Model_V']
+            last_gl_model_v = client_res.json()['GL_Model_V']
 
             # # next global model version
-            self.status.next_gl_model = latest_gl_model_v
+            self.status.gl_model = last_gl_model_v
             # self.status.next_gl_model = 1
 
             logging.info('bulid model')

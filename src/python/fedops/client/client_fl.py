@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FLClient(fl.client.NumPyClient):
 
-    def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,next_gl_model, wandb_use, 
+    def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, 
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
                  train_loader=None, val_loader=None, test_loader=None, criterion=None, optimizer=None, train_torch=None, test_torch=None):
         self.model_type = model_type
@@ -30,7 +30,7 @@ class FLClient(fl.client.NumPyClient):
         self.client_mac = client_mac
         self.client_name = client_name
         self.fl_round = fl_round
-        self.next_gl_model = next_gl_model
+        self.gl_model = gl_model
         self.model_name = model_name
         self.wandb_use = wandb_use
         
@@ -91,7 +91,7 @@ class FLClient(fl.client.NumPyClient):
         round_start_time = time.time()
 
         # model path for saving local model
-        model_path = f'./local_model/{self.fl_task_id}/{self.model_name}_local_model_V{self.next_gl_model}'
+        model_path = f'./local_model/{self.fl_task_id}/{self.model_name}_local_model_V{self.gl_model}'
 
         # Initialize results
         results = {}
@@ -176,10 +176,17 @@ class FLClient(fl.client.NumPyClient):
             for key, value in val_results_prefixed.items():
                 self.wandb_run.log({key: value, "round": self.fl_round}, step=self.fl_round)
 
-
-        # Training: model performance by round
-        results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "next_gl_model_v": self.next_gl_model,
-                    "train_time": round_end_time, **train_results_prefixed, **val_results_prefixed}
+        # if train_metrics!=None:
+        #     # Training: model performance by round
+        #     results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
+        #                 "train_time": round_end_time, **train_results_prefixed, **val_results_prefixed}
+        # else:
+        #     # Training: model performance by round
+        #     results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
+        #                 "train_time": round_end_time}
+        
+        results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
+                        "train_time": round_end_time}
 
         json_result = json.dumps(results)
         logger.info(f'train_performance - {json_result}')
@@ -224,7 +231,7 @@ class FLClient(fl.client.NumPyClient):
         if self.wandb_use:
             # wandb log
             self.wandb_run.log({"test_loss": test_loss, "round": self.fl_round}, step=self.fl_round)  # loss
-            self.wandb_run.log({"test_acc": test_accuracy, "round": self.fl_round}, step=self.fl_round)  # acc
+            self.wandb_run.log({"test_accuracy": test_accuracy, "round": self.fl_round}, step=self.fl_round)  # acc
             
             if metrics!=None:
                 # Log other metrics dynamically
@@ -232,12 +239,14 @@ class FLClient(fl.client.NumPyClient):
                     self.wandb_run.log({metric_name: metric_value}, step=self.fl_round)
 
         # Test: model performance by round
-        if metrics!=None:
-            test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-                        "test_loss": test_loss, "test_acc": test_accuracy, **metrics, "next_gl_model_v": self.next_gl_model}
-        else:
-            test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-                        "test_loss": test_loss, "test_acc": test_accuracy, "next_gl_model_v": self.next_gl_model}
+        # if metrics!=None:
+        #     test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
+        #                 "test_loss": test_loss, "test_accuracy": test_accuracy, **metrics, "gl_model_v": self.gl_model}
+        # else:
+        #     test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
+        #                 "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model}
+        test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
+                         "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model}
         json_result = json.dumps(test_result)
         logger.info(f'test - {json_result}')
 

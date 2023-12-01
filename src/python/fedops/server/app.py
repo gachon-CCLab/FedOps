@@ -50,7 +50,7 @@ class FLServer():
 
 
     def init_gl_model_registration(self, model, gl_model_name) -> None:
-        logging.info(f'latest_gl_model_v: {self.server.latest_gl_model_v}')
+        logging.info(f'last_gl_model_v: {self.server.last_gl_model_v}')
 
         if not model:
 
@@ -63,8 +63,8 @@ class FLServer():
 
 
         else:
-            logging.info('load latest global model')
-            print(f'latest_gl_model_name: {gl_model_name}')
+            logging.info('load last global model')
+            print(f'last_gl_model_name: {gl_model_name}')
 
             self.fl_server_start(model, gl_model_name)
             return gl_model_name
@@ -140,11 +140,11 @@ class FLServer():
                 self.server.end_by_round = time.time() - self.server.start_by_round
                 # gl model performance by round
                 if metrics!=None:
-                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_acc": accuracy,
-                                      "run_time_by_round": self.server.end_by_round, **metrics,"next_gl_model_v":self.server.next_gl_model_v}
+                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
+                                      "run_time_by_round": self.server.end_by_round, **metrics,"gl_model_v":self.server.gl_model_v}
                 else:
-                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_acc": accuracy,
-                                      "run_time_by_round": self.server.end_by_round,"next_gl_model_v":self.server.next_gl_model_v}
+                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
+                                      "run_time_by_round": self.server.end_by_round,"gl_model_v":self.server.gl_model_v}
                 json_server_eval = json.dumps(server_eval_result)
                 logging.info(f'server_eval_result - {json_server_eval}')
 
@@ -191,24 +191,24 @@ class FLServer():
         today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
 
 
-        # Loaded latest global model or no global model in s3
-        self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
+        # Loaded last global model or no global model in s3
+        self.next_model, self.next_model_name, self.server.last_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
         
-        # Loaded latest global model or no global model in local
+        # Loaded last global model or no global model in local
         # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
 
         # logging.info('Loaded latest global model or no global model')
 
         # New Global Model Version
-        self.server.next_gl_model_v = self.server.latest_gl_model_v + 1
+        self.server.gl_model_v = self.server.last_gl_model_v + 1
 
         # API that sends server status to server manager
         inform_Payload = {
             'S3_bucket': 'fl-gl-model',  # bucket name
-            'Latest_GL_Model': 'gl_model_%s_V.h5' % self.server.latest_gl_model_v,  # Model Weight File Name
+            'Last_GL_Model': 'gl_model_%s_V.h5' % self.server.last_gl_model_v,  # Model Weight File Name
             'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
-            'GL_Model_V': self.server.next_gl_model_v # Current Global Model Version
+            'GL_Model_V': self.server.gl_model_v # Current Global Model Version
         }
         server_status_json = json.dumps(inform_Payload)
         server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
@@ -222,7 +222,7 @@ class FLServer():
             fl_end_time = time.time() - fl_start_time  # FL end time
 
             server_all_time_result = {"fl_task_id": self.task_id, "server_operation_time": fl_end_time,
-                                      "next_gl_model_v": self.server.next_gl_model_v}
+                                      "gl_model_v": self.server.gl_model_v}
             json_all_time_result = json.dumps(server_all_time_result)
             logging.info(f'server_operation_time - {json_all_time_result}')
             
@@ -231,9 +231,9 @@ class FLServer():
             
             # upload global model
             if self.model_type == "Tensorflow":
-                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.h5"
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.h5"
             elif self.model_type =="Pytorch":
-                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.pth"
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.pth"
             server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
 
             logging.info(f'upload {global_model_file_name} model in s3')

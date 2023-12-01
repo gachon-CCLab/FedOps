@@ -31,7 +31,7 @@ class FLClientStatus(BaseModel):
     client_start: bool = False
     client_fail: bool = False
     server_IP: str = None # FL server IP
-    next_gl_model: int = 0
+    gl_model: int = 0
 
 
 def get_mac_address():
@@ -66,12 +66,12 @@ def download_local_model(model_type, task_id, listdir, model=None):
     matching_files = [f for f in listdir if re.match(pattern, f)]
 
     if matching_files:
-        latest_local_model_file = sorted(matching_files, key=lambda x: int(re.findall(pattern, x)[0][1]), reverse=True)[0]
+        last_local_model_file = sorted(matching_files, key=lambda x: int(re.findall(pattern, x)[0][1]), reverse=True)[0]
         # model_name = re.findall(pattern, latest_local_model_file)[0][0]
-        model_extension = re.findall(pattern, latest_local_model_file)[0][2]
-        model_path = os.path.join(f"./local_model/{task_id}/", latest_local_model_file)
+        model_extension = re.findall(pattern, last_local_model_file)[0][2]
+        model_path = os.path.join(f"./local_model/{task_id}/", last_local_model_file)
 
-        logging.info(f'downloaded local_model_name: {latest_local_model_file}')
+        logging.info(f'downloaded local_model_name: {last_local_model_file}')
         
         # Initialize downloaded model
         # downloaded_model = None

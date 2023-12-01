@@ -3,8 +3,8 @@ import os, logging, re
 
 # FL Server Status Class
 class FLServerStatus:
-    latest_gl_model_v = 0  # Previous Global Model Version
-    next_gl_model_v = 0  # Global model version to be created
+    last_gl_model_v = 0  # Previous Global Model Version
+    gl_model_v = 0  # Global model version to be created
     start_by_round = 0  # fit aggregation start
     end_by_round = 0  # fit aggregation end
     round = 0  # round number

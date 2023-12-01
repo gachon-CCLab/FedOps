@@ -76,7 +76,7 @@ class FLMobileServer():
         # API that sends server status to server manager
         inform_Payload = {
             'S3_bucket': None,  # bucket name
-            'Latest_GL_Model': None,  # Model Weight File Name
+            'Last_GL_Model': None,  # Model Weight File Name
             'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
             'GL_Model_V': None # Current Global Model Version
@@ -93,7 +93,7 @@ class FLMobileServer():
             fl_end_time = time.time() - fl_start_time  # FL end time
 
             server_all_time_result = {"fl_task_id": self.task_id, "server_operation_time": fl_end_time,
-                                      "next_gl_model_v": None}
+                                      "gl_model_v": None}
             json_all_time_result = json.dumps(server_all_time_result)
             logging.info(f'server_operation_time - {json_all_time_result}')
             # Send server time result to performance pod
