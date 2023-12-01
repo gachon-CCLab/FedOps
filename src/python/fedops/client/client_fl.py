@@ -186,7 +186,7 @@ class FLClient(fl.client.NumPyClient):
         #                 "train_time": round_end_time}
         
         results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
-                        "train_time": round_end_time}
+                        **train_results_prefixed, **val_results_prefixed,"train_time": round_end_time}
 
         json_result = json.dumps(results)
         logger.info(f'train_performance - {json_result}')
