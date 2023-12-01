@@ -7,7 +7,27 @@ from keras.utils import to_categorical # keras>=2.10.0
 from fedops.server import app
 from fedops.server import server_utils
 import fl_model
+import requests
 
+SERVER_ST = 'http://192.168.10.4:8000'
+
+def notify_client(task_id, status):
+    url = f'{SERVER_ST}/FLSe/server_status'  # 서버에 데이터를 전송할 엔드포인트
+
+    data = {
+        'task_id': task_id,
+        'status': status
+    }
+
+    try:
+        response = requests.post(url, json=data)
+        print(f"send API to BACKEND SERVER in message : {status}")
+        print(f"BACKEND RESPONSE is : {response}")
+        if not response.ok:
+            print(f'Failed to notify server. Status: {response.status_code}')
+
+    except Exception as error:
+        print('Error notifying server:', error)
 
 """
 Build initial global model based on dataset name.
@@ -76,7 +96,7 @@ if __name__ == "__main__":
     # Read server config file
     config_file_path = '../config.yaml'
     config = server_utils.read_config(config_file_path)
-
+    
     # Dataset Name
     dataset = 'cifar10'
 
@@ -91,5 +111,8 @@ if __name__ == "__main__":
 
     # Start fl server
     fl_server = app.FLServer(config, model, model_name, model_type=model_type,x_val=x_val, y_val=y_val)
+
+    notify_client(task_id = config['client']['task']['name'], status = 'created')
+
     fl_server.start()
 
