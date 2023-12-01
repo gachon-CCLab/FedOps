@@ -74,7 +74,7 @@ class FLClientTask():
             wandb_run = client_wandb.start_wandb(self.wandb_key, self.wandb_project, self.wandb_name)
         else:
             wandb_run=None
-            self.wandb_name=None
+            self.wandb_name=''
         
         # Initialize wandb_config, client object
         wandb_config = {}

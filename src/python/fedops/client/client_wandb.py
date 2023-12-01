@@ -29,7 +29,7 @@ def client_system_wandb(fl_task_id, client_mac, client_name, gl_model_v, wandb_n
         cols = ['system.network.sent', 'system.network.recv', 'system.disk.in', '_runtime', 
                 'system.proc.memory.rssMB','system.proc.memory.availableMB', 'system.cpu', 
                 'system.proc.cpu.threads', 'system.memory', 'system.proc.memory.percent', '_timestamp']
-        if client_name!=None:
+        if client_name!='':
             # check client system resource usage from wandb
             api = wandb.Api()
             runs = api.runs(f"{wandb_account}/{project}")

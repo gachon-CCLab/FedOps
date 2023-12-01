@@ -6,9 +6,7 @@ import asyncio
 import json
 from datetime import datetime
 import requests
-import os
 import sys
-import yaml
 import uuid
 import socket
 from typing import Optional
@@ -119,7 +117,7 @@ def fail_train():
     logging.info('Fail')
     manager.client_training = False
     manager.FL_ready = False
-    fl_server_closed()
+    # fl_server_closed()
     return manager
 
 
@@ -181,7 +179,6 @@ async def health_check():
     global manager
 
     health_check_result = {
-        "client_name": manager.client_name,
         "client_training": manager.client_training,
         "client_online": manager.client_online,
         "FL_ready": manager.FL_ready
