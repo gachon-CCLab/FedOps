@@ -1,0 +1,3 @@
+# server requirements
+fedops
+scikit-learn

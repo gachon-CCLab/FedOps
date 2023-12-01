@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  fl-client:
+    build: 
+      context: ../
+      dockerfile: ./docker-dist/client/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - TZ=Asia/Seoul
+      - DOCKER_DIST=1
+      - MONITORING=0
+    networks:
+      - fedops
+  client-manager:
+    build: 
+      context: ../
+      dockerfile: ./docker-dist/client_manager/Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      - TZ=Asia/Seoul
+      - DOCKER_DIST=1
+      - MONITORING=0
+    networks:
+      - fedops
+networks:
+  fedops:
+    driver: bridge
