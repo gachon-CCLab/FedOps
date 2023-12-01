@@ -33,10 +33,8 @@ class FLClient(fl.client.NumPyClient):
         self.gl_model = gl_model
         self.model_name = model_name
         self.wandb_use = wandb_use
-        
-        if self.wandb_use:
-            self.wandb_run = wandb_run
-            self.wandb_name = wandb_name
+        self.wandb_run = wandb_run
+        self.wandb_name = wandb_name            
         
         if self.model_type == "Tensorflow": 
             self.x_train, self.y_train = x_train, y_train
