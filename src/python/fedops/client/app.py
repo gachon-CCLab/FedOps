@@ -92,7 +92,7 @@ class FLClientTask():
                                             y_test=self.y_test,
                                             validation_split=self.validation_split, fl_task_id=self.task_id, client_mac=self.status.client_mac, 
                                             client_name=self.status.client_name,
-                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,
+                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use, wandb_name=self.wandb_name,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type)
 
             elif self.model_type == "Pytorch":
@@ -103,7 +103,7 @@ class FLClientTask():
 
                 client = client_fl.FLClient(model=self.model, validation_split=self.validation_split, 
                                             fl_task_id=self.task_id, client_mac=self.status.client_mac, client_name=self.status.client_name,
-                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,
+                                            fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,wandb_name=self.wandb_name,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type, 
                                             train_loader=self.train_loader, val_loader=self.val_loader, test_loader=self.test_loader, 
                                             criterion=self.criterion, optimizer=self.optimizer, 
@@ -143,8 +143,7 @@ class FLClientTask():
                                                  self.status.gl_model, self.wandb_name, self.wandb_account, self.wandb_project)
 
             client_all_time_result = {"fl_task_id": self.task_id, "client_mac": self.status.client_mac, "client_name": self.status.client_name,
-                                      "operation_time": fl_end_time,
-                                      "gl_model_v": self.status.gl_model}
+                                      "operation_time": fl_end_time,"gl_model_v": self.status.gl_model}
             json_result = json.dumps(client_all_time_result)
             logging.info(f'client_operation_time - {json_result}')
 

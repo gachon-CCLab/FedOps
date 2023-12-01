@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FLClient(fl.client.NumPyClient):
 
-    def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, 
+    def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, wandb_name,
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
                  train_loader=None, val_loader=None, test_loader=None, criterion=None, optimizer=None, train_torch=None, test_torch=None):
         self.model_type = model_type
@@ -36,6 +36,7 @@ class FLClient(fl.client.NumPyClient):
         
         if self.wandb_use:
             self.wandb_run = wandb_run
+            self.wandb_name = wandb_name
         
         if self.model_type == "Tensorflow": 
             self.x_train, self.y_train = x_train, y_train
@@ -186,7 +187,7 @@ class FLClient(fl.client.NumPyClient):
         #                 "train_time": round_end_time}
         
         results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
-                        **train_results_prefixed, **val_results_prefixed,"train_time": round_end_time}
+                        **train_results_prefixed, **val_results_prefixed,"train_time": round_end_time, 'wandb_name': self.wandb_name}
 
         json_result = json.dumps(results)
         logger.info(f'train_performance - {json_result}')
@@ -246,7 +247,7 @@ class FLClient(fl.client.NumPyClient):
         #     test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
         #                 "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model}
         test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-                         "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model}
+                         "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model, 'wandb_name': self.wandb_name}
         json_result = json.dumps(test_result)
         logger.info(f'test - {json_result}')
 
