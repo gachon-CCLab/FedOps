@@ -68,10 +68,10 @@ class FLMobileServer():
 
         today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
 
-        # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
+        # self.next_model, self.next_model_name, self.server.last_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
 
         # New Global Model Version
-        # self.server.next_gl_model_v = self.server.latest_gl_model_v + 1
+        # self.server.gl_model_v = self.server.last_gl_model_v + 1
 
         # API that sends server status to server manager
         inform_Payload = {
@@ -101,9 +101,9 @@ class FLMobileServer():
             
             # # # upload global model
             # # if self.model_type == "Tensorflow":
-            # #     global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.h5"
+            # #     global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.h5"
             # # elif self.model_type =="Pytorch":
-            # #     global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.next_gl_model_v}.pth"
+            # #     global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.pth"
             # # server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
 
             # logging.info(f'upload {global_model_file_name} model in s3')

@@ -181,7 +181,6 @@ async def health_check():
     global manager
 
     health_check_result = {
-        "client_name": manager.client_name,
         "client_training": manager.client_training,
         "client_online": manager.client_online,
         "FL_ready": manager.FL_ready

@@ -110,7 +110,7 @@ class FLServer():
         ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
                         
             # model path for saving local model
-            gl_model_path = f'./{model_name}_gl_model_V{self.server.next_gl_model_v}'
+            gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
             
             metrics = None
             
