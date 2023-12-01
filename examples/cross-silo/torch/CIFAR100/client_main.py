@@ -13,7 +13,7 @@ import logging
 from omegaconf import DictConfig, OmegaConf
     
     
-@hydra.main(config_path="conf", config_name="config", version_base=None)
+@hydra.main(config_path="./conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     # set log format
     handlers_list = [logging.StreamHandler()]

@@ -59,6 +59,8 @@ def train_torch():
                     loss = criterion(outputs, labels)
                     loss.backward()
                     optimizer.step()
+                    
+                    pbar.update()  # Update the progress bar for each batch
 
         model.to("cpu")
             
@@ -83,19 +85,22 @@ def test_torch():
         model.to(device)
         model.eval()
         with torch.no_grad():
-            for inputs, labels in test_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
-                
-                # Calculate loss
-                loss = criterion(outputs, labels)
-                total_loss += loss.item()
+            with torch.no_grad(), tqdm(total=len(test_loader), desc='Testing', unit='batch') as pbar:
+                for inputs, labels in test_loader:
+                    inputs, labels = inputs.to(device), labels.to(device)
+                    outputs = model(inputs)
+                    
+                    # Calculate loss
+                    loss = criterion(outputs, labels)
+                    total_loss += loss.item()
 
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == labels).sum().item()
+                    _, predicted = torch.max(outputs, 1)
+                    correct += (predicted == labels).sum().item()
 
-                all_labels.extend(labels.cpu().numpy())
-                all_predictions.extend(predicted.cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
+                    all_predictions.extend(predicted.cpu().numpy())
+                    
+                    pbar.update()  # Update the progress bar for each batch
             
         accuracy = correct / len(test_loader.dataset)
         average_loss = total_loss / len(test_loader)  # Calculate average loss
