@@ -32,13 +32,13 @@ strategy:
     _target_: fedops.simulation.fl_strategy.aggregation.weighted_average
     _partial_: true # we dont' want this function to be evaluated when instantiating the strategy, we treat it as a partial and evaluate it when the strategy actually calls the function (in aggregate_evaluate())
 
-  selection_use: false # Whether to use Selection Algorithm
+  selection_use: true # Whether to use Selection Algorithm
   selection_ratio: 0.3 # Select what % of clients
   metric: 'loss' # Select clients based on performance criteria such as loss/acc/auc
-  standard: 'min' # Based on highest/lowest
+  standard: 'max' # Based on highest/lowest
 
 wandb: 
-  use: true # Whether to use wandb
+  use: false # Whether to use wandb
   key: 'eb56a89a7457704c55789c584a3546c707d737f8' # set wandb key
-  project: 'Test' # set wandb project
+  project: 'CIFAR100C' # set wandb project
   name: '${num_clients} Clients, Seed:${random_seed}' # set object name

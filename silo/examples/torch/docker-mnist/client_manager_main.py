@@ -119,7 +119,7 @@ def fail_train():
     logging.info('Fail')
     manager.client_training = False
     manager.FL_ready = False
-    # fl_server_closed()
+    fl_server_closed()
     return manager
 
 
