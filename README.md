@@ -69,4 +69,4 @@ $ pip install fedops
 
 
 ## Support
-For any questions or issues, please contact the FedOps support team at <U>***tpah20@gachon.ac.kr***</U>
+For any questions or issues, please contact the FedOps support team at <U>***gyom1204@gachon.ac.kr***</U>
