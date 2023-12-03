@@ -62,8 +62,8 @@ def client_system_wandb(fl_task_id, client_mac, client_name, gl_model_v, wandb_n
 
                         sys_df_row_json = sys_df_row.to_json()
                     
-                    # send client_system  to client_performance pod
-                    client_api.ClientServerAPI(fl_task_id).put_client_system(sys_df_row_json)
+                        # send client_system  to client_performance pod
+                        client_api.ClientServerAPI(fl_task_id).put_client_system(sys_df_row_json)
                     
                     break
         else:
