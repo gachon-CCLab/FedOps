@@ -9,7 +9,7 @@
 - For people who want to quickly use FL on a single machine
 
 
-- Configure a client/server environment by allocating user-customized resources with Ray-based VirtualClientEngine.
+- Configure a client/server environment by allocating user-customized resources with Ray-based VirtualClientEngine.<br>
 (Reconstruction using Flower Simulation)
 
 - Apply custom data and models for FL
