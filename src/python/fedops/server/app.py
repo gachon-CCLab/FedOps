@@ -204,11 +204,11 @@ class FLServer():
 
         # API that sends server status to server manager
         inform_Payload = {
-            'S3_bucket': 'fl-gl-model',  # bucket name
-            'Last_GL_Model': 'gl_model_%s_V.h5' % self.server.last_gl_model_v,  # Model Weight File Name
-            'FLServer_start': today_time,
-            'FLSeReady': True,  # server ready status
-            'GL_Model_V': self.server.gl_model_v # Current Global Model Version
+            "S3_bucket": "fl-gl-model",  # bucket name
+            "Last_GL_Model": "gl_model_%s_V.h5" % self.server.last_gl_model_v,  # Model Weight File Name
+            "FLServer_start": today_time,
+            "FLSeReady": True,  # server ready status
+            "GL_Model_V": self.server.gl_model_v # Current Global Model Version
         }
         server_status_json = json.dumps(inform_Payload)
         server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
