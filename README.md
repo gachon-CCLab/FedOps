@@ -39,7 +39,7 @@ FedOps has developed a web service to manage the lifecycle operations of federat
 $ pip install fedops
 ```
 ### Real Devices
-* [Start FedOps Silo](https://github.com/gachon-CCLab/FedOps/tree/main/examples/silo/examples/torch)
+* [Start FedOps Silo](https://github.com/gachon-CCLab/FedOps/tree/main/silo/examples/torch)
 * [Start FedOps Mobile](https://github.com/gachon-CCLab/FedOps/tree/main/mobile/examples)
 
 ### Single Machine
