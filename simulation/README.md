@@ -2,7 +2,9 @@
 
 ## FL Simulation on a Single Machine
 
-![FedOps Simulation Image](../docs/images/simulation_1.png)
+<!-- ![FedOps Simulation Image](../docs/images/simulation_1.png) -->
+<img src="../docs/images/simulation_1.png" width="600" height="400">
+
 
 - For people who want to quickly use FL on a single machine
 
