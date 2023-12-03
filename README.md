@@ -1,7 +1,7 @@
 # FedOps: Federated Learning Lifecycle Operations Management Platform
   
 <div align="center">
- <img src="./docs/images/FedOps_icon.png" width="150px">
+ <img src="./docs/images/fedops_logo.png" width="300px">
 </div>
 
 <p align="center">
