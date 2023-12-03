@@ -2,7 +2,7 @@
 
 ## FL Simulation on a Single Machine
 
-<img src="../docs/images/simulation_1.png" width="450" height="350">
+<img src="../docs/images/simulation_1.png" width="850" height="400">
 
 
 - For people who want to quickly use FL on a single machine
