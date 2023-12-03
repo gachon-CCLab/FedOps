@@ -3,7 +3,7 @@ FedOps can actually be used in many industries and provides usecases.
 
 ## Healthcare Domain
 ### FedOps Healthcare Usecase
-![Healthcare Pack Image](../docs/images/healthcare_pack.png)
+![Healthcare Pack Image](../docs/images/industry_1.png)
 
 - **Korean Emergency Room(ER) Data for Severity Analysis**: Analyzing patient severity using Korean NEDIS data.
 
