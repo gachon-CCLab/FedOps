@@ -75,11 +75,11 @@ class FLMobileServer():
 
         # API that sends server status to server manager
         inform_Payload = {
-            'S3_bucket': None,  # bucket name
-            'Last_GL_Model': None,  # Model Weight File Name
+            'S3_bucket': '',  # bucket name
+            'Last_GL_Model': '',  # Model Weight File Name
             'FLServer_start': today_time,
             'FLSeReady': True,  # server ready status
-            'GL_Model_V': None # Current Global Model Version
+            'GL_Model_V': 0 # Current Global Model Version
         }
         server_status_json = json.dumps(inform_Payload)
         server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
