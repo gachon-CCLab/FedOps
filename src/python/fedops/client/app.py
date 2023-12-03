@@ -28,13 +28,17 @@ class FLClientTask():
         self.model_name = fl_task["model_name"]
         self.y_label_counter = fl_task["y_label_counter"]
         
+        self.status.client_name = socket.gethostname()
+        self.status.task_id = self.task_id
+        self.status.client_mac = client_utils.get_mac_address()
+        
         logging.info(f'init model_type: {self.model_type}')
         
         if self.wandb_use:
             self.wandb_key = cfg.wandb.key
             self.wandb_account = cfg.wandb.account
             self.wandb_project = cfg.wandb.project
-            self.wandb_name = f"client-v{self.status.gl_model}({datetime.now()})"
+            self.wandb_name = f"{self.status.client_name}-v{self.status.gl_model}({datetime.now()})"
 
 
         if self.model_type=="Tensorflow":
@@ -169,9 +173,7 @@ class FLClientTask():
         # Example:
         @self.app.get('/online')
         async def get_info():
-            self.status.client_name = socket.gethostname()
-            self.status.task_id = self.task_id
-            self.status.client_mac = client_utils.get_mac_address()
+            
             return self.status
 
         # asynchronously start client
