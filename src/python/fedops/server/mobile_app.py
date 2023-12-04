@@ -45,7 +45,7 @@ class FLMobileServer():
         config = {
             "batch_size": self.batch_size,
             "local_epochs": self.local_epochs,
-            # "num_rounds": cfg.num_rounds,
+            "num_rounds": self.num_rounds,
         }
         return config
 
