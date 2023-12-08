@@ -1,4 +1,4 @@
-# FedOps Silo Device
+# FedOps Silo
 
 This guide provides step-by-step instructions on executing FedOps Silo, a Federated Learning Lifecycle Management Operations framework.
 
