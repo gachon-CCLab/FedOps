@@ -25,8 +25,7 @@ FedOps (`fedops`) is a platform that helps organizations effectively manage and 
 
 * **Manager**: The manager oversees and manages the real-time FL progress of both clients and server
 
-* **CE/CS & BCFL**: Contribution Evaluation and Client Selection processes incentivize individual clients through a BCFL function based on their performance.
-
+* **CE/CS**: Contribution Evaluation and Client Selection processes based on their performance.
 
 * **CI/CD/CFL**: the CI/CD/CFL system seamlessly integrates with a Code Repo, 
 enabling code deployment to multiple clients and servers for continuous or periodic federated learning.
