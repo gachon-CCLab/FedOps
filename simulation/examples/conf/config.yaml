@@ -4,7 +4,7 @@ num_clients: 5 # total number of clients
 num_epochs: 2 # number of local epochs
 batch_size: 128
 num_rounds: 2
-clients_per_round: 3 # number of participating clients
+clients_per_round: 5 # number of participating clients
 learning_rate: 0.001
 
 random_seed: 42

@@ -24,9 +24,9 @@ def main(cfg: DictConfig) -> None:
     logger = logging.getLogger(__name__)
     
     # 랜덤 시드 설정
-    random.seed(cfg.random_seed)  # cfg.random_seed는 설정된 시드 값입니다.
-    np.random.seed(cfg.random_seed) # 데이터 파티션 부분에서 np.random 사용
-    torch.manual_seed(cfg.random_seed) # Model Init Seed
+    random.seed(cfg.random_seed)  
+    np.random.seed(cfg.random_seed) 
+    torch.manual_seed(cfg.random_seed)
     
     print(OmegaConf.to_yaml(cfg))
     
