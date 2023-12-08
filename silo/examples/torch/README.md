@@ -45,7 +45,7 @@ This guide provides step-by-step instructions on executing FedOps Silo, a Federa
      <br></br>
 
 3. ***Create your Git repository and add FL server code.***
-   - Set up your own Git repository and add the FL server code (`server_main.py, models.py, data_preparation.py, requirementst.txt, conf/config.yaml`) from the fl_server directory. 
+   - Set up your own Git repository and add the FL server code (`server_main.py, models.py, data_preparation.py, requirementst.txt, conf/config.yaml`). 
    - This code will be used to deploy and run the FL server in CCL k8s environment.
    <br></br>
 

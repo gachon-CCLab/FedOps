@@ -25,32 +25,31 @@ $ docker compose down
 ## Start python or shell
 - **0. Set client Env**
 
-```bash
-# Install fedops libray in your python env(conda)
-pip install -r requirements.txt
+    ```bash
+    # Install fedops libray in your python env(conda)
+    pip install -r requirements.txt
 
-# Install torch & torchvision for using pytorch
-pip install torch torchvision
+    # Install torch & torchvision for using pytorch
+    pip install torch torchvision
 
-```
+    ```
 
 - **1. Create two CLI and run python file**
 
-```bash
-# One CLI => client
-python3 client_main.py
+    ```bash
+    # One CLI => client
+    python3 client_main.py
 
-# The other CLI => client_manager
-python3 client_manager_main.py
+    # The other CLI => client_manager
+    python3 client_manager_main.py
 
-```
+    ```
 
 - **2. Run shell file**
 
-```bash
-sh run_shell_client.sh
-
-```
+    ```bash
+    sh run_shell_client.sh
+    ```
 
 
 ## Support
