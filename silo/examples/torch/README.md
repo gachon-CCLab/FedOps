@@ -52,7 +52,7 @@ This guide provides step-by-step instructions on executing FedOps Silo, a Federa
 4. ***Create FL task on FedOps web interface.***
    - Use the FedOps web interface to create your FL task. 
    - Specify the Git repository address for your FL server code.
-   - Refer [FedOps User Guide](https://gachon-cclab.github.io/docs/UserGuide/)
+   - Refer [FedOps Silo Guide](https://gachon-cclab.github.io/docs/user-guide/silo-guide/)
    <br></br>
 
 

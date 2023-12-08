@@ -38,7 +38,7 @@ This guide provides step-by-step instructions on executing FedOps Simulation
 - ***Create FL task on FedOps web interface.***
    - Use the FedOps web interface to create your FL task. 
    - Specify the Git repository address for your FL server code.
-   - Refer [FedOps User Guide](https://gachon-cclab.github.io/docs/UserGuide/)
+   - Refer [FedOps Mobile Guide](https://gachon-cclab.github.io/docs/user-guide/mobile-guide/)
    <br></br>
 
 
