@@ -37,6 +37,7 @@ def main(cfg: DictConfig) -> None:
     # partition dataset and get dataloaders
     trainloaders, valloaders, testloader = load_datasets(
         num_clients=cfg.num_clients,
+        val_ratio=cfg.dataset.validation_split,
         batch_size=cfg.batch_size,
     )
     
