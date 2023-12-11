@@ -16,7 +16,7 @@ from typing import Optional
 handlers_list = [logging.StreamHandler()]
 if "MONITORING" in os.environ:
     if os.environ["MONITORING"] == '1':
-        handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
+        handlers_list.append(logging.FileHandler('./fedops/client_manager.log'))
     else:
         pass
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
