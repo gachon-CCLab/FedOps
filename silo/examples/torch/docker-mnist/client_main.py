@@ -11,13 +11,18 @@ from fedops.client import client_utils
 from fedops.client.app import FLClientTask
 import logging
 from omegaconf import DictConfig, OmegaConf
+
+import os
     
     
 @hydra.main(config_path="./conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
     # set log format
     handlers_list = [logging.StreamHandler()]
-    
+    if os.environ["MONITORING"] == '1':
+        handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
+    else:
+        pass
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=handlers_list)
 

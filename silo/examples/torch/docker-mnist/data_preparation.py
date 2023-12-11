@@ -7,10 +7,15 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import datasets, transforms
 
+import os
+
 
 # set log format
 handlers_list = [logging.StreamHandler()]
-
+if os.environ["MONITORING"] == '1':
+    handlers_list.append(logging.FileHandler('./fedops/fl_client.log'))
+else:
+    pass
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=handlers_list)
 

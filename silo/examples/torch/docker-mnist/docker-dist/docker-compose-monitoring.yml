@@ -1,0 +1,111 @@
+version: "3.9"
+services:
+  fl-client:
+    build:
+      context: ../
+      dockerfile: ./docker-dist/client/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4000M
+    ports:
+      - "8002:8002"
+    healthcheck:
+       test: ["CMD-SHELL", "curl --silent --fail localhost:8003/_cluster/health || exit 1"]
+       interval: 10s
+       timeout: 10s
+       retries: 3
+    environment:
+      - TZ=Asia/Seoul
+      - DOCKER_DIST=1
+      - MONITORING=1
+    networks:
+      - fedops
+    volumes:
+      - fedops-vol:/app/fedops
+
+  client-manager:
+    build: 
+      context: ../
+      dockerfile: ./docker-dist/client_manager/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 500M
+    ports:
+      - "8003:8003"
+    environment:
+      - TZ=Asia/Seoul
+      - DOCKER_DIST=1
+      - MONITORING=1
+    networks:
+      - fedops
+    volumes:
+      - fedops-vol:/app/fedops
+
+  elasticsearch:
+    image: elasticsearch:7.17.3
+    container_name: es
+    environment:
+      discovery.type: single-node
+      # 메모리 스왑을 막기 위한 설정
+#      bootstrap.memory_lock: "true"
+      # JVM Heap 메모리 설정
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      MAX_LOCKED_MEMORY: unlimited
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - elastic
+  
+  logstash:
+    image: logstash:7.17.3
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 4000M
+    container_name: log
+    environment:
+      discovery.seed_hosts: logstash
+      MAX_LOCKED_MEMORY: unlimited
+      LS_JAVA_OPTS: "-Xms1g -Xmx1g"
+    volumes:
+      - ./docker-dist/logstash/pipeline/logstash-nginx.config:/usr/share/logstash/pipeline/logstash-nginx.config
+      - fedops-vol:/home/fedops
+    ports:
+      - "5001:5000/tcp"
+      - "5001:5000/udp"
+      - "5044:5044"
+      - "9600:9600"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+    command: logstash -f /usr/share/logstash/pipeline/logstash-nginx.config
+
+  kibana:
+    image: kibana:7.17.3
+    container_name: kib
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic
+
+networks:
+  fedops:
+    driver: bridge
+  elastic:
+    driver: bridge
+volumes:
+  fedops-vol:
