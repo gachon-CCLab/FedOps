@@ -1,0 +1,972 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+		972B80073C8C4FCC5FC05774 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E4CDF67C2D51B4877A4DCCA /* Pods_Runner.framework */; };
+		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
+		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		E84E8C602B134E46003E5AD2 /* flwr in Frameworks */ = {isa = PBXBuildFile; productRef = E84E8C5F2B134E46003E5AD2 /* flwr */; };
+		E84E8C632B135354003E5AD2 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E8C622B135354003E5AD2 /* Constants.swift */; };
+		E84E8C672B1353C9003E5AD2 /* BenchmarkInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E8C642B1353C9003E5AD2 /* BenchmarkInterceptor.swift */; };
+		E84E8C682B1353C9003E5AD2 /* BenchmarkModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E8C652B1353C9003E5AD2 /* BenchmarkModel.swift */; };
+		E84E8C692B1353C9003E5AD2 /* BenchmarkSuite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E8C662B1353C9003E5AD2 /* BenchmarkSuite.swift */; };
+		E84E8C6B2B135492003E5AD2 /* DataLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84E8C6A2B135492003E5AD2 /* DataLoader.swift */; };
+		E855296F2B1CDC2100417134 /* MNIST_test.csv.lzfse in Resources */ = {isa = PBXBuildFile; fileRef = E855296D2B1CDBCA00417134 /* MNIST_test.csv.lzfse */; };
+		E85529702B1CDC2100417134 /* MNIST_train.csv.lzfse in Resources */ = {isa = PBXBuildFile; fileRef = E855296E2B1CDBCA00417134 /* MNIST_train.csv.lzfse */; };
+		E88E8EBD2B269B54000B4E1B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E88E8EBC2B269B54000B4E1B /* Assets.xcassets */; };
+		E88E8EC02B26C8A2000B4E1B /* MNIST_Model.mlmodel in Resources */ = {isa = PBXBuildFile; fileRef = E88E8EBE2B26C816000B4E1B /* MNIST_Model.mlmodel */; };
+		E8C8EC112B1434C2005C35AB /* MLFlwrClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC102B1434C2005C35AB /* MLFlwrClient.swift */; };
+		E8C8EC132B1434E8005C35AB /* MLFlwrClientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC122B1434E8005C35AB /* MLFlwrClientModel.swift */; };
+		E8C8EC152B1434F8005C35AB /* MLModelInspect.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC142B1434F8005C35AB /* MLModelInspect.swift */; };
+		E8C8EC182B143811005C35AB /* Model.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC162B143811005C35AB /* Model.pb.swift */; };
+		E8C8EC192B143811005C35AB /* Model.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC172B143811005C35AB /* Model.proto */; };
+		E8C8EC5C2B143889005C35AB /* WordEmbedding.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC1A2B143886005C35AB /* WordEmbedding.proto */; };
+		E8C8EC5D2B143889005C35AB /* LinkedModel.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC1B2B143886005C35AB /* LinkedModel.proto */; };
+		E8C8EC5E2B143889005C35AB /* DataStructures.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC1C2B143886005C35AB /* DataStructures.proto */; };
+		E8C8EC5F2B143889005C35AB /* NearestNeighbors.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC1D2B143886005C35AB /* NearestNeighbors.proto */; };
+		E8C8EC602B143889005C35AB /* CustomModel.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC1E2B143886005C35AB /* CustomModel.proto */; };
+		E8C8EC612B143889005C35AB /* README.rst in Resources */ = {isa = PBXBuildFile; fileRef = E8C8EC1F2B143886005C35AB /* README.rst */; };
+		E8C8EC622B143889005C35AB /* MIL.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC202B143886005C35AB /* MIL.pb.swift */; };
+		E8C8EC632B143889005C35AB /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = E8C8EC212B143886005C35AB /* LICENSE.txt */; };
+		E8C8EC642B143889005C35AB /* ArrayFeatureExtractor.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC222B143886005C35AB /* ArrayFeatureExtractor.pb.swift */; };
+		E8C8EC652B143889005C35AB /* FeatureTypes.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC232B143886005C35AB /* FeatureTypes.pb.swift */; };
+		E8C8EC662B143889005C35AB /* WordTagger.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC242B143886005C35AB /* WordTagger.proto */; };
+		E8C8EC672B143889005C35AB /* SoundAnalysisPreprocessing.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC252B143886005C35AB /* SoundAnalysisPreprocessing.proto */; };
+		E8C8EC682B143889005C35AB /* NonMaximumSuppression.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC262B143886005C35AB /* NonMaximumSuppression.proto */; };
+		E8C8EC692B143889005C35AB /* Identity.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC272B143886005C35AB /* Identity.proto */; };
+		E8C8EC6A2B143889005C35AB /* ArrayFeatureExtractor.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC282B143886005C35AB /* ArrayFeatureExtractor.proto */; };
+		E8C8EC6B2B143889005C35AB /* Gazetteer.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC292B143886005C35AB /* Gazetteer.pb.swift */; };
+		E8C8EC6C2B143889005C35AB /* NeuralNetwork.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2A2B143886005C35AB /* NeuralNetwork.proto */; };
+		E8C8EC6D2B143889005C35AB /* Parameters.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2B2B143887005C35AB /* Parameters.proto */; };
+		E8C8EC6E2B143889005C35AB /* Scaler.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2C2B143887005C35AB /* Scaler.pb.swift */; };
+		E8C8EC6F2B143889005C35AB /* VisionFeaturePrint.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2D2B143887005C35AB /* VisionFeaturePrint.proto */; };
+		E8C8EC702B143889005C35AB /* SoundAnalysisPreprocessing.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2E2B143887005C35AB /* SoundAnalysisPreprocessing.pb.swift */; };
+		E8C8EC712B143889005C35AB /* FeatureTypes.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC2F2B143887005C35AB /* FeatureTypes.proto */; };
+		E8C8EC722B143889005C35AB /* FeatureVectorizer.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC302B143887005C35AB /* FeatureVectorizer.proto */; };
+		E8C8EC732B143889005C35AB /* Identity.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC312B143887005C35AB /* Identity.pb.swift */; };
+		E8C8EC742B143889005C35AB /* DictVectorizer.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC322B143887005C35AB /* DictVectorizer.pb.swift */; };
+		E8C8EC752B143889005C35AB /* Normalizer.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC332B143887005C35AB /* Normalizer.proto */; };
+		E8C8EC762B143889005C35AB /* BayesianProbitRegressor.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC342B143887005C35AB /* BayesianProbitRegressor.pb.swift */; };
+		E8C8EC772B143889005C35AB /* MIL.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC352B143887005C35AB /* MIL.proto */; };
+		E8C8EC782B143889005C35AB /* GLMRegressor.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC362B143887005C35AB /* GLMRegressor.proto */; };
+		E8C8EC792B143889005C35AB /* Gazetteer.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC372B143887005C35AB /* Gazetteer.proto */; };
+		E8C8EC7A2B143889005C35AB /* TextClassifier.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC382B143887005C35AB /* TextClassifier.pb.swift */; };
+		E8C8EC7B2B143889005C35AB /* TextClassifier.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC392B143887005C35AB /* TextClassifier.proto */; };
+		E8C8EC7C2B143889005C35AB /* LinkedModel.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3A2B143887005C35AB /* LinkedModel.pb.swift */; };
+		E8C8EC7D2B143889005C35AB /* Model.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3B2B143888005C35AB /* Model.proto */; };
+		E8C8EC7E2B143889005C35AB /* Imputer.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3C2B143888005C35AB /* Imputer.proto */; };
+		E8C8EC7F2B143889005C35AB /* WordTagger.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3D2B143888005C35AB /* WordTagger.pb.swift */; };
+		E8C8EC802B143889005C35AB /* GLMClassifier.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3E2B143888005C35AB /* GLMClassifier.proto */; };
+		E8C8EC812B143889005C35AB /* OneHotEncoder.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC3F2B143888005C35AB /* OneHotEncoder.proto */; };
+		E8C8EC822B143889005C35AB /* AudioFeaturePrint.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC402B143888005C35AB /* AudioFeaturePrint.proto */; };
+		E8C8EC842B143889005C35AB /* Scaler.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC422B143888005C35AB /* Scaler.proto */; };
+		E8C8EC852B143889005C35AB /* SVM.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC432B143888005C35AB /* SVM.pb.swift */; };
+		E8C8EC862B143889005C35AB /* ItemSimilarityRecommender.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC442B143888005C35AB /* ItemSimilarityRecommender.proto */; };
+		E8C8EC872B143889005C35AB /* VisionFeaturePrint.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC452B143888005C35AB /* VisionFeaturePrint.pb.swift */; };
+		E8C8EC882B143889005C35AB /* Normalizer.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC462B143888005C35AB /* Normalizer.pb.swift */; };
+		E8C8EC892B143889005C35AB /* FeatureVectorizer.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC472B143888005C35AB /* FeatureVectorizer.pb.swift */; };
+		E8C8EC8A2B143889005C35AB /* TreeEnsemble.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC482B143888005C35AB /* TreeEnsemble.proto */; };
+		E8C8EC8B2B143889005C35AB /* OneHotEncoder.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC492B143888005C35AB /* OneHotEncoder.pb.swift */; };
+		E8C8EC8C2B143889005C35AB /* SVM.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4A2B143888005C35AB /* SVM.proto */; };
+		E8C8EC8D2B143889005C35AB /* AudioFeaturePrint.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4B2B143888005C35AB /* AudioFeaturePrint.pb.swift */; };
+		E8C8EC8E2B143889005C35AB /* GLMRegressor.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4C2B143888005C35AB /* GLMRegressor.pb.swift */; };
+		E8C8EC8F2B143889005C35AB /* NearestNeighbors.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4D2B143889005C35AB /* NearestNeighbors.pb.swift */; };
+		E8C8EC902B14388A005C35AB /* WordEmbedding.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4E2B143889005C35AB /* WordEmbedding.pb.swift */; };
+		E8C8EC912B14388A005C35AB /* NeuralNetwork.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC4F2B143889005C35AB /* NeuralNetwork.pb.swift */; };
+		E8C8EC922B14388A005C35AB /* DictVectorizer.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC502B143889005C35AB /* DictVectorizer.proto */; };
+		E8C8EC932B14388A005C35AB /* CategoricalMapping.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC512B143889005C35AB /* CategoricalMapping.proto */; };
+		E8C8EC942B14388A005C35AB /* BayesianProbitRegressor.proto in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC522B143889005C35AB /* BayesianProbitRegressor.proto */; };
+		E8C8EC952B14388A005C35AB /* NonMaximumSuppression.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC532B143889005C35AB /* NonMaximumSuppression.pb.swift */; };
+		E8C8EC962B14388A005C35AB /* CustomModel.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC542B143889005C35AB /* CustomModel.pb.swift */; };
+		E8C8EC972B14388A005C35AB /* Imputer.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC552B143889005C35AB /* Imputer.pb.swift */; };
+		E8C8EC982B14388A005C35AB /* DataStructures.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC562B143889005C35AB /* DataStructures.pb.swift */; };
+		E8C8EC992B14388A005C35AB /* CategoricalMapping.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC572B143889005C35AB /* CategoricalMapping.pb.swift */; };
+		E8C8EC9A2B14388A005C35AB /* GLMClassifier.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC582B143889005C35AB /* GLMClassifier.pb.swift */; };
+		E8C8EC9B2B14388A005C35AB /* Parameters.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC592B143889005C35AB /* Parameters.pb.swift */; };
+		E8C8EC9C2B14388A005C35AB /* ItemSimilarityRecommender.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC5A2B143889005C35AB /* ItemSimilarityRecommender.pb.swift */; };
+		E8C8EC9D2B14388A005C35AB /* TreeEnsemble.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C8EC5B2B143889005C35AB /* TreeEnsemble.pb.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		088A3BCC0559738A516A2E51 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
+		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
+		3875E483E3178487925BAB7B /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		4CBEB03FE4848D1B9810399B /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5727F48C8BD76247EBFB8979 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
+		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		7880F2D0A6FAF838F44C6CAE /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
+		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
+		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		97EC5BE7B9F15BDCF5C9B246 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		9E4CDF67C2D51B4877A4DCCA /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB67C5BFA4397E77E0F5F828 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		E83C64042B21BE4700F60B45 /* MNIST_Model.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = MNIST_Model.mlmodel; path = ../../../../../../grpc_java/ios/Runner/MNIST_Model.mlmodel; sourceTree = "<group>"; };
+		E84E8C5D2B134D95003E5AD2 /* FLiOS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = FLiOS; sourceTree = SOURCE_ROOT; };
+		E84E8C622B135354003E5AD2 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Constants.swift; path = FLiOS/CoreMLClient/Constants.swift; sourceTree = SOURCE_ROOT; };
+		E84E8C642B1353C9003E5AD2 /* BenchmarkInterceptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BenchmarkInterceptor.swift; path = FLiOS/Benchmark/BenchmarkInterceptor.swift; sourceTree = SOURCE_ROOT; };
+		E84E8C652B1353C9003E5AD2 /* BenchmarkModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BenchmarkModel.swift; path = FLiOS/Benchmark/BenchmarkModel.swift; sourceTree = SOURCE_ROOT; };
+		E84E8C662B1353C9003E5AD2 /* BenchmarkSuite.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BenchmarkSuite.swift; path = FLiOS/Benchmark/BenchmarkSuite.swift; sourceTree = SOURCE_ROOT; };
+		E84E8C6A2B135492003E5AD2 /* DataLoader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DataLoader.swift; path = FLiOS/CoreMLClient/DataLoader.swift; sourceTree = SOURCE_ROOT; };
+		E855296D2B1CDBCA00417134 /* MNIST_test.csv.lzfse */ = {isa = PBXFileReference; lastKnownFileType = file; path = MNIST_test.csv.lzfse; sourceTree = "<group>"; };
+		E855296E2B1CDBCA00417134 /* MNIST_train.csv.lzfse */ = {isa = PBXFileReference; lastKnownFileType = file; path = MNIST_train.csv.lzfse; sourceTree = "<group>"; };
+		E88E8EB92B25D9AF000B4E1B /* MNIST_Model.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = MNIST_Model.mlmodel; path = ../../../../../../grpc_java/ios/Runner/MNIST_Model.mlmodel; sourceTree = "<group>"; };
+		E88E8EBC2B269B54000B4E1B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E88E8EBE2B26C816000B4E1B /* MNIST_Model.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; name = MNIST_Model.mlmodel; path = ../MNIST_Model.mlmodel; sourceTree = "<group>"; };
+		E8C8EC102B1434C2005C35AB /* MLFlwrClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MLFlwrClient.swift; path = FLiOS/CoreMLClient/MLFlwrClient.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC122B1434E8005C35AB /* MLFlwrClientModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MLFlwrClientModel.swift; path = FLiOS/CoreMLClient/MLFlwrClientModel.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC142B1434F8005C35AB /* MLModelInspect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MLModelInspect.swift; path = FLiOS/CoreMLClient/MLModelInspect.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC162B143811005C35AB /* Model.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.pb.swift; path = ../../flower_1/examples/ios/FLiOS/Scenarios/Model.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC172B143811005C35AB /* Model.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Model.proto; path = FLiOS/CoreMLProto/Model.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1A2B143886005C35AB /* WordEmbedding.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = WordEmbedding.proto; path = FLiOS/CoreMLProto/WordEmbedding.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1B2B143886005C35AB /* LinkedModel.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = LinkedModel.proto; path = FLiOS/CoreMLProto/LinkedModel.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1C2B143886005C35AB /* DataStructures.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = DataStructures.proto; path = FLiOS/CoreMLProto/DataStructures.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1D2B143886005C35AB /* NearestNeighbors.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = NearestNeighbors.proto; path = FLiOS/CoreMLProto/NearestNeighbors.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1E2B143886005C35AB /* CustomModel.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = CustomModel.proto; path = FLiOS/CoreMLProto/CustomModel.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC1F2B143886005C35AB /* README.rst */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.rst; path = FLiOS/CoreMLProto/README.rst; sourceTree = SOURCE_ROOT; };
+		E8C8EC202B143886005C35AB /* MIL.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MIL.pb.swift; path = FLiOS/CoreMLProto/MIL.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC212B143886005C35AB /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = LICENSE.txt; path = FLiOS/CoreMLProto/LICENSE.txt; sourceTree = SOURCE_ROOT; };
+		E8C8EC222B143886005C35AB /* ArrayFeatureExtractor.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ArrayFeatureExtractor.pb.swift; path = FLiOS/CoreMLProto/ArrayFeatureExtractor.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC232B143886005C35AB /* FeatureTypes.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FeatureTypes.pb.swift; path = FLiOS/CoreMLProto/FeatureTypes.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC242B143886005C35AB /* WordTagger.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = WordTagger.proto; path = FLiOS/CoreMLProto/WordTagger.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC252B143886005C35AB /* SoundAnalysisPreprocessing.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = SoundAnalysisPreprocessing.proto; path = FLiOS/CoreMLProto/SoundAnalysisPreprocessing.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC262B143886005C35AB /* NonMaximumSuppression.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = NonMaximumSuppression.proto; path = FLiOS/CoreMLProto/NonMaximumSuppression.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC272B143886005C35AB /* Identity.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Identity.proto; path = FLiOS/CoreMLProto/Identity.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC282B143886005C35AB /* ArrayFeatureExtractor.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = ArrayFeatureExtractor.proto; path = FLiOS/CoreMLProto/ArrayFeatureExtractor.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC292B143886005C35AB /* Gazetteer.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Gazetteer.pb.swift; path = FLiOS/CoreMLProto/Gazetteer.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC2A2B143886005C35AB /* NeuralNetwork.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = NeuralNetwork.proto; path = FLiOS/CoreMLProto/NeuralNetwork.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC2B2B143887005C35AB /* Parameters.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Parameters.proto; path = FLiOS/CoreMLProto/Parameters.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC2C2B143887005C35AB /* Scaler.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Scaler.pb.swift; path = FLiOS/CoreMLProto/Scaler.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC2D2B143887005C35AB /* VisionFeaturePrint.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = VisionFeaturePrint.proto; path = FLiOS/CoreMLProto/VisionFeaturePrint.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC2E2B143887005C35AB /* SoundAnalysisPreprocessing.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SoundAnalysisPreprocessing.pb.swift; path = FLiOS/CoreMLProto/SoundAnalysisPreprocessing.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC2F2B143887005C35AB /* FeatureTypes.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = FeatureTypes.proto; path = FLiOS/CoreMLProto/FeatureTypes.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC302B143887005C35AB /* FeatureVectorizer.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = FeatureVectorizer.proto; path = FLiOS/CoreMLProto/FeatureVectorizer.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC312B143887005C35AB /* Identity.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Identity.pb.swift; path = FLiOS/CoreMLProto/Identity.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC322B143887005C35AB /* DictVectorizer.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DictVectorizer.pb.swift; path = FLiOS/CoreMLProto/DictVectorizer.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC332B143887005C35AB /* Normalizer.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Normalizer.proto; path = FLiOS/CoreMLProto/Normalizer.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC342B143887005C35AB /* BayesianProbitRegressor.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = BayesianProbitRegressor.pb.swift; path = FLiOS/CoreMLProto/BayesianProbitRegressor.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC352B143887005C35AB /* MIL.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = MIL.proto; path = FLiOS/CoreMLProto/MIL.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC362B143887005C35AB /* GLMRegressor.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = GLMRegressor.proto; path = FLiOS/CoreMLProto/GLMRegressor.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC372B143887005C35AB /* Gazetteer.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Gazetteer.proto; path = FLiOS/CoreMLProto/Gazetteer.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC382B143887005C35AB /* TextClassifier.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TextClassifier.pb.swift; path = FLiOS/CoreMLProto/TextClassifier.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC392B143887005C35AB /* TextClassifier.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = TextClassifier.proto; path = FLiOS/CoreMLProto/TextClassifier.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC3A2B143887005C35AB /* LinkedModel.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LinkedModel.pb.swift; path = FLiOS/CoreMLProto/LinkedModel.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC3B2B143888005C35AB /* Model.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Model.proto; path = FLiOS/CoreMLProto/Model.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC3C2B143888005C35AB /* Imputer.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Imputer.proto; path = FLiOS/CoreMLProto/Imputer.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC3D2B143888005C35AB /* WordTagger.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = WordTagger.pb.swift; path = FLiOS/CoreMLProto/WordTagger.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC3E2B143888005C35AB /* GLMClassifier.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = GLMClassifier.proto; path = FLiOS/CoreMLProto/GLMClassifier.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC3F2B143888005C35AB /* OneHotEncoder.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = OneHotEncoder.proto; path = FLiOS/CoreMLProto/OneHotEncoder.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC402B143888005C35AB /* AudioFeaturePrint.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = AudioFeaturePrint.proto; path = FLiOS/CoreMLProto/AudioFeaturePrint.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC422B143888005C35AB /* Scaler.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = Scaler.proto; path = FLiOS/CoreMLProto/Scaler.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC432B143888005C35AB /* SVM.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SVM.pb.swift; path = FLiOS/CoreMLProto/SVM.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC442B143888005C35AB /* ItemSimilarityRecommender.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = ItemSimilarityRecommender.proto; path = FLiOS/CoreMLProto/ItemSimilarityRecommender.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC452B143888005C35AB /* VisionFeaturePrint.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = VisionFeaturePrint.pb.swift; path = FLiOS/CoreMLProto/VisionFeaturePrint.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC462B143888005C35AB /* Normalizer.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Normalizer.pb.swift; path = FLiOS/CoreMLProto/Normalizer.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC472B143888005C35AB /* FeatureVectorizer.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FeatureVectorizer.pb.swift; path = FLiOS/CoreMLProto/FeatureVectorizer.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC482B143888005C35AB /* TreeEnsemble.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = TreeEnsemble.proto; path = FLiOS/CoreMLProto/TreeEnsemble.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC492B143888005C35AB /* OneHotEncoder.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = OneHotEncoder.pb.swift; path = FLiOS/CoreMLProto/OneHotEncoder.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC4A2B143888005C35AB /* SVM.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = SVM.proto; path = FLiOS/CoreMLProto/SVM.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC4B2B143888005C35AB /* AudioFeaturePrint.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AudioFeaturePrint.pb.swift; path = FLiOS/CoreMLProto/AudioFeaturePrint.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC4C2B143888005C35AB /* GLMRegressor.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GLMRegressor.pb.swift; path = FLiOS/CoreMLProto/GLMRegressor.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC4D2B143889005C35AB /* NearestNeighbors.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NearestNeighbors.pb.swift; path = FLiOS/CoreMLProto/NearestNeighbors.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC4E2B143889005C35AB /* WordEmbedding.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = WordEmbedding.pb.swift; path = FLiOS/CoreMLProto/WordEmbedding.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC4F2B143889005C35AB /* NeuralNetwork.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NeuralNetwork.pb.swift; path = FLiOS/CoreMLProto/NeuralNetwork.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC502B143889005C35AB /* DictVectorizer.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = DictVectorizer.proto; path = FLiOS/CoreMLProto/DictVectorizer.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC512B143889005C35AB /* CategoricalMapping.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = CategoricalMapping.proto; path = FLiOS/CoreMLProto/CategoricalMapping.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC522B143889005C35AB /* BayesianProbitRegressor.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; name = BayesianProbitRegressor.proto; path = FLiOS/CoreMLProto/BayesianProbitRegressor.proto; sourceTree = SOURCE_ROOT; };
+		E8C8EC532B143889005C35AB /* NonMaximumSuppression.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NonMaximumSuppression.pb.swift; path = FLiOS/CoreMLProto/NonMaximumSuppression.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC542B143889005C35AB /* CustomModel.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CustomModel.pb.swift; path = FLiOS/CoreMLProto/CustomModel.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC552B143889005C35AB /* Imputer.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Imputer.pb.swift; path = FLiOS/CoreMLProto/Imputer.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC562B143889005C35AB /* DataStructures.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = DataStructures.pb.swift; path = FLiOS/CoreMLProto/DataStructures.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC572B143889005C35AB /* CategoricalMapping.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CategoricalMapping.pb.swift; path = FLiOS/CoreMLProto/CategoricalMapping.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC582B143889005C35AB /* GLMClassifier.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GLMClassifier.pb.swift; path = FLiOS/CoreMLProto/GLMClassifier.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC592B143889005C35AB /* Parameters.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Parameters.pb.swift; path = FLiOS/CoreMLProto/Parameters.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC5A2B143889005C35AB /* ItemSimilarityRecommender.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ItemSimilarityRecommender.pb.swift; path = FLiOS/CoreMLProto/ItemSimilarityRecommender.pb.swift; sourceTree = SOURCE_ROOT; };
+		E8C8EC5B2B143889005C35AB /* TreeEnsemble.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TreeEnsemble.pb.swift; path = FLiOS/CoreMLProto/TreeEnsemble.pb.swift; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		97C146EB1CF9000F007C117D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E84E8C602B134E46003E5AD2 /* flwr in Frameworks */,
+				972B80073C8C4FCC5FC05774 /* Pods_Runner.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B2E104424979897886B23A1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9E4CDF67C2D51B4877A4DCCA /* Pods_Runner.framework */,
+				4CBEB03FE4848D1B9810399B /* Pods_RunnerTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		331C8082294A63A400263BE5 /* RunnerTests */ = {
+			isa = PBXGroup;
+			children = (
+				331C807B294A618700263BE5 /* RunnerTests.swift */,
+			);
+			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		9740EEB11CF90186004384FC /* Flutter */ = {
+			isa = PBXGroup;
+			children = (
+				3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */,
+				9740EEB21CF90195004384FC /* Debug.xcconfig */,
+				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
+				9740EEB31CF90195004384FC /* Generated.xcconfig */,
+			);
+			name = Flutter;
+			sourceTree = "<group>";
+		};
+		97C146E51CF9000F007C117D = {
+			isa = PBXGroup;
+			children = (
+				9740EEB11CF90186004384FC /* Flutter */,
+				97C146F01CF9000F007C117D /* Runner */,
+				97C146EF1CF9000F007C117D /* Products */,
+				331C8082294A63A400263BE5 /* RunnerTests */,
+				DE66A015249FDB1A3906C409 /* Pods */,
+				2B2E104424979897886B23A1 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		97C146EF1CF9000F007C117D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				97C146EE1CF9000F007C117D /* Runner.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		97C146F01CF9000F007C117D /* Runner */ = {
+			isa = PBXGroup;
+			children = (
+				E88E8EBE2B26C816000B4E1B /* MNIST_Model.mlmodel */,
+				E8DA4C192B1866790054834A /* Scenarios */,
+				E8C8EC172B143811005C35AB /* Model.proto */,
+				E8C8EC222B143886005C35AB /* ArrayFeatureExtractor.pb.swift */,
+				E8C8EC282B143886005C35AB /* ArrayFeatureExtractor.proto */,
+				E8C8EC4B2B143888005C35AB /* AudioFeaturePrint.pb.swift */,
+				E8C8EC402B143888005C35AB /* AudioFeaturePrint.proto */,
+				E8C8EC342B143887005C35AB /* BayesianProbitRegressor.pb.swift */,
+				E8C8EC522B143889005C35AB /* BayesianProbitRegressor.proto */,
+				E8C8EC572B143889005C35AB /* CategoricalMapping.pb.swift */,
+				E8C8EC512B143889005C35AB /* CategoricalMapping.proto */,
+				E8C8EC542B143889005C35AB /* CustomModel.pb.swift */,
+				E8C8EC1E2B143886005C35AB /* CustomModel.proto */,
+				E8C8EC562B143889005C35AB /* DataStructures.pb.swift */,
+				E8C8EC1C2B143886005C35AB /* DataStructures.proto */,
+				E8C8EC322B143887005C35AB /* DictVectorizer.pb.swift */,
+				E8C8EC502B143889005C35AB /* DictVectorizer.proto */,
+				E8C8EC232B143886005C35AB /* FeatureTypes.pb.swift */,
+				E8C8EC2F2B143887005C35AB /* FeatureTypes.proto */,
+				E8C8EC472B143888005C35AB /* FeatureVectorizer.pb.swift */,
+				E8C8EC302B143887005C35AB /* FeatureVectorizer.proto */,
+				E8C8EC292B143886005C35AB /* Gazetteer.pb.swift */,
+				E8C8EC372B143887005C35AB /* Gazetteer.proto */,
+				E8C8EC582B143889005C35AB /* GLMClassifier.pb.swift */,
+				E8C8EC3E2B143888005C35AB /* GLMClassifier.proto */,
+				E8C8EC4C2B143888005C35AB /* GLMRegressor.pb.swift */,
+				E8C8EC362B143887005C35AB /* GLMRegressor.proto */,
+				E8C8EC312B143887005C35AB /* Identity.pb.swift */,
+				E8C8EC272B143886005C35AB /* Identity.proto */,
+				E8C8EC552B143889005C35AB /* Imputer.pb.swift */,
+				E8C8EC3C2B143888005C35AB /* Imputer.proto */,
+				E8C8EC5A2B143889005C35AB /* ItemSimilarityRecommender.pb.swift */,
+				E8C8EC442B143888005C35AB /* ItemSimilarityRecommender.proto */,
+				E8C8EC212B143886005C35AB /* LICENSE.txt */,
+				E8C8EC3A2B143887005C35AB /* LinkedModel.pb.swift */,
+				E8C8EC1B2B143886005C35AB /* LinkedModel.proto */,
+				E8C8EC202B143886005C35AB /* MIL.pb.swift */,
+				E8C8EC352B143887005C35AB /* MIL.proto */,
+				E8C8EC3B2B143888005C35AB /* Model.proto */,
+				E8C8EC4D2B143889005C35AB /* NearestNeighbors.pb.swift */,
+				E8C8EC1D2B143886005C35AB /* NearestNeighbors.proto */,
+				E8C8EC4F2B143889005C35AB /* NeuralNetwork.pb.swift */,
+				E8C8EC2A2B143886005C35AB /* NeuralNetwork.proto */,
+				E8C8EC532B143889005C35AB /* NonMaximumSuppression.pb.swift */,
+				E8C8EC262B143886005C35AB /* NonMaximumSuppression.proto */,
+				E8C8EC462B143888005C35AB /* Normalizer.pb.swift */,
+				E8C8EC332B143887005C35AB /* Normalizer.proto */,
+				E8C8EC492B143888005C35AB /* OneHotEncoder.pb.swift */,
+				E8C8EC3F2B143888005C35AB /* OneHotEncoder.proto */,
+				E8C8EC592B143889005C35AB /* Parameters.pb.swift */,
+				E8C8EC2B2B143887005C35AB /* Parameters.proto */,
+				E8C8EC1F2B143886005C35AB /* README.rst */,
+				E8C8EC2C2B143887005C35AB /* Scaler.pb.swift */,
+				E8C8EC422B143888005C35AB /* Scaler.proto */,
+				E8C8EC2E2B143887005C35AB /* SoundAnalysisPreprocessing.pb.swift */,
+				E8C8EC252B143886005C35AB /* SoundAnalysisPreprocessing.proto */,
+				E8C8EC432B143888005C35AB /* SVM.pb.swift */,
+				E8C8EC4A2B143888005C35AB /* SVM.proto */,
+				E8C8EC382B143887005C35AB /* TextClassifier.pb.swift */,
+				E8C8EC392B143887005C35AB /* TextClassifier.proto */,
+				E8C8EC5B2B143889005C35AB /* TreeEnsemble.pb.swift */,
+				E8C8EC482B143888005C35AB /* TreeEnsemble.proto */,
+				E8C8EC452B143888005C35AB /* VisionFeaturePrint.pb.swift */,
+				E8C8EC2D2B143887005C35AB /* VisionFeaturePrint.proto */,
+				E8C8EC4E2B143889005C35AB /* WordEmbedding.pb.swift */,
+				E8C8EC1A2B143886005C35AB /* WordEmbedding.proto */,
+				E8C8EC3D2B143888005C35AB /* WordTagger.pb.swift */,
+				E8C8EC242B143886005C35AB /* WordTagger.proto */,
+				E8C8EC142B1434F8005C35AB /* MLModelInspect.swift */,
+				E8C8EC122B1434E8005C35AB /* MLFlwrClientModel.swift */,
+				E8C8EC102B1434C2005C35AB /* MLFlwrClient.swift */,
+				E84E8C6A2B135492003E5AD2 /* DataLoader.swift */,
+				E84E8C642B1353C9003E5AD2 /* BenchmarkInterceptor.swift */,
+				E84E8C652B1353C9003E5AD2 /* BenchmarkModel.swift */,
+				E84E8C662B1353C9003E5AD2 /* BenchmarkSuite.swift */,
+				E84E8C622B135354003E5AD2 /* Constants.swift */,
+				E84E8C5D2B134D95003E5AD2 /* FLiOS */,
+				97C146FA1CF9000F007C117D /* Main.storyboard */,
+				E88E8EBC2B269B54000B4E1B /* Assets.xcassets */,
+				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
+				97C147021CF9000F007C117D /* Info.plist */,
+				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
+				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
+				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+			);
+			path = Runner;
+			sourceTree = "<group>";
+		};
+		DE66A015249FDB1A3906C409 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				088A3BCC0559738A516A2E51 /* Pods-Runner.debug.xcconfig */,
+				5727F48C8BD76247EBFB8979 /* Pods-Runner.release.xcconfig */,
+				7880F2D0A6FAF838F44C6CAE /* Pods-Runner.profile.xcconfig */,
+				3875E483E3178487925BAB7B /* Pods-RunnerTests.debug.xcconfig */,
+				97EC5BE7B9F15BDCF5C9B246 /* Pods-RunnerTests.release.xcconfig */,
+				BB67C5BFA4397E77E0F5F828 /* Pods-RunnerTests.profile.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		E8DA4C192B1866790054834A /* Scenarios */ = {
+			isa = PBXGroup;
+			children = (
+				E8C8EC162B143811005C35AB /* Model.pb.swift */,
+				E8DA4C1A2B1866790054834A /* MNIST */,
+			);
+			name = Scenarios;
+			path = ../../flower_1/examples/ios/FLiOS/Scenarios;
+			sourceTree = SOURCE_ROOT;
+		};
+		E8DA4C1A2B1866790054834A /* MNIST */ = {
+			isa = PBXGroup;
+			children = (
+				E83C64042B21BE4700F60B45 /* MNIST_Model.mlmodel */,
+				E88E8EB92B25D9AF000B4E1B /* MNIST_Model.mlmodel */,
+				E855296D2B1CDBCA00417134 /* MNIST_test.csv.lzfse */,
+				E855296E2B1CDBCA00417134 /* MNIST_train.csv.lzfse */,
+			);
+			name = MNIST;
+			path = ../../flower_1/examples/ios/FLiOS/Scenarios/MNIST;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		97C146ED1CF9000F007C117D /* Runner */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
+			buildPhases = (
+				DDBDCE529BEB34ED17AD2E66 /* [CP] Check Pods Manifest.lock */,
+				9740EEB61CF901F6004384FC /* Run Script */,
+				97C146EA1CF9000F007C117D /* Sources */,
+				97C146EB1CF9000F007C117D /* Frameworks */,
+				97C146EC1CF9000F007C117D /* Resources */,
+				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				4110608B7D23A7DF8ED6D926 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Runner;
+			packageProductDependencies = (
+				E84E8C5F2B134E46003E5AD2 /* flwr */,
+			);
+			productName = Runner;
+			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		97C146E61CF9000F007C117D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				KnownAssetTags = (
+					New,
+				);
+				LastUpgradeCheck = 1300;
+				ORGANIZATIONNAME = "";
+				TargetAttributes = {
+					97C146ED1CF9000F007C117D = {
+						CreatedOnToolsVersion = 7.3.1;
+						LastSwiftMigration = 1100;
+					};
+				};
+			};
+			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 97C146E51CF9000F007C117D;
+			packageReferences = (
+				E8761E492B09FB60003216B7 /* XCRemoteSwiftPackageReference "flower-swift" */,
+				E8761E4A2B09FB7F003216B7 /* XCRemoteSwiftPackageReference "grpc-swift" */,
+				E8761E4B2B09FB9C003216B7 /* XCRemoteSwiftPackageReference "NumPy-iOS" */,
+				E8761E4C2B09FBBA003216B7 /* XCRemoteSwiftPackageReference "PythonKit" */,
+			);
+			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				97C146ED1CF9000F007C117D /* Runner */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		97C146EC1CF9000F007C117D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E88E8EC02B26C8A2000B4E1B /* MNIST_Model.mlmodel in Resources */,
+				E855296F2B1CDC2100417134 /* MNIST_test.csv.lzfse in Resources */,
+				E85529702B1CDC2100417134 /* MNIST_train.csv.lzfse in Resources */,
+				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
+				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
+				E8C8EC632B143889005C35AB /* LICENSE.txt in Resources */,
+				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				E88E8EBD2B269B54000B4E1B /* Assets.xcassets in Resources */,
+				E8C8EC612B143889005C35AB /* README.rst in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
+			);
+			name = "Thin Binary";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+		};
+		4110608B7D23A7DF8ED6D926 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		9740EEB61CF901F6004384FC /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
+		};
+		DDBDCE529BEB34ED17AD2E66 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-Runner-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		97C146EA1CF9000F007C117D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8C8EC822B143889005C35AB /* AudioFeaturePrint.proto in Sources */,
+				E8C8EC9B2B14388A005C35AB /* Parameters.pb.swift in Sources */,
+				E8C8EC7F2B143889005C35AB /* WordTagger.pb.swift in Sources */,
+				E8C8EC9A2B14388A005C35AB /* GLMClassifier.pb.swift in Sources */,
+				E8C8EC662B143889005C35AB /* WordTagger.proto in Sources */,
+				E8C8EC972B14388A005C35AB /* Imputer.pb.swift in Sources */,
+				E8C8EC942B14388A005C35AB /* BayesianProbitRegressor.proto in Sources */,
+				E8C8EC682B143889005C35AB /* NonMaximumSuppression.proto in Sources */,
+				E8C8EC912B14388A005C35AB /* NeuralNetwork.pb.swift in Sources */,
+				E8C8EC5F2B143889005C35AB /* NearestNeighbors.proto in Sources */,
+				E8C8EC7C2B143889005C35AB /* LinkedModel.pb.swift in Sources */,
+				E8C8EC792B143889005C35AB /* Gazetteer.proto in Sources */,
+				E8C8EC152B1434F8005C35AB /* MLModelInspect.swift in Sources */,
+				E8C8EC7D2B143889005C35AB /* Model.proto in Sources */,
+				E8C8EC772B143889005C35AB /* MIL.proto in Sources */,
+				E84E8C692B1353C9003E5AD2 /* BenchmarkSuite.swift in Sources */,
+				E8C8EC602B143889005C35AB /* CustomModel.proto in Sources */,
+				E8C8EC922B14388A005C35AB /* DictVectorizer.proto in Sources */,
+				E8C8EC902B14388A005C35AB /* WordEmbedding.pb.swift in Sources */,
+				E8C8EC762B143889005C35AB /* BayesianProbitRegressor.pb.swift in Sources */,
+				E8C8EC992B14388A005C35AB /* CategoricalMapping.pb.swift in Sources */,
+				E8C8EC782B143889005C35AB /* GLMRegressor.proto in Sources */,
+				E8C8EC642B143889005C35AB /* ArrayFeatureExtractor.pb.swift in Sources */,
+				E8C8EC742B143889005C35AB /* DictVectorizer.pb.swift in Sources */,
+				E8C8EC892B143889005C35AB /* FeatureVectorizer.pb.swift in Sources */,
+				E8C8EC702B143889005C35AB /* SoundAnalysisPreprocessing.pb.swift in Sources */,
+				E8C8EC8E2B143889005C35AB /* GLMRegressor.pb.swift in Sources */,
+				E8C8EC182B143811005C35AB /* Model.pb.swift in Sources */,
+				E8C8EC872B143889005C35AB /* VisionFeaturePrint.pb.swift in Sources */,
+				E8C8EC952B14388A005C35AB /* NonMaximumSuppression.pb.swift in Sources */,
+				E8C8EC5D2B143889005C35AB /* LinkedModel.proto in Sources */,
+				E8C8EC5E2B143889005C35AB /* DataStructures.proto in Sources */,
+				E8C8EC862B143889005C35AB /* ItemSimilarityRecommender.proto in Sources */,
+				E8C8EC672B143889005C35AB /* SoundAnalysisPreprocessing.proto in Sources */,
+				E8C8EC7E2B143889005C35AB /* Imputer.proto in Sources */,
+				E8C8EC6B2B143889005C35AB /* Gazetteer.pb.swift in Sources */,
+				E8C8EC852B143889005C35AB /* SVM.pb.swift in Sources */,
+				E84E8C682B1353C9003E5AD2 /* BenchmarkModel.swift in Sources */,
+				E8C8EC812B143889005C35AB /* OneHotEncoder.proto in Sources */,
+				E8C8EC6F2B143889005C35AB /* VisionFeaturePrint.proto in Sources */,
+				E8C8EC9C2B14388A005C35AB /* ItemSimilarityRecommender.pb.swift in Sources */,
+				E8C8EC622B143889005C35AB /* MIL.pb.swift in Sources */,
+				E8C8EC192B143811005C35AB /* Model.proto in Sources */,
+				E8C8EC7B2B143889005C35AB /* TextClassifier.proto in Sources */,
+				E8C8EC8C2B143889005C35AB /* SVM.proto in Sources */,
+				E84E8C6B2B135492003E5AD2 /* DataLoader.swift in Sources */,
+				E8C8EC962B14388A005C35AB /* CustomModel.pb.swift in Sources */,
+				E8C8EC9D2B14388A005C35AB /* TreeEnsemble.pb.swift in Sources */,
+				E8C8EC932B14388A005C35AB /* CategoricalMapping.proto in Sources */,
+				E8C8EC882B143889005C35AB /* Normalizer.pb.swift in Sources */,
+				E8C8EC6E2B143889005C35AB /* Scaler.pb.swift in Sources */,
+				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				E8C8EC842B143889005C35AB /* Scaler.proto in Sources */,
+				E8C8EC732B143889005C35AB /* Identity.pb.swift in Sources */,
+				E8C8EC132B1434E8005C35AB /* MLFlwrClientModel.swift in Sources */,
+				E8C8EC712B143889005C35AB /* FeatureTypes.proto in Sources */,
+				E8C8EC6C2B143889005C35AB /* NeuralNetwork.proto in Sources */,
+				E8C8EC8B2B143889005C35AB /* OneHotEncoder.pb.swift in Sources */,
+				E8C8EC8A2B143889005C35AB /* TreeEnsemble.proto in Sources */,
+				E8C8EC5C2B143889005C35AB /* WordEmbedding.proto in Sources */,
+				E8C8EC982B14388A005C35AB /* DataStructures.pb.swift in Sources */,
+				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				E8C8EC6D2B143889005C35AB /* Parameters.proto in Sources */,
+				E84E8C632B135354003E5AD2 /* Constants.swift in Sources */,
+				E8C8EC6A2B143889005C35AB /* ArrayFeatureExtractor.proto in Sources */,
+				E8C8EC8F2B143889005C35AB /* NearestNeighbors.pb.swift in Sources */,
+				E8C8EC8D2B143889005C35AB /* AudioFeaturePrint.pb.swift in Sources */,
+				E8C8EC112B1434C2005C35AB /* MLFlwrClient.swift in Sources */,
+				E8C8EC692B143889005C35AB /* Identity.proto in Sources */,
+				E8C8EC802B143889005C35AB /* GLMClassifier.proto in Sources */,
+				E8C8EC752B143889005C35AB /* Normalizer.proto in Sources */,
+				E8C8EC652B143889005C35AB /* FeatureTypes.pb.swift in Sources */,
+				E8C8EC722B143889005C35AB /* FeatureVectorizer.proto in Sources */,
+				E8C8EC7A2B143889005C35AB /* TextClassifier.pb.swift in Sources */,
+				E84E8C672B1353C9003E5AD2 /* BenchmarkInterceptor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		97C146FA1CF9000F007C117D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				97C146FB1CF9000F007C117D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				97C147001CF9000F007C117D /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		249021D3217E4FDB00AE95B9 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
+		249021D4217E4FDB00AE95B9 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				COREML_CODEGEN_LANGUAGE = Swift;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FedOpsMobile;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = FedOps.mobile;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Profile;
+		};
+		97C147031CF9000F007C117D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		97C147041CF9000F007C117D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		97C147061CF9000F007C117D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				COREML_CODEGEN_LANGUAGE = Swift;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FedOpsMobile;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = FedOps.mobile;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		97C147071CF9000F007C117D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				COREML_CODEGEN_LANGUAGE = Swift;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_BITCODE = NO;
+				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FedOpsMobile;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = FedOps.mobile;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				97C147031CF9000F007C117D /* Debug */,
+				97C147041CF9000F007C117D /* Release */,
+				249021D3217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				97C147061CF9000F007C117D /* Debug */,
+				97C147071CF9000F007C117D /* Release */,
+				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E8761E492B09FB60003216B7 /* XCRemoteSwiftPackageReference "flower-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/adap/flower-swift.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+		E8761E4A2B09FB7F003216B7 /* XCRemoteSwiftPackageReference "grpc-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/grpc/grpc-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		E8761E4B2B09FB9C003216B7 /* XCRemoteSwiftPackageReference "NumPy-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kewlbear/NumPy-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.54854;
+			};
+		};
+		E8761E4C2B09FBBA003216B7 /* XCRemoteSwiftPackageReference "PythonKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pvieito/PythonKit.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E84E8C5F2B134E46003E5AD2 /* flwr */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8761E492B09FB60003216B7 /* XCRemoteSwiftPackageReference "flower-swift" */;
+			productName = flwr;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 97C146E61CF9000F007C117D /* Project object */;
+}
