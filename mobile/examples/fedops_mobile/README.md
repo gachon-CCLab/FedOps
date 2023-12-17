@@ -20,7 +20,9 @@ How to use the code?
 
 6. Enter your task name to first text field in your mobile, then it makes port in FedOps platform. After that enter your task id to the second textField, server returns server configuration and server 
 port.
-![](assets/img_2.png).
-7. Then you can start your federated learning.
+<div style="text-align: right;">
+      <img src="assets/img_2.png" style="max-width:100%;" />
+   </div>
+8. Then you can start your federated learning.
 
 
