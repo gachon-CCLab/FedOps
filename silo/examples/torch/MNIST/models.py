@@ -85,7 +85,7 @@ def test_torch():
         model.to(device)
         model.eval()
         with torch.no_grad():
-            with torch.no_grad(), tqdm(total=len(test_loader), desc='Testing', unit='batch') as pbar:
+            tqdm(total=len(test_loader), desc='Testing', unit='batch') as pbar:
                 for inputs, labels in test_loader:
                     inputs, labels = inputs.to(device), labels.to(device)
                     outputs = model(inputs)
