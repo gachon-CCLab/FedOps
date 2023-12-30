@@ -1,3 +1,4 @@
 # server requirements
 fedops
+torchvision
 scikit-learn

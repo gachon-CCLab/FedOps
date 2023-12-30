@@ -25,6 +25,7 @@ class FLClient(fl.client.NumPyClient):
     def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, wandb_name,
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
                  train_loader=None, val_loader=None, test_loader=None, cfg=None, train_torch=None, test_torch=None):
+        self.cfg = cfg
         self.model_type = model_type
         self.model = model
         self.validation_split = validation_split
@@ -46,7 +47,6 @@ class FLClient(fl.client.NumPyClient):
             self.train_loader = train_loader
             self.val_loader = val_loader
             self.test_loader = test_loader
-            self.cfg = cfg
             self.train_torch = train_torch
             self.test_torch = test_torch
 

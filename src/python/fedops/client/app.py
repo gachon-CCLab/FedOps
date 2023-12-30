@@ -26,7 +26,6 @@ class FLClientTask():
         self.model_type = cfg.model_type
         self.model = fl_task["model"]
         self.model_name = fl_task["model_name"]
-        self.y_label_counter = fl_task["y_label_counter"]
         
         self.status.client_name = socket.gethostname()
         self.status.task_id = self.task_id
