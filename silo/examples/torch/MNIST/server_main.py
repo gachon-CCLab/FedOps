@@ -12,8 +12,7 @@ from hydra.utils import instantiate
 def main(cfg: DictConfig) -> None:
     
     """
-    Build initial global model based on dataset name.
-    Set the initial global model you created in fl_model.py to match the dataset name.
+    Set the initial global model you created in models.py.
     """
     # Build init global model using torch
     model = instantiate(cfg.model)

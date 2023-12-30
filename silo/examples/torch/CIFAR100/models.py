@@ -32,7 +32,10 @@ class CIFAR100Classifier(nn.Module):
 # torch train
 def train_torch():
     def custom_train_torch(model, train_loader, epochs, cfg):
-        """Train the network on the training set."""
+        """
+        Train the network on the training set.
+        Model must be the return value.
+        """
         print("Starting training...")
         
         criterion = nn.CrossEntropyLoss()
@@ -63,7 +66,10 @@ def train_torch():
 # torch test
 def test_torch():
     def custom_test_torch(model, test_loader, cfg):
-        """Validate the network on the entire test set."""
+        """
+        Validate the network on the entire test set.
+        Loss, accuracy values, and dictionary-type metrics variables are fixed as return values.
+        """
         print("Starting evalutation...")
         
         criterion = nn.CrossEntropyLoss()

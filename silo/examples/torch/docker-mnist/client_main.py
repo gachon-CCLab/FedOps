@@ -36,11 +36,9 @@ def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     
     """
-   Client data load function
-   Split partition => apply each client dataset(Options)
-   After setting data method in client_data.py, call the data method.
-   Keep these variables.
-   """
+    Client data load function
+    After setting model method in data_preparation.py, call the model method.
+    """
     train_loader, val_loader, test_loader = data_preparation.load_partition(dataset=cfg.dataset.name, 
                                                                         validation_split=cfg.dataset.validation_split, 
                                                                         batch_size=cfg.batch_size) # Pytorch version
@@ -48,10 +46,10 @@ def main(cfg: DictConfig) -> None:
     logger.info('data loaded')
 
     """
-    #     Client local model build function
-    #     Set init local model
-    #     After setting model method in client_model.py, call the model method.
-    #     """
+    Client local model build function
+    Set init local model
+    After setting model method in models.py, call the model method.
+    """
     # torch model
     model = instantiate(cfg.model)
     model_type = cfg.model_type     # Check tensorflow or torch model

@@ -24,29 +24,15 @@ logger = logging.getLogger(__name__)
 
 
 """
-Create your data loader for training/testing.
+Create your data loader for training/testing local & global model.
 Keep the value of the return variable for normal operation.
-----------------------------------------------------------
-dataset example
 """
-
-
-# Pytorch version
-
-# Define a custom Dataset class
-class CustomDataset(Dataset):
-    def __init__(self, data, targets, indices=None):
-        self.data = data[indices]
-        self.targets = targets[indices]
-    
-    def __len__(self):
-        return len(self.data)
-    
-    def __getitem__(self, idx):
-        return self.data[idx], self.targets[idx]
 
 # MNIST
 def load_partition(dataset, validation_split, batch_size):
+    """
+    The variables train_loader, val_loader, and test_loader must be returned fixedly.
+    """
     now = datetime.now()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
     fl_task = {"dataset": dataset, "start_execution_time": now_str}
@@ -77,6 +63,9 @@ def load_partition(dataset, validation_split, batch_size):
     return train_loader, val_loader, test_loader
 
 def gl_model_torch_validation(batch_size):
+    """
+    Setting up a dataset to evaluate a global model on the server
+    """
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))  # Adjusted for grayscale
