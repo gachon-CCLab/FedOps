@@ -32,19 +32,15 @@ class MNISTClassifier(nn.Module):
 
         return x
 
-# Set the loss function and optimizer
-def set_model_hyperparameter(model, lr):
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
-
-    return criterion, optimizer
-
 # Set the torch train & test
 # torch train
 def train_torch():
-    def custom_train_torch(model, train_loader, criterion, optimizer, epochs, device: str = "cpu"):
+    def custom_train_torch(model, train_loader, epochs, cfg):
         """Train the network on the training set."""
         print("Starting training...")
+        
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=cfg.learning_rate)
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
@@ -71,9 +67,11 @@ def train_torch():
 # torch test
 def test_torch():
     
-    def custom_test_torch(model, test_loader, criterion, device: str = "cpu"):
+    def custom_test_torch(model, test_loader, cfg):
         """Validate the network on the entire test set."""
         print("Starting evalutation...")
+        
+        criterion = nn.CrossEntropyLoss()
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         

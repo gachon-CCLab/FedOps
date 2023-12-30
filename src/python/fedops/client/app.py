@@ -39,6 +39,7 @@ class FLClientTask():
             self.wandb_account = cfg.wandb.account
             self.wandb_project = cfg.wandb.project
             self.wandb_name = f"{self.status.client_name}-v{self.status.gl_model}({datetime.now()})"
+            
 
 
         if self.model_type=="Tensorflow":
@@ -51,8 +52,6 @@ class FLClientTask():
             self.train_loader = fl_task["train_loader"]
             self.val_loader = fl_task["val_loader"]
             self.test_loader = fl_task["test_loader"]
-            self.criterion = fl_task["criterion"]
-            self.optimizer = fl_task["optimizer"]
             self.train_torch = fl_task["train_torch"]
             self.test_torch = fl_task["test_torch"]
                     
@@ -87,12 +86,6 @@ class FLClientTask():
         try:
             loop = asyncio.get_event_loop()
             if self.model_type == "Tensorflow":
-                # Update wandb config
-                wandb_config = {"learning_rate": self.model.optimizer.learning_rate.numpy(),
-                                "optimizer": self.model.optimizer,
-                                "loss_function": self.model.loss,
-                                "dataset": self.dataset_name, "model_architecture": self.model_name}
-
                 client = client_fl.FLClient(model=self.model, x_train=self.x_train, y_train=self.y_train, x_test=self.x_test,
                                             y_test=self.y_test,
                                             validation_split=self.validation_split, fl_task_id=self.task_id, client_mac=self.status.client_mac, 
@@ -101,24 +94,18 @@ class FLClientTask():
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type)
 
             elif self.model_type == "Pytorch":
-                wandb_config = {"learning_rate": self.optimizer.param_groups[0]['lr'],
-                                "optimizer": self.optimizer.__class__.__name__,
-                                "loss_function": self.criterion,
-                                "dataset": self.dataset_name, "model_architecture": self.model_name}
-
                 client = client_fl.FLClient(model=self.model, validation_split=self.validation_split, 
                                             fl_task_id=self.task_id, client_mac=self.status.client_mac, client_name=self.status.client_name,
                                             fl_round=1, gl_model=self.status.gl_model, wandb_use=self.wandb_use,wandb_name=self.wandb_name,
                                             wandb_run=wandb_run, model_name=self.model_name, model_type=self.model_type, 
                                             train_loader=self.train_loader, val_loader=self.val_loader, test_loader=self.test_loader, 
-                                            criterion=self.criterion, optimizer=self.optimizer, 
-                                            train_torch=self.train_torch, test_torch=self.test_torch)
+                                            cfg=self.cfg, train_torch=self.train_torch, test_torch=self.test_torch)
 
 
             
             # Check data fl client data status in the wandb
-            label_values = [[i, self.y_label_counter[i]] for i in range(self.output_size)]
-            logging.info(f'label_values: {label_values}')
+            # label_values = [[i, self.y_label_counter[i]] for i in range(self.output_size)]
+            # logging.info(f'label_values: {label_values}')
 
             # client_start object
             client_start = client_fl.flower_client_start(self.status.server_IP, client)
@@ -136,8 +123,11 @@ class FLClientTask():
             
             
             if self.wandb_use:
+                wandb_config = {"dataset": self.dataset_name, "model_architecture": self.model_name}
                 wandb_run.config.update(wandb_config, allow_val_change=True)
-                client_wandb.data_status_wandb(wandb_run, label_values)
+                
+                # client_wandb.data_status_wandb(wandb_run, label_values)
+                
                 # Wandb log(Client round end time)
                 wandb_run.log({"operation_time": fl_end_time, "gl_model_v": self.status.gl_model},step=self.status.gl_model)
                 # close wandb

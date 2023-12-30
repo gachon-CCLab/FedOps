@@ -24,7 +24,7 @@ class FLClient(fl.client.NumPyClient):
 
     def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, wandb_name,
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
-                 train_loader=None, val_loader=None, test_loader=None, criterion=None, optimizer=None, train_torch=None, test_torch=None):
+                 train_loader=None, val_loader=None, test_loader=None, cfg=None, train_torch=None, test_torch=None):
         self.model_type = model_type
         self.model = model
         self.validation_split = validation_split
@@ -46,8 +46,7 @@ class FLClient(fl.client.NumPyClient):
             self.train_loader = train_loader
             self.val_loader = val_loader
             self.test_loader = test_loader
-            self.criterion = criterion
-            self.optimizer = optimizer
+            self.cfg = cfg
             self.train_torch = train_torch
             self.test_torch = test_torch
 
@@ -134,11 +133,10 @@ class FLClient(fl.client.NumPyClient):
             # Update local model parameters
             self.set_parameters(parameters)
             
-            trained_model = self.train_torch(self.model, self.train_loader, self.criterion, self.optimizer, 
-                                            epochs)
+            trained_model = self.train_torch(self.model, self.train_loader, epochs, self.cfg)
             
-            train_loss, train_accuracy, train_metrics = self.test_torch(trained_model, self.train_loader, self.criterion)
-            val_loss, val_accuracy, val_metrics = self.test_torch(trained_model, self.val_loader, self.criterion)
+            train_loss, train_accuracy, train_metrics = self.test_torch(trained_model, self.train_loader, self.cfg)
+            val_loss, val_accuracy, val_metrics = self.test_torch(trained_model, self.val_loader, self.cfg)
             
             if train_metrics!=None:
                 train_results = {"loss": train_loss,"accuracy": train_accuracy,**train_metrics}
@@ -224,7 +222,7 @@ class FLClient(fl.client.NumPyClient):
             self.set_parameters(parameters)
             
             # Evaluate global model parameters on the local test data and return results
-            test_loss, test_accuracy, metrics = self.test_torch(self.model, self.test_loader, self.criterion)
+            test_loss, test_accuracy, metrics = self.test_torch(self.model, self.test_loader, self.cfg)
             num_examples_test = len(self.test_loader)
         else:
             raise ValueError("Unsupported model_type")

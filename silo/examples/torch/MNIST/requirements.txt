@@ -1,5 +1,3 @@
 # server requirements
 fedops
-torch
-torchvision
 scikit-learn

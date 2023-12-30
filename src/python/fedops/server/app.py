@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 class FLServer():
-    def __init__(self, cfg, model, model_name, model_type, 
-                 criterion=None, optimizer=None, gl_val_loader=None, x_val=None, y_val=None, test_torch=None):
+    def __init__(self, cfg, model, model_name, model_type, gl_val_loader=None, x_val=None, y_val=None, test_torch=None):
         
         self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
 
         self.server = server_utils.FLServerStatus() # Set FLServerStatus class
         self.model_type = model_type
+        self.cfg = cfg
         self.strategy = cfg.server.strategy
         
         self.batch_size = int(cfg.batch_size)
@@ -44,8 +44,6 @@ class FLServer():
 
         elif self.model_type == "Pytorch":
             self.gl_val_loader = gl_val_loader
-            self.criterion = criterion
-            self.optimizer = optimizer
             self.test_torch = test_torch
 
 
@@ -130,7 +128,7 @@ class FLServer():
                 state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
                 model.load_state_dict(state_dict, strict=True)
             
-                loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.criterion)
+                loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.cfg)
                 
                 # model save
                 torch.save(model.state_dict(), gl_model_path+'.pth')

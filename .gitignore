@@ -17,6 +17,7 @@ examples/fl_data
 *dataset*
 *k8s*
 test*
+old*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
