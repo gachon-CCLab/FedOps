@@ -68,7 +68,7 @@ def client_train():
         global_params = [val.detach().clone() for val in model.parameters()]
         model.train()
         
-        for _ in range(epochs):
+        for i in range(epochs):
             total_loss = 0.0
             correct=0
 
@@ -87,7 +87,7 @@ def client_train():
                 
             accuracy = correct / len(trainloader)
             average_loss = total_loss / len(trainloader)  # Calculate average loss
-            
+            print(f"Epoch {i+1} Loss: {total_loss}")
 
         return average_loss, accuracy
     

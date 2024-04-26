@@ -43,7 +43,7 @@ strategy:
     _partial_: true # we dont' want this function to be evaluated when instantiating the strategy, we treat it as a partial and evaluate it when the strategy actually calls the function (in aggregate_evaluate())
 
   # Client Selection
-  selection_use: true # Whether to use Selection Algorithm
+  selection_use: false # Whether to use Selection Algorithm
   selection_ratio: 0.5 # Select what % of clients
   metric: 'loss' # Select clients based on performance criteria such as loss/acc/auc
   standard: 'max' # Based on highest/lowest
@@ -51,7 +51,7 @@ strategy:
 
 # Monitor global model performance
 wandb: 
-  use: true # Whether to use wandb
+  use: false # Whether to use wandb
   key: 'your wandb api key' # Input your wandb api key
   account: 'your wandb account' # Input your wandb account
   project: '${dataset.name}_${task_id}'

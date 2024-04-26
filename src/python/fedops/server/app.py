@@ -119,7 +119,7 @@ class FLServer():
                 model.set_weights(parameters_ndarrays)  # Update model with the latest parameters
                 
                 # model save
-                model.save(gl_model_path+'.h5')
+                model.save(gl_model_path+'.tf')
             
             elif self.model_type == "Pytorch":
                 import torch
@@ -155,6 +155,7 @@ class FLServer():
                 return loss, {"accuracy": accuracy}
 
         return evaluate
+    
 
 
     def fit_config(self, rnd: int):
