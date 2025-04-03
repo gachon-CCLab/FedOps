@@ -12,6 +12,7 @@ from peft import (
     set_peft_model_state_dict,
 )
 import torch
+import json
 from collections import OrderedDict
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 from peft import get_peft_model, LoraConfig, prepare_model_for_kbit_training
@@ -176,3 +177,34 @@ def load_model(model_name: str, quantization: int, gradient_checkpointing: bool,
         model.config.use_cache = False
 
     return get_peft_model(model, peft_config)
+
+def gen_parameter_shape(cfg) -> None:
+    """
+    Huggingface 모델에 LoRA를 적용한 후, 학습 가능한 파라미터들의 shape을 JSON으로 저장
+    cfg: OmegaConf or dict, 반드시 cfg.model.name이 포함되어 있어야 함
+    """
+    model_name = cfg.model.name
+    save_filename = cfg.save_filename if "save_filename" in cfg else "parameter_shapes.json"
+
+    # 모델 로드 및 LoRA 적용
+    model = AutoModelForCausalLM.from_pretrained(model_name)
+    peft_config = LoraConfig(
+        r=cfg.finetune.lora_r,
+        lora_alpha=cfg.finetune.lora_alpha,
+        lora_dropout=cfg.finetune.lora_dropout,
+        task_type="CAUSAL_LM",
+    )
+    peft_model = get_peft_model(model, peft_config)
+
+    # LoRA 파라미터 shape 추출
+    parameter_shapes = [list(p.shape) for p in get_parameters_for_llm(peft_model)]
+
+    # 현재 디렉토리에 저장
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    save_path = os.path.join(current_dir, save_filename)
+
+    # JSON 저장
+    with open(save_path, "w") as f:
+        json.dump(parameter_shapes, f, indent=2)
+
+    print(f"[✓] {save_filename} saved to: {save_path}")
