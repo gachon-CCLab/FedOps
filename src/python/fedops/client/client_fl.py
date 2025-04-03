@@ -5,6 +5,7 @@ import time
 import os
 from functools import partial
 from . import client_api
+from . import client_utils
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -19,12 +20,8 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
                     handlers=handlers_list)
 
 logger = logging.getLogger(__name__)
-
-import numpy as np
 import warnings
 import torch
-from omegaconf import DictConfig
-from client_utils import set_parameters_for_llm, get_parameters_for_llm
 
 # Avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -83,7 +80,7 @@ class FLClient(fl.client.NumPyClient):
             self.model.load_state_dict(state_dict, strict=False)
 
         elif self.model_type in ["Huggingface"]:
-            set_parameters_for_llm(self.model, parameters)
+            client_utils.set_parameters_for_llm(self.model, parameters)
     
     def get_parameters(self):
         """Get parameters of the local model."""
@@ -95,7 +92,7 @@ class FLClient(fl.client.NumPyClient):
             return [val.cpu().numpy() for name, val in self.model.state_dict().items() if "bn" not in name]
         
         elif self.model_type == "Huggingface":
-            return get_parameters_for_llm(self.model)
+            return client_utils.get_parameters_for_llm(self.model)
 
     def get_properties(self, config):
         """Get properties of client."""
