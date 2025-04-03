@@ -199,9 +199,8 @@ def gen_parameter_shape(cfg) -> None:
     # LoRA 파라미터 shape 추출
     parameter_shapes = [list(p.shape) for p in get_parameters_for_llm(peft_model)]
 
-    # 현재 디렉토리에 저장
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    save_path = os.path.join(current_dir, save_filename)
+    # 현재 실행 위치 기준으로 저장
+    save_path = os.path.abspath(save_filename)
 
     # JSON 저장
     with open(save_path, "w") as f:
