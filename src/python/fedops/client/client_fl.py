@@ -20,11 +20,24 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] 
 
 logger = logging.getLogger(__name__)
 
+import numpy as np
+import warnings
+import torch
+from omegaconf import DictConfig
+from client_utils import set_parameters_for_llm, get_parameters_for_llm
+
+# Avoid warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+os.environ["RAY_DISABLE_DOCKER_CPU_WARNING"] = "1"
+warnings.filterwarnings("ignore", category=UserWarning)
+
 class FLClient(fl.client.NumPyClient):
 
     def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, wandb_name,
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
-                 train_loader=None, val_loader=None, test_loader=None, cfg=None, train_torch=None, test_torch=None):
+                 train_loader=None, val_loader=None, test_loader=None, cfg=None, train_torch=None, test_torch=None,
+                 finetune_llm=None, test_llm=None, trainset=None, tokenizer=None, data_collator=None, formatting_prompts_func=None, num_rounds=None):
+        
         self.cfg = cfg
         self.model_type = model_type
         self.model = model
@@ -50,16 +63,27 @@ class FLClient(fl.client.NumPyClient):
             self.train_torch = train_torch
             self.test_torch = test_torch
 
+        elif self.model_type == "Huggingface":
+            self.trainset = trainset
+            self.tokenizer = tokenizer
+            self.finetune_llm = finetune_llm
+            self.data_collator = data_collator
+            self.formatting_prompts_func = formatting_prompts_func
+
 
     def set_parameters(self, parameters):
-        import torch
-        """Loads a efficientnet model and replaces it parameters with the ones
-        given."""
-        keys = [k for k in self.model.state_dict().keys() if "bn" not in k] # Excluding parameters of BN layers
-        params_dict = zip(keys, parameters)
-        state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-        # self.model.load_state_dict(state_dict, strict=True)
-        self.model.load_state_dict(state_dict, strict=False)
+        if self.model_type in ["Tensorflow"]:
+            raise Exception("Not implemented")
+        
+        elif self.model_type in ["Pytorch"]:
+            keys = [k for k in self.model.state_dict().keys() if "bn" not in k] # Excluding parameters of BN layers
+            params_dict = zip(keys, parameters)
+            state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+            # self.model.load_state_dict(state_dict, strict=True)
+            self.model.load_state_dict(state_dict, strict=False)
+
+        elif self.model_type in ["Huggingface"]:
+            set_parameters_for_llm(self.model, parameters)
     
     def get_parameters(self):
         """Get parameters of the local model."""
@@ -69,6 +93,9 @@ class FLClient(fl.client.NumPyClient):
         elif self.model_type == "Pytorch":
             # Excluding parameters of BN layers
             return [val.cpu().numpy() for name, val in self.model.state_dict().items() if "bn" not in name]
+        
+        elif self.model_type == "Huggingface":
+            return get_parameters_for_llm(self.model)
 
     def get_properties(self, config):
         """Get properties of client."""
@@ -156,6 +183,30 @@ class FLClient(fl.client.NumPyClient):
             # Save model weights
             import torch
             torch.save(self.model.state_dict(), model_path+'.pth')
+
+        elif self.model_type == "Huggingface":
+            train_results_prefixed = {}
+            val_results_prefixed = {}
+
+            logging.info('Hf-fit set param')
+            # Update local model parameters: LoRA Adapter params
+            self.set_parameters(parameters)
+
+            logging.info('Hf-fit finetune')
+            trained_model = self.finetune_llm(self.model, self.trainset, self.tokenizer, self.formatting_prompts_func, self.data_collator)
+            logging.info('Hf-fit get param')
+            parameters_prime = self.get_parameters()
+            logging.info('Hf-fit save model')
+            num_examples_train = len(self.trainset)
+
+            train_loss = results["train_loss"] if "train_loss" in results else None
+            results = {"train_loss": train_loss}
+
+            model_save_path = model_path
+            self.model.save_pretrained(model_save_path)
+            # 선택적으로 tokenizer도 함께 저장
+            self.tokenizer.save_pretrained(model_save_path)
+
         else:
             raise ValueError("Unsupported model_type")
 
@@ -224,6 +275,13 @@ class FLClient(fl.client.NumPyClient):
             # Evaluate global model parameters on the local test data and return results
             test_loss, test_accuracy, metrics = self.test_torch(self.model, self.test_loader, self.cfg)
             num_examples_test = len(self.test_loader)
+        
+        elif self.model_type == "Huggingface":
+            # 평가는 추후 실행
+            test_loss = 0.0
+            test_accuracy = 0.0
+            num_examples_test = 1
+        
         else:
             raise ValueError("Unsupported model_type")
 

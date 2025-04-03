@@ -6,6 +6,13 @@ import re
 import logging
 import uuid, socket
 from . import client_api
+from flwr.common.typing import NDArrays
+from peft import (
+    get_peft_model_state_dict,
+    set_peft_model_state_dict,
+)
+import torch
+from collections import OrderedDict
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -124,3 +131,16 @@ async def notify_fail():
         logging.error('notify_fail error: ', r.content)
     
     return FL_client_start
+
+# For LLM
+def set_parameters_for_llm(model, parameters: NDArrays) -> None:
+    """Change the parameters of the model using the given ones."""
+    peft_state_dict_keys = get_peft_model_state_dict(model).keys()
+    params_dict = zip(peft_state_dict_keys, parameters)
+    state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
+    set_peft_model_state_dict(model, state_dict)
+
+def get_parameters_for_llm(model) -> NDArrays:
+    """Return the parameters of the current net."""
+    state_dict = get_peft_model_state_dict(model)
+    return [val.cpu().numpy() for _, val in state_dict.items()]

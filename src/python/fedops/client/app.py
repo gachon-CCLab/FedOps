@@ -53,6 +53,13 @@ class FLClientTask():
             self.test_loader = fl_task["test_loader"]
             self.train_torch = fl_task["train_torch"]
             self.test_torch = fl_task["test_torch"]
+
+        elif self.model_type == "Huggingface":
+            self.trainset = fl_task["trainset"]
+            self.tokenizer = fl_task["tokenizer"]
+            self.finetune_llm = fl_task["finetune_llm"]
+            self.data_collator = fl_task["data_collator"]
+            self.formatting_prompts_func = fl_task["formatting_prompts_func"]
                     
 
     async def fl_client_start(self):
@@ -100,7 +107,27 @@ class FLClientTask():
                                             train_loader=self.train_loader, val_loader=self.val_loader, test_loader=self.test_loader, 
                                             cfg=self.cfg, train_torch=self.train_torch, test_torch=self.test_torch)
 
-
+            elif self.model_type == "Huggingface":
+                client = client_fl.FLClient(
+                    model=self.model,
+                    validation_split=self.validation_split,
+                    fl_task_id=self.task_id,
+                    client_mac=self.status.client_mac,
+                    client_name=self.status.client_name,
+                    fl_round=1,
+                    gl_model=self.status.gl_model,
+                    wandb_use=self.wandb_use,
+                    wandb_name=self.wandb_name,
+                    wandb_run=wandb_run,
+                    model_name=self.model_name,
+                    model_type=self.model_type,
+                    trainset=self.trainset,
+                    tokenizer=self.tokenizer,
+                    finetune_llm=self.finetune_llm,
+                    test_llm=self.test_llm,
+                    formatting_prompts_func=self.formatting_prompts_func,
+                    data_collator=self.data_collator,
+                )
             
             # Check data fl client data status in the wandb
             # label_values = [[i, self.y_label_counter[i]] for i in range(self.output_size)]

@@ -5,6 +5,8 @@ import datetime
 import os
 import json
 import time
+import numpy as np
+import shutil
 from . import server_api
 from . import server_utils
 from collections import OrderedDict
@@ -46,6 +48,9 @@ class FLServer():
             self.gl_val_loader = gl_val_loader
             self.test_torch = test_torch
 
+        elif self.model_type == "Huggingface":
+            pass
+
 
     def init_gl_model_registration(self, model, gl_model_name) -> None:
         logging.info(f'last_gl_model_v: {self.server.last_gl_model_v}')
@@ -79,6 +84,9 @@ class FLServer():
             model_parameters = model.get_weights()
         elif self.model_type == "Pytorch":
             model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
+        elif self.model_type == "Huggingface":
+            json_path = "./parameter_shapes.json"
+            model_parameters = server_utils.load_initial_parameters_from_shape(json_path)
 
         strategy = instantiate(
             self.strategy,
@@ -132,6 +140,13 @@ class FLServer():
                 
                 # model save
                 torch.save(model.state_dict(), gl_model_path+'.pth')
+
+            elif self.model_type == "Huggingface":
+                logging.warning("Skipping evaluation for Huggingface model")
+                loss, accuracy = 0.0, 0.0
+
+                os.makedirs(gl_model_path, exist_ok=True)
+                np.savez(os.path.join(gl_model_path, "adapter_parameters.npz"), *parameters_ndarrays)
 
             if self.server.round >= 1:
                 # fit aggregation end time
@@ -231,9 +246,21 @@ class FLServer():
             # upload global model
             if self.model_type == "Tensorflow":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.h5"
+                server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
             elif self.model_type =="Pytorch":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.pth"
-            server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+                server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+            elif self.model_type == "Huggingface":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}"
+                npz_file_path = f"{global_model_file_name}.npz"
+                # 경로 변경: evaluate에서 저장한 실제 경로
+                # evaluate에서는: ./{gl_model_name}_gl_model_VN/adapter_parameters.npz 로 저장함
+                model_dir = f"{global_model_file_name}"
+                real_npz_path = os.path.join(model_dir, "adapter_parameters.npz")
+                # 파일 이름 통일을 위해 복사 (선택)
+                shutil.copy(real_npz_path, npz_file_path)
+
+                server_utils.upload_model_to_bucket(self.task_id, npz_file_path)
 
             logging.info(f'upload {global_model_file_name} model in s3')
 
