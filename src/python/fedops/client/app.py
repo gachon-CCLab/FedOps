@@ -124,7 +124,6 @@ class FLClientTask():
                     trainset=self.trainset,
                     tokenizer=self.tokenizer,
                     finetune_llm=self.finetune_llm,
-                    test_llm=self.test_llm,
                     formatting_prompts_func=self.formatting_prompts_func,
                     data_collator=self.data_collator,
                 )

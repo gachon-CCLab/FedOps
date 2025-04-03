@@ -33,7 +33,7 @@ class FLClient(fl.client.NumPyClient):
     def __init__(self, model, validation_split, fl_task_id, client_mac, client_name, fl_round,gl_model, wandb_use, wandb_name,
                  wandb_run=None, model_name=None, model_type=None, x_train=None, y_train=None, x_test=None, y_test=None, 
                  train_loader=None, val_loader=None, test_loader=None, cfg=None, train_torch=None, test_torch=None,
-                 finetune_llm=None, test_llm=None, trainset=None, tokenizer=None, data_collator=None, formatting_prompts_func=None, num_rounds=None):
+                 finetune_llm=None, trainset=None, tokenizer=None, data_collator=None, formatting_prompts_func=None, num_rounds=None):
         
         self.cfg = cfg
         self.model_type = model_type
@@ -185,15 +185,10 @@ class FLClient(fl.client.NumPyClient):
             train_results_prefixed = {}
             val_results_prefixed = {}
 
-            logging.info('Hf-fit set param')
             # Update local model parameters: LoRA Adapter params
             self.set_parameters(parameters)
-
-            logging.info('Hf-fit finetune')
             trained_model = self.finetune_llm(self.model, self.trainset, self.tokenizer, self.formatting_prompts_func, self.data_collator)
-            logging.info('Hf-fit get param')
             parameters_prime = self.get_parameters()
-            logging.info('Hf-fit save model')
             num_examples_train = len(self.trainset)
 
             train_loss = results["train_loss"] if "train_loss" in results else None
