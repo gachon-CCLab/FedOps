@@ -12,7 +12,7 @@ dataset:
   validation_split: 0.2 # Ratio of dividing train data by validation, but Huggingface do not use this.
 
 # client
-task_id: "llmfttest01" # Input your Task Name that you register in FedOps Website
+task_id: "" # Input your Task Name that you register in FedOps Website
 
 # finetune args
 finetune:
@@ -39,7 +39,7 @@ wandb:
 num_epochs: 3 # Number of local epochs (adjust for better fine-tuning)
 batch_size: 16 # Batch size optimized for LLM fine-tuning
 num_rounds: 2 # Number of federated learning rounds
-clients_per_round: 1 # Number of clients participating in each round
+clients_per_round: 2 # Number of clients participating in each round
 
 server:
   strategy:
