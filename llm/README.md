@@ -27,7 +27,6 @@ This use case will work just fine without modifying anything.
 git clone https://github.com/gachon-CCLab/FedOps.git \
 && mv FedOps/llm/usecase/finetune . \
 && rm -rf FedOps
-
 ```
 
 2. **Customize the FedOps Baseline code.**
