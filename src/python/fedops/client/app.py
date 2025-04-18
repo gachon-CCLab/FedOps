@@ -10,10 +10,11 @@ from . import client_utils
 from . import client_fl
 from . import client_wandb
 from . import client_api
+from ..utils.fedxai.gradcam import MNISTGradCAM
 
 
 class FLClientTask():
-    def __init__(self, cfg, fl_task=None):
+    def __init__(self, cfg, fl_task=None, xai=False):
         self.app = FastAPI()
         self.status = client_utils.FLClientStatus()
         self.cfg = cfg
@@ -26,6 +27,7 @@ class FLClientTask():
         self.model_type = cfg.model_type
         self.model = fl_task["model"]
         self.model_name = fl_task["model_name"]
+        self.xai = xai
         
         self.status.client_name = socket.gethostname()
         self.status.task_id = self.task_id
@@ -145,6 +147,24 @@ class FLClientTask():
 
             # FL client end time
             fl_end_time = time.time() - fl_start_time
+
+            # Grad-CAM 설명 생성
+            if self.xai:
+                try:
+                    logging.info("Generating Grad-CAM explanations...")
+                    gradcam = MNISTGradCAM(model=self.model)  # Replace "layer_name" with the desired layer
+                    input_data = self.x_test[:1]  # Use a sample input for visualization
+                    cam_output = gradcam.generate(input_data)
+                    
+                    # 저장 또는 시각화
+                    gradcam.save(cam_output, "gradcam_output.png")  # 저장 경로 지정
+                    logging.info("Grad-CAM explanation saved as gradcam_output.png")
+                except Exception as e:
+                    logging.error(f"Error generating Grad-CAM explanations: {e}")
+
+            # Wandb 로그 추가 (옵션)
+            # if self.wandb_use:
+            #     wandb_run.log({"gradcam_output": wandb.Image("gradcam_output.png")})
             
             
             if self.wandb_use:
@@ -231,5 +251,8 @@ class FLClientTask():
             # FL client out
             client_api.ClientMangerAPI().get_client_out()
             logging.info(f'{self.status.client_name};{self.status.client_mac}-client close')
+            if self.xai == True:
+                # close xai
+                GradCAM.close_xai()
 
 

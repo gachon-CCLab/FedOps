@@ -83,7 +83,7 @@ class FLServer():
         if self.model_type == "Tensorflow":
             model_parameters = model.get_weights()
         elif self.model_type == "Pytorch":
-            model_parameters = [val.cpu().numpy() for _, val in model.state_dict().items()]
+            model_parameters = [val.cpu().detach().numpy() for _, val in model.state_dict().items()]
         elif self.model_type == "Huggingface":
             json_path = "./parameter_shapes.json"
             model_parameters = server_utils.load_initial_parameters_from_shape(json_path)
