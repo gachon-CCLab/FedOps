@@ -1,0 +1,51 @@
+# Common
+random_seed: 42
+
+model_type: "Huggingface" # Change to indicate Hugging Face model
+model:
+  name: "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B" # Replace with desired LLM model
+  output_size: 512
+
+dataset:
+  name: "medalpaca/medical_meadow_medical_flashcards" # Input your dataset name
+  llm_task: "medical" # Specify task type
+  validation_split: 0.2 # Ratio of dividing train data by validation, but Huggingface do not use this.
+
+# client
+task_id: "" # Input your Task Name that you register in FedOps Website
+
+# finetune args
+finetune:
+  lora_r: 8
+  lora_alpha: 16
+  lora_dropout: 0.075
+  learning_rate: 0.001
+  per_device_train_batch_size: 16
+  gradient_accumulation_steps: 1
+  logging_steps: 1
+  max_steps: 10
+  save_steps: 1000
+  save_total_limit: 5
+  gradient_checkpointing: True
+  lr_scheduler_type: "constant"
+
+wandb:
+  use: false # Whether to use wandb
+  key: "your wandb api key" # Input your wandb api key
+  account: "your wandb account" # Input your wandb account
+  project: "${dataset.name}_${task_id}"
+
+# server
+num_epochs: 3 # Number of local epochs (adjust for better fine-tuning)
+batch_size: 16 # Batch size optimized for LLM fine-tuning
+num_rounds: 2 # Number of federated learning rounds
+clients_per_round: 2 # Number of clients participating in each round
+
+server:
+  strategy:
+    _target_: flwr.server.strategy.FedAvg # Aggregation algorithm (default: FedAvg)
+    fraction_fit: 0.1 # Adjusted to allow multiple clients if needed
+    fraction_evaluate: 0.1 # Adjusted for evaluation frequency
+    min_fit_clients: ${clients_per_round} # Minimum clients for training
+    min_available_clients: ${clients_per_round} # Minimum available clients per round
+    min_evaluate_clients: ${clients_per_round} # Minimum clients for evaluation
