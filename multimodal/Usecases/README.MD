@@ -1,4 +1,4 @@
-```markdown
+````markdown
 # Multimodal Federated Hateful Memes Classification (FedOps Silo)
 
 This repository demonstrates a full end-to-end **multimodal** (text + image) federated learning (FL) setup using FedOps Silo and Flower, applied to the [Hateful Memes](https://huggingface.co/neuralcatcher/hateful_memes) dataset. Each client trains a fusion model on its local (non-IID) split of the memes, and a centralized FL server aggregates updates across all clients. We also show how to customize both the **model-level fusion** (inside `models.py`) and the **server-side aggregation** (custom Flower Strategy).
@@ -36,25 +36,23 @@ This repository demonstrates a full end-to-end **multimodal** (text + image) fed
 
 ## 📂 Folder Structure
 
-```
-
-Hateful\_memes\_classification/
-├── clienta\_main.py          # “Client A” entry point (GPU setup + FL client)
-├── clientb\_main.py          # “Client B” entry point (similar to clienta\_main.py)
-├── client\_manager\_main.py   # Flower client manager (registers client with central coordinator)
-├── server\_main.py           # FL server entry point (starts Flower server)
-├── models.py                # Defines `HatefulMemesFusionModel` (text+image fusion)
-├── data\_preparation.py      # Loads Hateful Memes dataset, returns PyTorch DataLoaders
+```plaintext
+Hateful_memes_classification/
+├── clienta_main.py            # “Client A” entry point (GPU setup + FL client)
+├── clientb_main.py            # “Client B” entry point (similar to clienta_main.py)
+├── client_manager_main.py     # Flower client manager (registers client with central coordinator)
+├── server_main.py             # FL server entry point (starts Flower server)
+├── models.py                  # Defines `HatefulMemesFusionModel` (text+image fusion)
+├── data_preparation.py        # Loads Hateful Memes dataset, returns PyTorch DataLoaders
 ├── multimodal/
 │   ├── FusionModel/
-│   │   └── custom\_fusion.py # (optional) alternative fusion architectures (e.g. cross-attention)
+│   │   └── custom_fusion.py   # (optional) alternative fusion architectures (e.g. cross-attention)
 │   └── Aggregation/
-│       └── my\_custom\_strategy.py   # Example custom Flower Strategy subclass
+│       └── my_custom_strategy.py  # Example custom Flower Strategy subclass
 ├── conf/
-│   └── config.yaml           # Hydra config (model, FL server, strategy, hyperparams)
-├── requirements.txt          # Python dependencies
-└── README.md                 # ← You are reading this file
-
+│   └── config.yaml             # Hydra config (model, FL server, strategy, hyperparams)
+├── requirements.txt            # Python dependencies
+└── README.md                   # ← You are reading this file
 ````
 
 ---
@@ -70,7 +68,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-````
+```
 
 Make sure your CUDA drivers and PyTorch CUDA build are correctly installed if you intend to use a GPU.
 
@@ -437,8 +435,6 @@ To try a new fusion style, place your class under `multimodal/FusionModel/...` a
 ---
 
 **Happy Federated Learning!**
-
-Feel free to open issues or pull requests in this repo for bug fixes, improvements, or new custom strategies.
 
 ```
 ```
