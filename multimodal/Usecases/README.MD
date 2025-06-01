@@ -1,36 +1,51 @@
 ````markdown
 # Multimodal Federated Hateful Memes Classification (FedOps Silo)
 
-This repository demonstrates a full end-to-end **multimodal** (text + image) federated learning (FL) setup using FedOps Silo and Flower, applied to the [Hateful Memes](https://huggingface.co/neuralcatcher/hateful_memes) dataset. Each client trains a fusion model on its local (non-IID) split of the memes, and a centralized FL server aggregates updates across all clients. We also show how to customize both the **model-level fusion** (inside `models.py`) and the **server-side aggregation** (custom Flower Strategy).
+This repository demonstrates a full end-to-end **multimodal** (text + image)
+federated learning (FL) setup using FedOps Silo and Flower, applied to the
+[Hateful Memes](https://huggingface.co/neuralcatcher/hateful_memes) dataset.
+Each client trains a fusion model on its local (non-IID) split of the memes,
+and a centralized FL server aggregates updates across all clients.
 
 ---
 
 ## 🚀 Features
 
 - **Multimodal Fusion (Early, Intermediate, Late)**  
-  We demonstrate multiple fusion strategies for combining text and image modalities:
-  1. **Early Fusion**: Concatenate raw or preprocessed text embeddings and image embeddings before any deeper processing.  
-  2. **Intermediate Fusion**: Use cross-attention or other attention mechanisms to let one modality guide the other (e.g. image attends over text features or vice versa).  
-  3. **Late Fusion**: Train separate unimodal classifiers for text and image, then combine their output logits or probabilities in a final decision layer.  
+  1. **Early Fusion**: Concatenate text embeddings and image embeddings
+     before deeper processing.  
+  2. **Intermediate Fusion**: Use cross-attention to let one modality guide
+     the other (e.g. image attends over text features).  
+  3. **Late Fusion**: Train separate unimodal classifiers for text and image,
+     then combine their output logits or probabilities in a final decision
+     layer.
 
-  The default `HatefulMemesFusionModel` uses a simple fusion layer (concatenation of BERT pooled output and CNN image features). You can also implement a cross-attention variant (Intermediate Fusion) under `multimodal/FusionModel/custom_fusion.py`.
+  The default `HatefulMemesFusionModel` uses simple concatenation of BERT
+  pooled output and CNN image features. Custom fusion variants live under
+  `multimodal/FusionModel/`.
 
 - **Federated Learning Stack**  
-  Uses [FedOps Silo](https://github.com/fedops-fedmm) and [Flower](https://flower.dev) under the hood:
-  1. **Clients** each run a local PyTorch training loop (text + image).  
-  2. **Server** uses a Flower Strategy (e.g. FedAvg or a custom aggregator) to merge client weights each round.
+  Uses [FedOps Silo](https://github.com/fedops-fedmm) and [Flower](https://flower.dev):
+  1. **Clients** run local PyTorch training loops (text + image).  
+  2. **Server** uses a Flower Strategy (e.g. FedAvg or a custom aggregator)
+     to merge client weights each round.
 
 - **Non-IID Data Splits**  
-  Each client receives a stratified, non-IID subset of the Hateful Memes dataset (both text & images). A small “hold-out” validation set remains with the server for global evaluation.
+  Each client receives a stratified, non-IID subset of the Hateful Memes
+  dataset. A hold-out validation set remains with the server for global
+  evaluation.
 
 - **GPU Acceleration**  
-  Clients detect and utilize any available GPU for faster model training (CUDA + cuDNN).
+  Clients detect and utilize any available GPU for faster model training
+  (CUDA + cuDNN).
 
 - **Custom Aggregation Strategies**  
-  Easily add your own FL Strategy (e.g. modality-aware weight fusion) under `multimodal/Aggregation/...` and point to it in `conf/config.yaml`.
+  Easily add your own FL Strategy (e.g. modality-aware weight fusion) under
+  `multimodal/Aggregation/` and point to it in `conf/config.yaml`.
 
 - **Hydra Configuration**  
-  All hyperparameters, model settings, and FL server/strategy parameters live in a single `conf/config.yaml` file that works seamlessly for both server & client.
+  All hyperparameters, model settings, and FL server/strategy parameters live
+  in a single `conf/config.yaml` file that works for both server & client.
 
 ---
 
@@ -40,17 +55,21 @@ This repository demonstrates a full end-to-end **multimodal** (text + image) fed
 Hateful_memes_classification/
 ├── clienta_main.py            # “Client A” entry point (GPU setup + FL client)
 ├── clientb_main.py            # “Client B” entry point (similar to clienta_main.py)
-├── client_manager_main.py     # Flower client manager (registers client with central coordinator)
+├── client_manager_main.py     # Flower client manager (registers client
+│                              # with central coordinator)
 ├── server_main.py             # FL server entry point (starts Flower server)
-├── models.py                  # Defines `HatefulMemesFusionModel` (text+image fusion)
-├── data_preparation.py        # Loads Hateful Memes dataset, returns PyTorch DataLoaders
+├── models.py                  # Defines `HatefulMemesFusionModel`
+│                              # (text+image fusion)
+├── data_preparation.py        # Loads Hateful Memes dataset,
+│                              # returns PyTorch DataLoaders
 ├── multimodal/
 │   ├── FusionModel/
-│   │   └── custom_fusion.py   # (optional) alternative fusion architectures (e.g. cross-attention)
+│   │   └── custom_fusion.py   # (optional) alternative fusion architectures
 │   └── Aggregation/
 │       └── my_custom_strategy.py  # Example custom Flower Strategy subclass
 ├── conf/
-│   └── config.yaml             # Hydra config (model, FL server, strategy, hyperparams)
+│   └── config.yaml             # Hydra config (model, FL server, strategy,
+│                              # hyperparams)
 ├── requirements.txt            # Python dependencies
 └── README.md                   # ← You are reading this file
 ````
@@ -70,11 +89,12 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Make sure your CUDA drivers and PyTorch CUDA build are correctly installed if you intend to use a GPU.
+Make sure your CUDA drivers and PyTorch CUDA build are correctly installed if
+you intend to use a GPU.
 
 ---
 
-### 2. Configuration (conf/config.yaml)
+### 2. Configuration (`conf/config.yaml`)
 
 All hyperparameters and file paths live in one place. Example:
 
@@ -94,7 +114,7 @@ model:
 
 dataset:
   name: 'hateful_memes'
-  validation_split: 0.2  # 20% of full data held out at server
+  validation_split: 0.2  # 20% held out at server
 
 task_id: 'hatetaskthree'
 
@@ -109,9 +129,8 @@ clients_per_round: 2
 
 server:
   strategy:
-    # Point to either FedAvg or your own custom strategy:
     _target_: multimodal.Aggregation.my_custom_strategy.MyCustomStrategy
-    alpha: 0.7         # Example hyperparameter for custom Strategy
+    alpha: 0.7
     fraction_fit: 0.00001
     fraction_evaluate: 0.000001
     min_fit_clients: ${clients_per_round}
@@ -119,25 +138,32 @@ server:
     min_evaluate_clients: ${clients_per_round}
 ```
 
-*Key points:*
-
-* `_target_` under `model:` must point to the PyTorch fusion model class in `models.py` (or a custom fusion file under `multimodal/FusionModel/...`).
-* `_target_` under `server.strategy:` can be Flower’s built-in `FedAvg` or your own class (e.g. `multimodal.Aggregation.my_custom_strategy.MyCustomStrategy`).
+* `_target_` under `model:` points to the PyTorch fusion model class in
+  `models.py` (or a custom fusion file under `multimodal/FusionModel/`).
+* `_target_` under `server.strategy:` can be Flower’s built-in `FedAvg` or
+  your own class (e.g.
+  `multimodal.Aggregation.my_custom_strategy.MyCustomStrategy`).
 
 ---
 
 ### 3. Non-IID Data Splitting
 
-Each client loads its own **local** (non-IID) partition of the Hateful Memes dataset. By default, `data_preparation.py` uses the **entire** dataset in each client, but you can customize:
+Each client loads its own **local** (non-IID) partition of the Hateful Memes
+dataset. By default, `data_preparation.py` uses the **entire** dataset in each
+client, but you can customize:
 
 ```python
 # data_preparation.py
 
 def load_partition(batch_size=32, split="train", client_id=None):
-    full_dataset = load_dataset("neuralcatcher/hateful_memes", split=split)
+    full_dataset = load_dataset(
+        "neuralcatcher/hateful_memes", split=split
+    )
     if client_id is not None:
         # Example: stratified 50/50 split by “label”
-        indices = stratified_indices_for_client(full_dataset["label"], client_id, num_clients=2)
+        indices = stratified_indices_for_client(
+            full_dataset["label"], client_id, num_clients=2
+        )
         local_subset = full_dataset.select(indices)
     else:
         local_subset = full_dataset
@@ -145,59 +171,59 @@ def load_partition(batch_size=32, split="train", client_id=None):
     # … tokenize, transform images, return DataLoader(local_subset) …
 ```
 
-If you want a gold-standard non-IID (e.g. Dirichlet allocation or label partition), implement `stratified_indices_for_client(...)` accordingly in `data_preparation.py` and pass `client_id=0` or `1` when each client calls `load_partition(...)`.
+Implement `stratified_indices_for_client(...)` under `data_preparation.py` and
+pass `client_id=0` or `1` when each client calls `load_partition(...)`.
 
 ---
 
 ### 4. Running Clients & Server
 
-You’ll start:
-
-1. **Server** (on a machine with Kubernetes or just a local shell):
-
-   ```bash
-   # In one terminal:
-   source venv/bin/activate
-   python server_main.py --config-name=config
-   ```
-
-   This spins up the Flower server on port `8787` by default (or as configured in `config.yaml`).
-
-2. **Client Manager** (on each client machine):
-
-   ```bash
-   # In separate terminal on Client A:
-   source venv/bin/activate
-   python client_manager_main.py
-   ```
-
-   This FastAPI client manager polls the server for “start training” signals.
-
-3. **Client Training Process** (on each client machine, in a different terminal):
-
-   ```bash
-   # On Client A:
-   source venv/bin/activate
-   python clienta_main.py --config-name=config
-   ```
-
-   * Client detects GPU (if available) and prints: `🔌 Using device: cuda` or `cpu`.
-   * It registers with the manager, waits for a `/start` signal from `client_manager_main.py`, then spins up Flower’s NumPyClient under the hood and starts local training.
-
-Repeat similarly on **Client B** machine:
+#### 4.1 Start the Server
 
 ```bash
-# On Client B:
-python clientb_main.py --config-name=config
+python server_main.py --config-name=config
 ```
 
-Once both clients are live, the server’s strategy (e.g. FedAvg or your custom `MyCustomStrategy`) will accept their weight updates each round, aggregate them, and broadcast back the new global model.
+This spins up the Flower server on `0.0.0.0:8787` by default and waits for
+clients.
+
+#### 4.2 Start Client Manager (per client)
+
+On **Client A** machine:
+
+```bash
+python client_manager_main.py
+```
+
+This FastAPI manager polls the server for “start training” signals and
+forwards them to the local FL client.
+
+#### 4.3 Start FL Client (per client)
+
+On **Client A**:
+
+```bash
+python clienta_main.py --config-name=config
+```
+
+* Client prints: `🔌 Using device: cuda` if CUDA is available, else `cpu`.
+* Client loads its local (non-IID) split via
+  `data_preparation.load_partition(...)`.
+* Client manager signals “start training” once both clients register online.
+* Flower’s `start_numpy_client` starts under the hood and begins local
+  training.
+
+On **Client B** (another machine or terminal):
+
+```bash
+python clientb_main.py --config-name=config
+```
 
 ---
 
 ## 🖥️ GPU Acceleration (Client Side)
 
-Each client’s `clienta_main.py` / `clientb_main.py` includes a GPU check:
+Each client’s main file includes:
 
 ```python
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -206,22 +232,22 @@ if device.type == "cuda":
     torch.backends.cudnn.benchmark = True
 ```
 
-The fusion model is then moved onto that device:
+The fusion model is moved onto that device:
 
 ```python
 model = instantiate(cfg.model)
 model = model.to(device)
 ```
 
-Inside `models.py`, both train and test loops send tensors to `device` with `batch["…"].to(device, non_blocking=True)`. If you have multiple GPUs, set `CUDA_VISIBLE_DEVICES=0,1` when launching the client.
+In `models.py`, train and test loops send tensors to `device` with
+`batch["…"].to(device, non_blocking=True)`. For multi-GPU, set
+`CUDA_VISIBLE_DEVICES=0,1` when launching the client.
 
 ---
 
 ## ⚙️ Custom Aggregation Strategy
 
-To add your own FL aggregator:
-
-1. **Create a new file** under `multimodal/Aggregation/my_custom_strategy.py`:
+1. **Create a file** under `multimodal/Aggregation/my_custom_strategy.py`:
 
    ```python
    # multimodal/Aggregation/my_custom_strategy.py
@@ -243,33 +269,40 @@ To add your own FL aggregator:
            failures: List[BaseException],
        ):
            """
-           Example: Compute a weighted average of client weights
-           where each client’s weight = alpha * (validation_accuracy)
-           + (1 - alpha) * (num_samples / total_samples).
+           Example: Weight client updates by a combination of validation accuracy
+           and local sample size.
            """
            weighted_results = []
-           total_samples = sum(res.metrics["num_examples"] for _, res in results)
+           total_samples = sum(
+               res.metrics["num_examples"] for _, res in results
+           )
 
            for client, fit_res in results:
                local_samples = fit_res.metrics["num_examples"]
                local_acc = fit_res.metrics.get("accuracy", 0.0)
-               w_size   = local_samples / total_samples
-               # Combine performance and data size:
-               weight_factor = self.alpha * local_acc + (1.0 - self.alpha) * w_size
+               w_size = local_samples / total_samples
+               weight_factor = (
+                   self.alpha * local_acc + (1.0 - self.alpha) * w_size
+               )
                weighted_results.append((client, fit_res, weight_factor))
 
-           # Call FedAvg with our custom weight_factors:
-           return super().aggregate_fit(rnd, [
-               (client, fit_res, weight_factor) for client, fit_res, weight_factor in weighted_results
-           ], failures)
+           return super().aggregate_fit(
+               rnd,
+               [
+                   (client, fit_res, weight_factor)
+                   for client, fit_res, weight_factor in weighted_results
+               ],
+               failures,
+           )
    ```
 
-2. **Update `conf/config.yaml`** to point to this new class:
+2. **Update `conf/config.yaml`** to point to this class:
 
    ```yaml
    server:
      strategy:
-       _target_: multimodal.Aggregation.my_custom_strategy.MyCustomStrategy
+       _target_:
+         multimodal.Aggregation.my_custom_strategy.MyCustomStrategy
        alpha: 0.7
        fraction_fit: 0.00001
        fraction_evaluate: 0.000001
@@ -278,70 +311,129 @@ To add your own FL aggregator:
        min_evaluate_clients: ${clients_per_round}
    ```
 
-When the FL server starts, Hydra will resolve `_target_` to your custom strategy class, instantiate it with `alpha=0.7`, and run it.
+Hydra will instantiate your custom strategy at server startup.
 
 ---
 
 ## 🔄 Custom Model Fusion
 
-We support multiple fusion paradigms in `models.py` (late fusion by default) and custom fusion files under `multimodal/FusionModel/...` for early or intermediate approaches:
+By default, `models.py` implements simple concatenation (Early Fusion). To
+experiment with other fusion types:
 
-1. **Early Fusion**:
+1. **Early Fusion** (default): Concatenate BERT pooled output and CNN image
+   features.
 
-   * Simply concatenate text embeddings (e.g. pooled BERT output) and image embeddings (e.g. CNN features) right after each encoder.
-   * Example (in `models.py` default):
+2. **Intermediate Fusion** (Cross-Attention): Place a new file under
+   `multimodal/FusionModel/custom_fusion.py`, e.g.:
 
-     ```python
-     text_features = self.bert(input_ids, attention_mask).pooler_output  # (batch, 768)
-     image_feat    = self.image_encoder(image)                           # (batch, 128)
-     fused         = torch.cat((text_features, image_feat), dim=1)       # (batch, 768+128)
-     out           = self.classifier(F.relu(self.fusion_fc(fused)))      # final logits
-     ```
+   ```python
+   # multimodal/FusionModel/custom_fusion.py
 
-2. **Intermediate Fusion (Cross-Attention)**:
+   import torch
+   import torch.nn as nn
+   import torch.nn.functional as F
+   from transformers import BertModel
 
-   * Use one modality as “query” and the other as “key/value” in a MultiheadAttention block.
-   * For example, let the image features query the text features:
+   class CrossAttentionFusionModel(nn.Module):
+       def __init__(
+           self,
+           text_hidden_dim=768,
+           image_output_dim=128,
+           fusion_output_dim=256,
+           output_size=2,
+           num_heads=8,
+       ):
+           super().__init__()
+           self.bert = BertModel.from_pretrained("bert-base-uncased")
+           self.image_encoder = nn.Sequential(
+               nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),
+               nn.ReLU(),
+               nn.MaxPool2d(kernel_size=2),
+               nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+               nn.ReLU(),
+               nn.AdaptiveAvgPool2d((4, 4)),
+           )
+           self.flatten = nn.Flatten()
+           self.image_fc = nn.Linear(64 * 4 * 4, image_output_dim)
 
-     ```python
-     # In multimodal/FusionModel/custom_fusion.py:
-     text_feat = self.bert(...).pooler_output.unsqueeze(1)         # (batch, 1, 768)
-     img_feat  = self.image_encoder(image).view(batch, -1).unsqueeze(0)  # (1, batch, 128)
-     attn_out, _ = self.cross_attention(
-         query=img_feat,
-         key=text_feat.transpose(0,1),
-         value=text_feat.transpose(0,1)
-     )
-     attn_out = attn_out.squeeze(0)  # (batch, 768)
-     fused    = F.relu(self.fusion_fc(torch.cat([attn_out, img_feat.squeeze(0)], dim=1)))
-     out      = self.classifier(fused)
-     ```
+           # Cross-Attention block
+           self.cross_attention = nn.MultiheadAttention(
+               embed_dim=text_hidden_dim, num_heads=num_heads
+           )
+           self.fusion_fc = nn.Linear(text_hidden_dim + image_output_dim,
+                                      fusion_output_dim)
+           self.classifier = nn.Linear(fusion_output_dim, output_size)
 
-3. **Late Fusion**:
+       def forward(self, input_ids, attention_mask, image):
+           bert_out = self.bert(
+               input_ids=input_ids, attention_mask=attention_mask
+           )
+           text_feat = bert_out.pooler_output  # (batch, 768)
+           text_feat = text_feat.unsqueeze(1)  # (batch, 1, 768)
 
-   * Train separate text-only and image-only classifiers, then combine their logits in a final decision layer or weighted sum.
-   * Example (create two heads in `models.py`):
+           img_feat = self.image_encoder(image)  # (batch, 64, 4, 4)
+           img_feat = self.flatten(img_feat)      # (batch, 64*4*4)
+           img_feat = self.image_fc(img_feat)     # (batch, 128)
+           img_feat = img_feat.unsqueeze(0)       # (1, batch, 128)
 
-     ```python
-     text_logits  = self.text_head(text_features)   # (batch, 2)
-     image_logits = self.image_head(image_features) # (batch, 2)
-     final_logits = self.late_fusion_layer(text_logits, image_logits) 
-     # Could be weighted average: alpha * text_logits + (1-alpha) * image_logits
-     ```
+           # Cross-attend image queries over text keys/values
+           text_kv = text_feat.transpose(0, 1)  # (1, batch, 768)
+           attn_out, _ = self.cross_attention(
+               query=img_feat,
+               key=text_kv,
+               value=text_kv,
+           )
+           attn_out = attn_out.squeeze(0)  # (batch, 768)
 
-To try a new fusion style, place your class under `multimodal/FusionModel/...` and update `_target_` in `conf/config.yaml`.
+           fused = torch.cat((attn_out, img_feat.squeeze(0)), dim=1)
+           fusion_out = F.relu(self.fusion_fc(fused))
+           logits = self.classifier(fusion_out)
+           return logits
+   ```
+
+3. **Late Fusion**: In `models.py`, implement separate text-only and image-only
+   heads, then combine:
+
+   ```python
+   class LateFusionModel(nn.Module):
+       def __init__(self, ...):
+           super().__init__()
+           self.bert = BertModel.from_pretrained("bert-base-uncased")
+           self.image_encoder = ...
+           self.text_head = nn.Linear(text_hidden_dim, output_size)
+           self.image_head = nn.Linear(image_output_dim, output_size)
+           self.late_fusion_layer = nn.Linear(output_size * 2, output_size)
+
+       def forward(self, input_ids, attention_mask, image):
+           text_feat = self.bert(...).pooler_output  # (batch, 768)
+           text_logits = self.text_head(text_feat)   # (batch, 2)
+
+           img_feat = self.image_encoder(image)      # ...
+           img_feat = self.image_fc(img_feat)        # (batch, 128)
+           img_logits = self.image_head(img_feat)    # (batch, 2)
+
+           fused_logits = torch.cat([text_logits, img_logits], dim=1)
+           final_logits = self.late_fusion_layer(fused_logits)
+           return final_logits
+   ```
+
+To switch, update `_target_` under `model:` in `conf/config.yaml` to the new
+class path.
 
 ---
 
 ## 📖 Usage Workflow
 
-1. **Prepare K8s (Optional)**
-   If you want to run on Kubernetes, build Docker images for:
+1. **(Optional) Kubernetes**
+   Build Docker images for:
 
    * FL server (includes `server_main.py` + dependencies)
-   * Each client (includes `client_manager_main.py` + `clienta_main.py` or `clientb_main.py`)
+   * Each client (includes `client_manager_main.py` + `clienta_main.py` or
+     `clientb_main.py`)
 
-   Ensure nodes have GPUs (set appropriate resource requests/limits). If pods get evicted due to `out-of-memory` or `out-of-shared-memory`, you may need to increase `spec.containers.resources.limits.memory` or `spec.containers.securityContext.privileged` for `shmSize`.
+   Ensure pods have GPU resources (`resources.requests.limits`). If pods get
+   evicted due to `out-of-memory` or `out-of-shared-memory`, increase pod
+   memory limits or use a larger node pool.
 
 2. **Launch FL Server**
 
@@ -349,8 +441,9 @@ To try a new fusion style, place your class under `multimodal/FusionModel/...` a
    python server_main.py --config-name=config
    ```
 
-   * The server loads its **hold-out validation set** (20% of full data, stratified) via `data_preparation.gl_model_torch_validation`.
-   * Starts Flower on `0.0.0.0:8787` (default) and waits for clients.
+   * Server loads a **hold-out validation set** (20% of full data) via
+     `data_preparation.gl_model_torch_validation`.
+   * Starts Flower on `0.0.0.0:8787` (default).
 
 3. **Launch Client Manager**
 
@@ -358,38 +451,40 @@ To try a new fusion style, place your class under `multimodal/FusionModel/...` a
    python client_manager_main.py
    ```
 
-   * The FastAPI manager polls the server at `/FLSe/info` every few seconds.
-   * When the server signals “start training,” the manager sends a `/start` request to the local FL client.
+   * FastAPI manager polls the server at `/FLSe/info` every few seconds.
+   * When the server signals “start training,” the manager forwards a `/start`
+     request to the FL client.
 
 4. **Launch FL Client**
 
    ```bash
    python clienta_main.py --config-name=config
-   # On another machine or different terminal:
+   ```
+
+   * Prints `🔌 Using device: cuda` if CUDA is available.
+   * Loads local (non-IID) subset via `data_preparation.load_partition(...)`.
+   * Waits for manager’s “start training” signal, then spins up Flower’s client.
+   * Logs local train/validation metrics each round.
+
+   Repeat on **Client B**:
+
+   ```bash
    python clientb_main.py --config-name=config
    ```
 
-   * Each client prints:
-
-     ```
-     🔌 Using device: cuda
-     ```
-
-     if CUDA is available, else `cpu`.
-   * Clients load their local (non-IID) subset of Hateful Memes via `data_preparation.load_partition(...)`.
-   * Each client manager will signal “start training” once both are registered online.
-   * The FL client uses Flower’s `start_numpy_client` under the hood to communicate with the server.
-
 5. **Monitoring & Logs**
 
-   * Server logs round-by-round metrics: initial validation loss/accuracy, then after each aggregation.
-   * Clients log local train/validation metrics each round.
-   * If a client times out or loses connection, you’ll see a “ping timeout” or `StatusCode.UNAVAILABLE`; the manager may automatically mark it offline and notify the server.
+   * Server logs round-by-round metrics: initial validation loss/accuracy, then
+     after each aggregation.
+   * Clients log local train/validation metrics.
+   * If a client times out or loses connection, you’ll see a “ping timeout” or
+     `StatusCode.UNAVAILABLE`; the manager marks it offline and updates the
+     server.
 
 6. **Hold-Out Validation on Server**
 
-   * The server’s `FLServer` uses `gl_val_loader` (20% hold-out) to compute global model performance each round, independent of client validation.
-   * This ensures the server never “sees” any training splits from clients, even indirectly.
+   * The server’s `FLServer` uses `gl_val_loader` (20% hold-out) to compute
+     global model performance each round, independent of client validation.
 
 ---
 
@@ -397,18 +492,17 @@ To try a new fusion style, place your class under `multimodal/FusionModel/...` a
 
 1. **Add New Aggregation Strategies**
 
-   * Put each new strategy class under `multimodal/Aggregation/...`.
+   * Create new strategy classes under `multimodal/Aggregation/`.
    * Update `_target_` in `conf/config.yaml`.
    * Run `python server_main.py` to test locally.
 
-2. **Convert to a Standalone Python Package**
-   Once your strategy(s) are rock-solid:
+2. **Publish to PyPI**
 
-   * Create a `setup.py` or `pyproject.toml` at project root.
+   * Add `setup.py` or `pyproject.toml` at project root.
 
-   * Under `packages=[ "multimodal.Aggregation", … ]` list your new module.
+   * Under `packages=[ "multimodal.Aggregation", … ]` list your modules.
 
-   * Ensure dependencies are in `install_requires=[ … ]`.
+   * In `install_requires=[ … ]`, list needed dependencies.
 
    * Then:
 
@@ -417,18 +511,21 @@ To try a new fusion style, place your class under `multimodal/FusionModel/...` a
      twine upload dist/*
      ```
 
-   * Users can then `pip install your-package` and point `_target_` to `your_package.my_custom_strategy.MyCustomStrategy`.
+   * Others can `pip install your-package` and point `_target_` to
+     `your_package.my_custom_strategy.MyCustomStrategy`.
 
-3. **Contribute Back to FedOps / Flower**
-   If your aggregator outperforms existing multimodal strategies, consider opening a PR under the official FedOps repo or publishing a tutorial on Flower’s website.
+3. **Contribute to FedOps / Flower**
+   If your aggregator outperforms existing multimodal strategies, consider
+   opening a PR or writing a tutorial on Flower’s site.
 
 ---
 
 ## ✨ Acknowledgments
 
 * **FedOps Silo** – Federated learning boilerplate for PyTorch & Flower.
-* **Flower** – A friendly, lightweight federated learning framework.
-* **Hateful Memes** – A multimodal dataset (text + images) for offensive content classification.
+* **Flower** – A lightweight federated learning framework.
+* **Hateful Memes** – A multimodal dataset (text + images) for offensive content
+  classification.
 * **HuggingFace transformers** – BERT model for text encoding.
 * **PyTorch** – Deep learning library powering local training.
 
