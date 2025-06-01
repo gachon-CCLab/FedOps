@@ -1,10 +1,10 @@
 ````markdown
 # Multimodal Federated Hateful Memes Classification (FedOps Silo)
 
-This repository demonstrates a full end-to-end **multimodal** (text + image)
-federated learning (FL) setup using FedOps Silo and Flower, applied to the
-[Hateful Memes](https://huggingface.co/neuralcatcher/hateful_memes) dataset.
-Each client trains a fusion model on its local (non-IID) split of the memes,
+This repository demonstrates a full end-to-end **multimodal** (text + image)  
+federated learning (FL) setup using FedOps Silo and Flower, applied to the  
+[Hateful Memes](https://huggingface.co/neuralcatcher/hateful_memes) dataset.  
+Each client trains a fusion model on its local (non-IID) split of the memes,  
 and a centralized FL server aggregates updates across all clients.
 
 ---
@@ -12,39 +12,39 @@ and a centralized FL server aggregates updates across all clients.
 ## 🚀 Features
 
 - **Multimodal Fusion (Early, Intermediate, Late)**  
-  1. **Early Fusion**: Concatenate text embeddings and image embeddings
+  1. **Early Fusion**: Concatenate text embeddings and image embeddings  
      before deeper processing.  
-  2. **Intermediate Fusion**: Use cross-attention to let one modality guide
+  2. **Intermediate Fusion**: Use cross-attention to let one modality guide  
      the other (e.g. image attends over text features).  
-  3. **Late Fusion**: Train separate unimodal classifiers for text and image,
-     then combine their output logits or probabilities in a final decision
+  3. **Late Fusion**: Train separate unimodal classifiers for text and image,  
+     then combine their output logits or probabilities in a final decision  
      layer.
 
-  The default `HatefulMemesFusionModel` uses simple concatenation of BERT
-  pooled output and CNN image features. Custom fusion variants live under
+  The default `HatefulMemesFusionModel` uses simple concatenation of BERT  
+  pooled output and CNN image features. Custom fusion variants live under  
   `multimodal/FusionModel/`.
 
 - **Federated Learning Stack**  
-  Uses [FedOps Silo](https://github.com/fedops-fedmm) and [Flower](https://flower.dev):
+  Uses [FedOps Silo](https://github.com/fedops-fedmm) and [Flower](https://flower.dev):  
   1. **Clients** run local PyTorch training loops (text + image).  
-  2. **Server** uses a Flower Strategy (e.g. FedAvg or a custom aggregator)
+  2. **Server** uses a Flower Strategy (e.g. FedAvg or a custom aggregator)  
      to merge client weights each round.
 
 - **Non-IID Data Splits**  
-  Each client receives a stratified, non-IID subset of the Hateful Memes
-  dataset. A hold-out validation set remains with the server for global
+  Each client receives a stratified, non-IID subset of the Hateful Memes  
+  dataset. A hold-out validation set remains with the server for global  
   evaluation.
 
 - **GPU Acceleration**  
-  Clients detect and utilize any available GPU for faster model training
+  Clients detect and utilize any available GPU for faster model training  
   (CUDA + cuDNN).
 
 - **Custom Aggregation Strategies**  
-  Easily add your own FL Strategy (e.g. modality-aware weight fusion) under
+  Easily add your own FL Strategy (e.g. modality-aware weight fusion) under  
   `multimodal/Aggregation/` and point to it in `conf/config.yaml`.
 
 - **Hydra Configuration**  
-  All hyperparameters, model settings, and FL server/strategy parameters live
+  All hyperparameters, model settings, and FL server/strategy parameters live  
   in a single `conf/config.yaml` file that works for both server & client.
 
 ---
@@ -52,26 +52,24 @@ and a centralized FL server aggregates updates across all clients.
 ## 📂 Folder Structure
 
 ```plaintext
-Hateful_memes_classification/
-├── clienta_main.py            # “Client A” entry point (GPU setup + FL client)
-├── clientb_main.py            # “Client B” entry point (similar to clienta_main.py)
-├── client_manager_main.py     # Flower client manager (registers client
-│                              # with central coordinator)
-├── server_main.py             # FL server entry point (starts Flower server)
-├── models.py                  # Defines `HatefulMemesFusionModel`
-│                              # (text+image fusion)
-├── data_preparation.py        # Loads Hateful Memes dataset,
-│                              # returns PyTorch DataLoaders
+<project_root>/
 ├── multimodal/
+│   ├── usecases/
+│   │   └── Hateful_memes_classification/
+│   │       ├── clienta_main.py            # “Client A” entry point (GPU + FL client)
+│   │       ├── clientb_main.py            # “Client B” entry point (similar to clienta_main.py)
+│   │       ├── client_manager_main.py     # Flower client manager (registers client with server)
+│   │       ├── server_main.py             # FL server entry point (starts Flower server)
+│   │       ├── models.py                  # Defines `HatefulMemesFusionModel` (text+image fusion)
+│   │       ├── data_preparation.py        # Loads Hateful Memes dataset, returns DataLoaders
+│   │       └── requirements.txt           # Python dependencies specific to this use case
 │   ├── FusionModel/
-│   │   └── custom_fusion.py   # (optional) alternative fusion architectures
+│   │   └── custom_fusion.py               # (optional) alternative fusion architectures
 │   └── Aggregation/
-│       └── my_custom_strategy.py  # Example custom Flower Strategy subclass
+│       └── my_custom_strategy.py          # Example custom Flower Strategy subclass
 ├── conf/
-│   └── config.yaml             # Hydra config (model, FL server, strategy,
-│                              # hyperparams)
-├── requirements.txt            # Python dependencies
-└── README.md                   # ← You are reading this file
+│   └── config.yaml                        # Hydra config (model, FL server, strategy, hyperparams)
+└── README.md                              # ← You are reading this file
 ````
 
 ---
@@ -81,16 +79,18 @@ Hateful_memes_classification/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/Hateful_memes_classification.git
-cd Hateful_memes_classification
+git clone https://github.com/your-username/MultimodalFedHatefulMemes.git
+cd MultimodalFedHatefulMemes
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r multimodal/usecases/Hateful_memes_classification/requirements.txt
 ```
 
-Make sure your CUDA drivers and PyTorch CUDA build are correctly installed if
-you intend to use a GPU.
+> **Note:**
+>
+> 1. Install CUDA-enabled PyTorch if you plan to use a GPU.
+> 2. The top-level `requirements.txt` is under the `usecases` folder.
 
 ---
 
@@ -106,7 +106,7 @@ lr: 0.0001
 
 model_type: 'Pytorch'
 model:
-  _target_: models.HatefulMemesFusionModel
+  _target_: multimodal.usecases.Hateful_memes_classification.models.HatefulMemesFusionModel
   text_hidden_dim: 768
   image_output_dim: 128
   fusion_output_dim: 256
@@ -138,8 +138,9 @@ server:
     min_evaluate_clients: ${clients_per_round}
 ```
 
-* `_target_` under `model:` points to the PyTorch fusion model class in
-  `models.py` (or a custom fusion file under `multimodal/FusionModel/`).
+* `_target_` under `model:` points to the fusion model class in
+  `multimodal/usecases/Hateful_memes_classification/models.py` (or another
+  custom fusion file under `multimodal/FusionModel/`).
 * `_target_` under `server.strategy:` can be Flower’s built-in `FedAvg` or
   your own class (e.g.
   `multimodal.Aggregation.my_custom_strategy.MyCustomStrategy`).
@@ -153,26 +154,105 @@ dataset. By default, `data_preparation.py` uses the **entire** dataset in each
 client, but you can customize:
 
 ```python
-# data_preparation.py
+# multimodal/usecases/Hateful_memes_classification/data_preparation.py
+
+from datasets import load_dataset
+import torch
+from torch.utils.data import DataLoader, Subset
+from transformers import BertTokenizer
+from torchvision import transforms
+from PIL import Image
+import requests
+from io import BytesIO
+
+def stratified_indices_for_client(labels, client_id, num_clients=2):
+    """
+    Example: split indices so that each client gets an equal share of each label.
+    """
+    from collections import defaultdict
+    import numpy as np
+
+    label_to_indices = defaultdict(list)
+    for idx, lbl in enumerate(labels):
+        label_to_indices[lbl].append(idx)
+
+    client_indices = []
+    for lbl, idx_list in label_to_indices.items():
+        np.random.shuffle(idx_list)
+        splits = np.array_split(idx_list, num_clients)
+        client_indices.extend(splits[client_id].tolist())
+
+    return client_indices
 
 def load_partition(batch_size=32, split="train", client_id=None):
-    full_dataset = load_dataset(
-        "neuralcatcher/hateful_memes", split=split
-    )
+    """
+    Return DataLoader for a client’s local (non-IID) split. If client_id is None,
+    return DataLoader for the entire split.
+    """
+    full_dataset = load_dataset("neuralcatcher/hateful_memes", split=split)
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ])
+
     if client_id is not None:
-        # Example: stratified 50/50 split by “label”
         indices = stratified_indices_for_client(
             full_dataset["label"], client_id, num_clients=2
         )
-        local_subset = full_dataset.select(indices)
+        subset = full_dataset.select(indices)
     else:
-        local_subset = full_dataset
+        subset = full_dataset
 
-    # … tokenize, transform images, return DataLoader(local_subset) …
+    class HatefulMemesDataset(torch.utils.data.Dataset):
+        def __init__(self, hf_dataset):
+            self.dataset = hf_dataset
+
+        def __len__(self):
+            return len(self.dataset)
+
+        def __getitem__(self, idx):
+            item = self.dataset[idx]
+            text = item["text"]
+            text_tokens = tokenizer(
+                text,
+                padding="max_length",
+                truncation=True,
+                max_length=128,
+                return_tensors="pt"
+            )
+            image_tensor = torch.zeros((3, 224, 224))
+            try:
+                img_info = item.get("image", None)
+                if img_info and isinstance(img_info, dict) and "url" in img_info:
+                    img_bytes = requests.get(img_info["url"], timeout=5).content
+                    image = Image.open(BytesIO(img_bytes)).convert("RGB")
+                    image_tensor = transform(image)
+            except Exception:
+                pass
+            label = torch.tensor(item["label"], dtype=torch.long)
+
+            return {
+                "input_ids": text_tokens["input_ids"].squeeze(0),
+                "attention_mask": text_tokens["attention_mask"].squeeze(0),
+                "image": image_tensor,
+                "label": label
+            }
+
+    dataset_obj = HatefulMemesDataset(subset)
+    loader = DataLoader(
+        dataset_obj,
+        batch_size=batch_size,
+        shuffle=True if client_id is not None else False,
+        num_workers=2,
+        pin_memory=True
+    )
+    return loader
 ```
 
-Implement `stratified_indices_for_client(...)` under `data_preparation.py` and
-pass `client_id=0` or `1` when each client calls `load_partition(...)`.
+In each client’s `main()` call `load_partition(cfg.batch_size, split="train", client_id=0)`
+for Client A and `load_partition(cfg.batch_size, split="train", client_id=1)`
+for Client B. Keep `client_id=None` for the server’s hold-out validation loader.
 
 ---
 
@@ -181,43 +261,56 @@ pass `client_id=0` or `1` when each client calls `load_partition(...)`.
 #### 4.1 Start the Server
 
 ```bash
+cd multimodal/usecases/Hateful_memes_classification
 python server_main.py --config-name=config
 ```
 
-This spins up the Flower server on `0.0.0.0:8787` by default and waits for
-clients.
+* Server loads a **hold-out validation set** (20% of full data) via
+  `data_preparation.gl_model_torch_validation(batch_size=cfg.batch_size)`.
+* Starts Flower on `0.0.0.0:8787` (default).
 
 #### 4.2 Start Client Manager (per client)
 
 On **Client A** machine:
 
 ```bash
+cd multimodal/usecases/Hateful_memes_classification
 python client_manager_main.py
 ```
 
-This FastAPI manager polls the server for “start training” signals and
-forwards them to the local FL client.
+This FastAPI manager polls the server for “start training” signals and forwards
+them to the local FL client via a `/start` request.
+
+On **Client B** (another machine or terminal):
+
+```bash
+cd multimodal/usecases/Hateful_memes_classification
+python client_manager_main.py
+```
 
 #### 4.3 Start FL Client (per client)
 
 On **Client A**:
 
 ```bash
+cd multimodal/usecases/Hateful_memes_classification
 python clienta_main.py --config-name=config
 ```
 
-* Client prints: `🔌 Using device: cuda` if CUDA is available, else `cpu`.
-* Client loads its local (non-IID) split via
-  `data_preparation.load_partition(...)`.
+* Prints `🔌 Using device: cuda` if CUDA is available, else `cpu`.
+* Loads its local (non-IID) split via
+  `data_preparation.load_partition(cfg.batch_size, split="train", client_id=0)`.
 * Client manager signals “start training” once both clients register online.
-* Flower’s `start_numpy_client` starts under the hood and begins local
-  training.
+* Flower’s `start_numpy_client` begins local training.
 
-On **Client B** (another machine or terminal):
+On **Client B**:
 
 ```bash
+cd multimodal/usecases/Hateful_memes_classification
 python clientb_main.py --config-name=config
 ```
+
+* Same steps, but replace `client_id=0` with `client_id=1` in your data loader.
 
 ---
 
@@ -273,9 +366,7 @@ In `models.py`, train and test loops send tensors to `device` with
            and local sample size.
            """
            weighted_results = []
-           total_samples = sum(
-               res.metrics["num_examples"] for _, res in results
-           )
+           total_samples = sum(res.metrics["num_examples"] for _, res in results)
 
            for client, fit_res in results:
                local_samples = fit_res.metrics["num_examples"]
@@ -288,10 +379,8 @@ In `models.py`, train and test loops send tensors to `device` with
 
            return super().aggregate_fit(
                rnd,
-               [
-                   (client, fit_res, weight_factor)
-                   for client, fit_res, weight_factor in weighted_results
-               ],
+               [(client, fit_res, weight_factor)
+                for client, fit_res, weight_factor in weighted_results],
                failures,
            )
    ```
@@ -396,19 +485,33 @@ experiment with other fusion types:
 
    ```python
    class LateFusionModel(nn.Module):
-       def __init__(self, ...):
+       def __init__(self, text_hidden_dim=768, image_output_dim=128,
+                    fusion_output_dim=256, output_size=2):
            super().__init__()
            self.bert = BertModel.from_pretrained("bert-base-uncased")
-           self.image_encoder = ...
+           self.image_encoder = nn.Sequential(
+               nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),
+               nn.ReLU(),
+               nn.MaxPool2d(kernel_size=2),
+               nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+               nn.ReLU(),
+               nn.AdaptiveAvgPool2d((4, 4)),
+           )
+           self.flatten = nn.Flatten()
+           self.image_fc = nn.Linear(64 * 4 * 4, image_output_dim)
+
            self.text_head = nn.Linear(text_hidden_dim, output_size)
            self.image_head = nn.Linear(image_output_dim, output_size)
            self.late_fusion_layer = nn.Linear(output_size * 2, output_size)
 
        def forward(self, input_ids, attention_mask, image):
-           text_feat = self.bert(...).pooler_output  # (batch, 768)
+           text_feat = self.bert(
+               input_ids=input_ids, attention_mask=attention_mask
+           ).pooler_output  # (batch, 768)
            text_logits = self.text_head(text_feat)   # (batch, 2)
 
-           img_feat = self.image_encoder(image)      # ...
+           img_feat = self.image_encoder(image)
+           img_feat = self.flatten(img_feat)
            img_feat = self.image_fc(img_feat)        # (batch, 128)
            img_logits = self.image_head(img_feat)    # (batch, 2)
 
@@ -431,23 +534,25 @@ class path.
    * Each client (includes `client_manager_main.py` + `clienta_main.py` or
      `clientb_main.py`)
 
-   Ensure pods have GPU resources (`resources.requests.limits`). If pods get
-   evicted due to `out-of-memory` or `out-of-shared-memory`, increase pod
-   memory limits or use a larger node pool.
+   Ensure pods request enough GPU/memory resources. If pods get evicted due
+   to OOM or out-of-shared-memory, increase node resource limits or use a
+   larger node pool.
 
 2. **Launch FL Server**
 
    ```bash
+   cd multimodal/usecases/Hateful_memes_classification
    python server_main.py --config-name=config
    ```
 
    * Server loads a **hold-out validation set** (20% of full data) via
-     `data_preparation.gl_model_torch_validation`.
+     `data_preparation.gl_model_torch_validation(batch_size=cfg.batch_size)`.
    * Starts Flower on `0.0.0.0:8787` (default).
 
-3. **Launch Client Manager**
+3. **Launch Client Manager (per client)**
 
    ```bash
+   cd multimodal/usecases/Hateful_memes_classification
    python client_manager_main.py
    ```
 
@@ -455,20 +560,23 @@ class path.
    * When the server signals “start training,” the manager forwards a `/start`
      request to the FL client.
 
-4. **Launch FL Client**
+4. **Launch FL Client (per client)**
 
    ```bash
+   cd multimodal/usecases/Hateful_memes_classification
    python clienta_main.py --config-name=config
    ```
 
    * Prints `🔌 Using device: cuda` if CUDA is available.
-   * Loads local (non-IID) subset via `data_preparation.load_partition(...)`.
+   * Loads local (non-IID) subset via
+     `data_preparation.load_partition(cfg.batch_size, split="train", client_id=0)`.
    * Waits for manager’s “start training” signal, then spins up Flower’s client.
    * Logs local train/validation metrics each round.
 
    Repeat on **Client B**:
 
    ```bash
+   cd multimodal/usecases/Hateful_memes_classification
    python clientb_main.py --config-name=config
    ```
 
@@ -500,9 +608,9 @@ class path.
 
    * Add `setup.py` or `pyproject.toml` at project root.
 
-   * Under `packages=[ "multimodal.Aggregation", … ]` list your modules.
+   * Under `packages=["multimodal.Aggregation", ...]` list your modules.
 
-   * In `install_requires=[ … ]`, list needed dependencies.
+   * In `install_requires=[ ... ]`, list needed dependencies.
 
    * Then:
 
