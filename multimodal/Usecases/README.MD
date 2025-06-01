@@ -241,7 +241,7 @@ which uses the **entire** Hateful Memes training split. To create a “gold‐st
        client_subset = full.filter(lambda x: x["label"] == desired_label_for_client(client_id))
        train_data = HatefulMemesDatasetFromHF(client_subset, split="train‐pseudo", max_length=128)
        # … same for validation/test or let server hold them out
-       train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, …)
+       train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, …
        return train_loader
    ```
 2. In each client’s entrypoint (`clienta_main.py` vs. `clientb_main.py`), call:
@@ -396,58 +396,6 @@ server:
 
 ---
 
-## 📖 Extending / Custom Aggregation
-
-1. **Create a new strategy** in `fedops/server/strategies/my_multimodal.py`:
-
-   ```python
-   from flwr.server.strategy import FedAvg
-   from typing import List, Tuple, Dict
-   from flwr.common import Parameters
-
-   class MyMultimodalStrategy(FedAvg):
-       def aggregate_fit(
-           self,
-           rnd: int,
-           results: List[Tuple[str, Parameters, Dict[str, float]]],
-           failures: List[str],
-       ) -> Tuple[Parameters, Dict[str, float]]:
-           # Example: weigh each client’s update by (α·modality_score + (1−α)·perf)
-           # Compute modality_score per client (e.g. ratio of image/text in local data)
-           # Combine with reported “perf” (val accuracy) in results[…][2]
-           # …
-           return super().aggregate_fit(rnd, custom_parameters, metrics)
-   ```
-
-2. **Modify** `conf/config.yaml` to point to your new class:
-
-   ```yaml
-   server:
-     strategy:
-       _target_: fedops.server.strategies.my_multimodal.MyMultimodalStrategy
-       alpha: 0.7
-       # … any additional hyperparameters
-   ```
-
-3. **Re‐run** `python server_main.py`. Now FedOps will instantiate your `MyMultimodalStrategy` instead of `FedAvg`.
-
-Later, you can package `fedops/server/strategies/` into its own PyPI project so others can:
-
-```bash
-pip install my-fedops-multimodal
-```
-
-and in their `config.yaml` simply write:
-
-```yaml
-server:
-  strategy:
-    _target_: my_fedops_multimodal.MyMultimodalStrategy
-    alpha: 0.7
-```
-
----
-
 ## 📚 Citations & References
 
 * **Flower**: “Flower: A Friendly Federated Learning Research Framework” ([https://flower.dev/](https://flower.dev/))
@@ -467,8 +415,6 @@ This project is released under the MIT License. See [LICENSE](LICENSE) for detai
 
 * Built with ❤️ using PyTorch, HuggingFace Transformers, Flower, and FedOps.
 * Inspired by “NeuralCatcher/Hateful Memes” on Hugging Face.
-
----
 
 ```
 ```
