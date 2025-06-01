@@ -1,5 +1,5 @@
-````markdown
-# Multimodal Federated Hateful Memes Classification (FedOps Silo)
+
+#Multimodal Federated Hateful Memes Classification (FedOps Silo)
 
 This repository demonstrates a full end-to-end **multimodal** (text + image)  
 federated learning (FL) setup using FedOps Silo and Flower, applied to the  
@@ -9,7 +9,7 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-## 🚀 Features
+##🚀 Features
 
 - **Multimodal Fusion (Early, Intermediate, Late)**  
   1. **Early Fusion**: Concatenate text embeddings and image embeddings  
@@ -49,9 +49,9 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-## 📂 Folder Structure
+##📂 Folder Structure
 
-```plaintext
+
 <project_root>/
 ├── multimodal/
 │   ├── usecases/
@@ -74,9 +74,9 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-## 🔧 Quick Start
+##🔧 Quick Start
 
-### 1. Clone & Install
+###1. Clone & Install
 
 ```bash
 git clone https://github.com/your-username/MultimodalFedHatefulMemes.git
@@ -94,7 +94,7 @@ pip install -r multimodal/usecases/Hateful_memes_classification/requirements.txt
 
 ---
 
-### 2. Configuration (`conf/config.yaml`)
+###2. Configuration (`conf/config.yaml`)
 
 All hyperparameters and file paths live in one place. Example:
 
@@ -147,7 +147,7 @@ server:
 
 ---
 
-### 3. Non-IID Data Splitting
+###3. Non-IID Data Splitting
 
 Each client loads its own **local** (non-IID) partition of the Hateful Memes
 dataset. By default, `data_preparation.py` uses the **entire** dataset in each
