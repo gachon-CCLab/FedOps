@@ -49,7 +49,7 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-##📂 Folder Structure
+## 📂 Folder Structure
 
 
 <project_root>/
