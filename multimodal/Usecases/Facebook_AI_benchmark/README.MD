@@ -1,5 +1,5 @@
-
-#Multimodal Federated Hateful Memes Classification (FedOps Silo)
+````markdown
+# Multimodal Federated Hateful Memes Classification (FedOps Silo)
 
 This repository demonstrates a full end-to-end **multimodal** (text + image)  
 federated learning (FL) setup using FedOps Silo and Flower, applied to the  
@@ -9,7 +9,7 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-##🚀 Features
+## 🚀 Features
 
 - **Multimodal Fusion (Early, Intermediate, Late)**  
   1. **Early Fusion**: Concatenate text embeddings and image embeddings  
@@ -51,7 +51,7 @@ and a centralized FL server aggregates updates across all clients.
 
 ## 📂 Folder Structure
 
-
+```plaintext
 <project_root>/
 ├── multimodal/
 │   ├── usecases/
@@ -74,9 +74,9 @@ and a centralized FL server aggregates updates across all clients.
 
 ---
 
-##🔧 Quick Start
+## 🔧 Quick Start
 
-###1. Clone & Install
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/your-username/MultimodalFedHatefulMemes.git
@@ -94,7 +94,7 @@ pip install -r multimodal/usecases/Hateful_memes_classification/requirements.txt
 
 ---
 
-###2. Configuration (`conf/config.yaml`)
+### 2. Configuration (`conf/config.yaml`)
 
 All hyperparameters and file paths live in one place. Example:
 
@@ -147,7 +147,7 @@ server:
 
 ---
 
-###3. Non-IID Data Splitting
+### 3. Non-IID Data Splitting
 
 Each client loads its own **local** (non-IID) partition of the Hateful Memes
 dataset. By default, `data_preparation.py` uses the **entire** dataset in each
@@ -158,7 +158,7 @@ client, but you can customize:
 
 from datasets import load_dataset
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Dataset
 from transformers import BertTokenizer
 from torchvision import transforms
 from PIL import Image
@@ -204,7 +204,7 @@ def load_partition(batch_size=32, split="train", client_id=None):
     else:
         subset = full_dataset
 
-    class HatefulMemesDataset(torch.utils.data.Dataset):
+    class HatefulMemesDataset(Dataset):
         def __init__(self, hf_dataset):
             self.dataset = hf_dataset
 
@@ -256,7 +256,7 @@ for Client B. Keep `client_id=None` for the server’s hold-out validation loade
 
 ---
 
-### 4. Running Clients & Server
+## 4. Running Clients & Server
 
 #### 4.1 Start the Server
 
@@ -300,8 +300,8 @@ python clienta_main.py --config-name=config
 * Prints `🔌 Using device: cuda` if CUDA is available, else `cpu`.
 * Loads its local (non-IID) split via
   `data_preparation.load_partition(cfg.batch_size, split="train", client_id=0)`.
-* Client manager signals “start training” once both clients register online.
-* Flower’s `start_numpy_client` begins local training.
+* Waits for manager’s “start training” signal, then spins up Flower’s client.
+* Logs local train/validation metrics each round.
 
 On **Client B**:
 
@@ -310,7 +310,7 @@ cd multimodal/usecases/Hateful_memes_classification
 python clientb_main.py --config-name=config
 ```
 
-* Same steps, but replace `client_id=0` with `client_id=1` in your data loader.
+Same steps, but replace `client_id=0` with `client_id=1` in your data loader.
 
 ---
 
@@ -531,8 +531,7 @@ class path.
    Build Docker images for:
 
    * FL server (includes `server_main.py` + dependencies)
-   * Each client (includes `client_manager_main.py` + `clienta_main.py` or
-     `clientb_main.py`)
+   * Each client (includes `client_manager_main.py` + `clienta_main.py` or `clientb_main.py`)
 
    Ensure pods request enough GPU/memory resources. If pods get evicted due
    to OOM or out-of-shared-memory, increase node resource limits or use a
