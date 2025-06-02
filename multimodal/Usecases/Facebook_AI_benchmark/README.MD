@@ -406,7 +406,7 @@ Hydra will instantiate your custom strategy at server startup.
 
 ## 🔄 Custom Model Fusion
 
-By default, `models.py` implements simple concatenation (Early Fusion). To
+By default, `models.py` implements simple concatenation (late Fusion). To
 experiment with other fusion types:
 
 1. **Early Fusion** (default): Concatenate BERT pooled output and CNN image
