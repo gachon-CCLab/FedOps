@@ -8,7 +8,7 @@ model:
   text_hidden_dim: 768
   image_output_dim: 128
   fusion_output_dim: 256
-  output_size: 2  # ✅ add this line
+  output_size: 2  # specify the classifier output size( eg: if its binary prediction its =2 else specify the number of classes)
 
 dataset:
   name: 'hateful_memes'
