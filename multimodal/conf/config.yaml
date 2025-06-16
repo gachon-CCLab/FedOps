@@ -29,11 +29,15 @@ batch_size: 32
 num_rounds: 2
 clients_per_round: 2
 
+
+
 server:
   strategy:
-    _target_: flwr.server.strategy.FedAvg
-    fraction_fit: 0.00001
-    fraction_evaluate: 0.000001
+    _target_: aggregation.map2_fedavg.Map2FedAvgStrategy #my multimodal FL strategy
+    fraction_fit: ${clients_per_round}
+    fraction_evaluate: ${clients_per_round}
     min_fit_clients: ${clients_per_round}
-    min_available_clients: ${clients_per_round}
     min_evaluate_clients: ${clients_per_round}
+    min_available_clients: ${clients_per_round}
+    mlp_hidden: 16      # tune me(hideen dim of MLP) (this will be used to tune the MLP in serverside which will convert summary payload into modality embedding)
+    meta_lr: 0.01       # tune me (learning rate of above MLP)
