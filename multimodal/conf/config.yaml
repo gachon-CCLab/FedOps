@@ -8,7 +8,7 @@ model:
   text_hidden_dim: 768
   image_output_dim: 128
   fusion_output_dim: 256
-  output_size: 2  # ✅ add this line
+  output_size: 2  # ✅ binary prediction so its two
 
 dataset:
   name: 'hateful_memes'
@@ -39,5 +39,6 @@ server:
     min_fit_clients: ${clients_per_round}
     min_evaluate_clients: ${clients_per_round}
     min_available_clients: ${clients_per_round}
+    # FedMAP hyperparams
     mlp_hidden: 16      # tune me(hideen dim of MLP) (this will be used to tune the MLP in serverside which will convert summary payload into modality embedding)
     meta_lr: 0.01       # tune me (learning rate of above MLP)
