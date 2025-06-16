@@ -33,7 +33,7 @@ clients_per_round: 2
 
 server:
   strategy:
-    _target_: aggregation.map2_fedavg.Map2FedAvgStrategy #my multimodal FL strategy
+    _target_: aggregation.FedMAP.Map2FedAvgStrategy #my multimodal FL strategy
     fraction_fit: ${clients_per_round}
     fraction_evaluate: ${clients_per_round}
     min_fit_clients: ${clients_per_round}
