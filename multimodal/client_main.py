@@ -1,78 +1,88 @@
+# client_main.py
+
 import random
 import hydra
-from hydra.utils import instantiate
 import numpy as np
 import torch
+from omegaconf import DictConfig, OmegaConf
+from hydra.utils import instantiate
+
 import data_preparation
 import models
 from fedops.client import client_utils
 from fedops.client.app import FLClientTask
-import logging
-from omegaconf import DictConfig, OmegaConf
-
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
-     # ── GPU SETUP ──
+    # ── GPU & Seeds ──
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"🔌 Using device: {device}")
-    if device.type == "cuda":
-        torch.backends.cudnn.benchmark = True
-        
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
-    logger = logging.getLogger(__name__)
-
     print("🔧 Step 1: Setting random seeds")
     random.seed(cfg.random_seed)
     np.random.seed(cfg.random_seed)
     torch.manual_seed(cfg.random_seed)
+    if device.type == "cuda":
+        torch.backends.cudnn.benchmark = True
 
+    # ── Configuration ──
     print("📋 Step 2: Loaded configuration:")
     print(OmegaConf.to_yaml(cfg))
 
-    print("📦 Step 3: Loading Hateful Memes dataset...")
+    # ── Data loaders ──
+    print("🧪 Step 3: Preparing data loaders for Hateful Memes")
     train_loader, val_loader, test_loader = data_preparation.load_partition(
         batch_size=cfg.batch_size
     )
-    logger.info("✅ Step 3 Done: Hateful Memes data loaded")
+    print(f"✅ Data loaders ready: "
+          f"train={len(train_loader.dataset)}, "
+          f"val={len(val_loader.dataset)}, "
+          f"test={len(test_loader.dataset)}")
 
-    print("🧠 Step 4: Instantiating fusion model...")
-    model = instantiate(cfg.model)
-    model = model.to(device)#newly added for moving to GPU
-    model_type = cfg.model_type
+    # ── Make val_loader available to train_torch ──
+    print("🔗 Step 4: Injecting validation loader into config")
+    cfg.val_loader = val_loader
+
+    # ── Model & FL setup ──
+    print("🧠 Step 5: Instantiating fusion model")
+    model = instantiate(cfg.model).to(device)
     model_name = type(model).__name__
-    logger.info(f"✅ Model '{model_name}' instantiated")
+    print(f"✅ Model instantiated: {model_name}")
 
-    print("🛠️ Step 5: Getting training and testing functions...")
-    train_torch = models.train_torch()
-    test_torch = models.test_torch()
+    print("🛠️ Step 6: Preparing training and testing functions")
+    train_fn = models.train_torch()
+    test_fn  = models.test_torch()
 
-    print("📁 Step 6: Checking for existing local model checkpoint...")
-    task_id = cfg.task_id
-    local_list = client_utils.local_model_directory(task_id)
+    # ── Load local checkpoint if present ──
+    print("📁 Step 7: Checking for existing local model checkpoint")
+    local_list = client_utils.local_model_directory(cfg.task_id)
     if local_list:
-        logger.info("📦 Step 6 Done: Loading local model checkpoint")
-        model = client_utils.download_local_model(model_type, task_id, listdir=local_list, model=model)
+        print("📦 Loading existing local checkpoint")
+        model = client_utils.download_local_model(
+            cfg.model_type,
+            cfg.task_id,
+            listdir=local_list,
+            model=model
+        )
+    else:
+        print("⏭️ No local checkpoint found, starting fresh")
 
-    print("📝 Step 7: Registering model and data with FL client...")
+    # ── Register with FL client ──
+    print("📝 Step 8: Registering model and data with FL client")
     registration = {
         "train_loader": train_loader,
-        "val_loader": val_loader,
-        "test_loader": test_loader,
-        "model": model,
-        "model_name": model_name,
-        "train_torch": train_torch,
-        "test_torch": test_torch
+        "val_loader":   val_loader,
+        "test_loader":  test_loader,
+        "model":        model,
+        "model_name":   model_name,
+        "train_torch":  train_fn,
+        "test_torch":   test_fn,
     }
 
-    print("🚀 Step 8: Launching FL client task...")
+    # ── Start FL ──
+    print("🚀 Step 9: Launching FL client task")
     fl_client = FLClientTask(cfg, registration)
     fl_client.start()
-    logger.info("🏁 Training started!")
-
+    print("🏁 Training started!")
 
 if __name__ == "__main__":
     main()
-    
-def FL_client_start(cfg):
-    main(cfg)
