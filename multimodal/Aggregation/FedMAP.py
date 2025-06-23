@@ -5,14 +5,13 @@ import torch
 import torch.nn as nn
 from flwr.server.strategy import FedAvg
 
-
 class Map2FedAvgStrategy(FedAvg):
     """
     Map²-FedAvgStrategy for text+image only:
-    1) Embed each client summary [perf, contrib, cov_img, cov_txt] via a small MLP.
-    2) Compute per-modality attention weights for 'img', 'txt', and 'fusion'.
-    3) Aggregate each branch’s deltas with those weights.
-    4) Meta-update the MLP & query vectors on the dev set.
+      1) Embed each client summary [perf, contrib, cov_img, cov_txt] via an MLP.
+      2) Compute per-branch attention weights for 'img', 'txt', and 'fusion'.
+      3) Aggregate branch deltas accordingly.
+      4) Meta-update the MLP & query vectors on a dev set.
     """
 
     def __init__(
@@ -35,16 +34,16 @@ class Map2FedAvgStrategy(FedAvg):
             min_available_clients=min_available_clients,
             **kwargs,
         )
-        # 4 → mlp_hidden → mlp_hidden//2 embedding MLP
+        # 4 → mlp_hidden → mlp_hidden//2
         self.embed = nn.Sequential(
-            nn.Linear(4, mlp_hidden),  # input: [perf, contrib, cov_img, cov_txt]
+            nn.Linear(4, mlp_hidden),
             nn.ReLU(),
             nn.Linear(mlp_hidden, mlp_hidden // 2),
             nn.ReLU(),
         )
         d = mlp_hidden // 2
 
-        # One learnable query vector per branch
+        # One learnable query per branch
         self.queries = nn.ParameterDict({
             "img":    nn.Parameter(torch.randn(d)),
             "txt":    nn.Parameter(torch.randn(d)),
@@ -59,14 +58,14 @@ class Map2FedAvgStrategy(FedAvg):
         if not results:
             return None, {}
 
-        # Capture parameter order on first call
+        # Capture param key order once
         if self._model_order is None:
-            params0     = self.initial_parameters()
-            temp_model  = self._model_fn()
-            temp_model.load_state_dict(self.parameters_to_weights(params0))
-            self._model_order = list(temp_model.state_dict().keys())
+            params0    = self.initial_parameters()
+            tmp_model  = self._model_fn()
+            tmp_model.load_state_dict(self.parameters_to_weights(params0))
+            self._model_order = list(tmp_model.state_dict().keys())
 
-        # 1) Unpack summaries & compute per-client deltas
+        # 1) Unpack summaries & compute client deltas
         summaries, deltas = {}, {}
         global_params = dict(zip(
             self._model_order,
@@ -75,7 +74,6 @@ class Map2FedAvgStrategy(FedAvg):
 
         for _, fit in results:
             m = fit.metrics or {}
-            # Build 4-d summary: perf, contrib, cov_img, cov_txt
             x = torch.tensor([
                 m.get("perf", 0.0),
                 m.get("contrib", 0.0),
@@ -84,29 +82,20 @@ class Map2FedAvgStrategy(FedAvg):
             ])
             summaries[fit.client_name] = x
 
-            # Compute full-model delta = local_state - global_state
             local_weights = self.parameters_to_weights(fit.parameters)
             local_sd = dict(zip(self._model_order, local_weights))
             deltas[fit.client_name] = {
-                k: local_sd[k] - global_params[k]
-                for k in self._model_order
+                k: local_sd[k] - global_params[k] for k in self._model_order
             }
 
-        # 2) Embed all summaries
+        # 2) Embed summaries
         embeddings = {k: self.embed(v) for k, v in summaries.items()}
         d = next(iter(embeddings.values())).shape[0]
 
-        # 3) Branch‐wise aggregation
+        # 3) Branch-wise aggregation
         new_state = {}
-        # Define branches with the index of their coverage flag in summary
-        branches = [
-            ("img",    2),  # coverage at x[2]
-            ("txt",    3),  # coverage at x[3]
-            ("fusion", None),  # fusion uses any client that has img or txt
-        ]
-
+        branches = [("img", 2), ("txt", 3), ("fusion", None)]
         for branch, idx in branches:
-            # Select clients valid for this branch
             if branch == "fusion":
                 valid = [
                     k for k, x in summaries.items()
@@ -119,13 +108,13 @@ class Map2FedAvgStrategy(FedAvg):
                 ]
 
             if not valid:
-                # No updates: carry forward global params for this branch
+                # carry forward global params for this branch
                 for name, base in global_params.items():
                     if name.startswith(branch):
                         new_state[name] = base.clone()
                 continue
 
-            # Compute unnormalized attention scores
+            # compute attention scores
             q = self.queries[branch]
             alphas = torch.tensor([
                 math.exp((embeddings[k] @ q).item() / math.sqrt(d))
@@ -133,7 +122,7 @@ class Map2FedAvgStrategy(FedAvg):
             ])
             weights = alphas / alphas.sum()
 
-            # Weighted aggregate each parameter in this branch
+            # weighted aggregate each param in branch
             for name, base in global_params.items():
                 if not name.startswith(branch):
                     continue
@@ -142,15 +131,15 @@ class Map2FedAvgStrategy(FedAvg):
                     agg += weights[i] * (base + deltas[k][name])
                 new_state[name] = agg
 
-        # 4) Meta‐update the MLP and queries on the dev set
+        # 4) Meta-update on dev set
         self._meta_update(new_state)
 
-        # 5) Pack and return new global parameters
+        # 5) Pack new global parameters
         new_weights = [new_state[k] for k in self._model_order]
         return self.weights_to_parameters(new_weights), {}
 
     def _meta_update(self, state_dict):
-        # Load the new global state into a fresh model
+        # Load new global state into fresh model
         model = self._model_fn()
         sd = model.state_dict()
         for k in sd:
@@ -158,7 +147,7 @@ class Map2FedAvgStrategy(FedAvg):
         model.load_state_dict(sd)
         model.eval()
 
-        # Compute dev-set loss
+        # Compute dev-loss
         criterion = nn.CrossEntropyLoss()
         total_loss = 0.0
         with torch.no_grad():
@@ -166,11 +155,11 @@ class Map2FedAvgStrategy(FedAvg):
                 out = model(**batch)
                 total_loss += criterion(out, batch["label"]).item()
 
-        # Backprop through MLP & query vectors
-        optimizer = torch.optim.SGD(
+        # Backprop through embed & queries
+        opt = torch.optim.SGD(
             list(self.embed.parameters()) + list(self.queries.parameters()),
             lr=self.meta_lr
         )
-        optimizer.zero_grad()
+        opt.zero_grad()
         torch.tensor(total_loss, requires_grad=True).backward()
-        optimizer.step()
+        opt.step()
