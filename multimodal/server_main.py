@@ -6,7 +6,7 @@ from fedops.server.app import FLServer
 import models
 import data_preparation
 import torch.nn as nn
-from aggregation.map2_fedavg import Map2FedAvgStrategy
+from aggregation.FEDMAP import Map2FedAvgStrategy
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
