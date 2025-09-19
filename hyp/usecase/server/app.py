@@ -1,0 +1,342 @@
+#server/app.py
+
+
+import logging
+from typing import Dict, Optional, Tuple
+import flwr as fl
+import datetime
+import os
+import json
+import time
+import numpy as np
+import shutil
+from . import server_api
+# import server_api
+from . import server_utils
+
+from collections import OrderedDict
+from hydra.utils import instantiate
+
+# 추가: Flower 파라미터 변환 유틸
+from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays, NDArrays
+
+# TF warning log filtering
+# os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
+                    handlers=[logging.StreamHandler()])
+logger = logging.getLogger(__name__)
+
+
+class FLServer():
+    def __init__(self, cfg, model, model_name, model_type, gl_val_loader=None, x_val=None, y_val=None, test_torch=None):
+        
+        self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
+
+        self.server = server_utils.FLServerStatus() # Set FLServerStatus class
+        self.model_type = model_type
+        self.cfg = cfg
+        self.strategy = cfg.server.strategy
+        
+        self.batch_size = int(cfg.batch_size)
+        self.local_epochs = int(cfg.num_epochs)
+        self.num_rounds = int(cfg.num_rounds)
+
+        self.init_model = model
+        self.init_model_name = model_name
+        self.next_model = None
+        self.next_model_name = None
+        
+        if self.model_type=="Tensorflow":
+            self.x_val = x_val
+            self.y_val = y_val  
+               
+        elif self.model_type == "Pytorch":
+            self.gl_val_loader = gl_val_loader
+            self.test_torch = test_torch
+
+        elif self.model_type == "Huggingface":
+            pass
+
+        # === 추가: 최고 전역모델 보관 슬롯 ===
+        # 어떤 메트릭을 최고 기준으로 쓸지 지정 (accuracy 또는 f1_score 등)
+        self.best_metric_key = "accuracy"
+        # _best["params"]는 list[np.ndarray] (NDArrays)를 보관
+        self._best = {"metric": float("-inf"), "round": -1, "params": None}
+
+
+    def init_gl_model_registration(self, model, gl_model_name) -> None:
+        logging.info(f'last_gl_model_v: {self.server.last_gl_model_v}')
+
+        if not model:
+
+            logging.info('init global model making')
+            init_model, model_name = self.init_model, self.init_model_name
+            print(f'init_gl_model_name: {model_name}')
+
+            self.fl_server_start(init_model, model_name)
+            return model_name
+
+        else:
+            logging.info('load last global model')
+            print(f'last_gl_model_name: {gl_model_name}')
+
+            self.fl_server_start(model, gl_model_name)
+            return gl_model_name
+
+
+    def fl_server_start(self, model, model_name):
+        # Load and compile model for
+        # 1. server-side parameter initialization
+        # 2. server-side parameter evaluation
+
+        model_parameters = None # Init model_parametes variable
+        
+        if self.model_type == "Tensorflow":
+            model_parameters = model.get_weights()
+        elif self.model_type == "Pytorch":
+            model_parameters = [val.cpu().detach().numpy() for _, val in model.state_dict().items()]
+        elif self.model_type == "Huggingface":
+            json_path = "./parameter_shapes.json"
+            model_parameters = server_utils.load_initial_parameters_from_shape(json_path)
+
+        strategy = instantiate(
+            self.strategy,
+            initial_parameters=fl.common.ndarrays_to_parameters(model_parameters),
+            evaluate_fn=self.get_eval_fn(model, model_name),
+            on_fit_config_fn=self.fit_config,
+            on_evaluate_config_fn=self.evaluate_config,
+        )
+        
+        # Start Flower server
+        fl.server.start_server(
+            server_address="0.0.0.0:8080",
+            config=fl.server.ServerConfig(num_rounds=self.num_rounds),
+            strategy=strategy,
+        )
+
+        # ===== 학습 종료 후: 최고 전역모델로 최종 파일 덮어쓰기 =====
+        try:
+            if self._best["params"] is not None:
+                logging.info(f"[BEST] using round={self._best['round']} {self.best_metric_key}={self._best['metric']:.6f} as final")
+
+                gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
+
+                if self.model_type == "Pytorch":
+                    import torch
+                    keys = [k for k in model.state_dict().keys() if "bn" not in k]
+                    params_dict = zip(keys, self._best["params"])
+                    state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+                    model.load_state_dict(state_dict, strict=True)
+                    torch.save(model.state_dict(), gl_model_path + '.pth')
+                    logging.info("[BEST] Saved best global model to %s.pth", gl_model_path)
+
+                    # (선택) 중앙 검증으로 최종-베스트 성능 로그
+                    loss_b, acc_b, met_b = self.test_torch(model, self.gl_val_loader, self.cfg)
+                    logging.info(f"[FINAL-BEST] loss={loss_b:.4f}, acc={acc_b:.6f}, extra={met_b}")
+
+                elif self.model_type == "Tensorflow":
+                    # TensorFlow는 set_weights로 바로 세팅 가능
+                    self.init_model.set_weights(self._best["params"])
+                    # 저장 확장자 통일: .h5
+                    self.init_model.save(gl_model_path + '.h5')
+                    logging.info("[BEST] Saved best global model to %s.h5", gl_model_path)
+
+                    # (선택) 중앙 검증으로 최종-베스트 성능 로그
+                    loss_b, acc_b = self.init_model.evaluate(self.x_val, self.y_val, verbose=0)
+                    logging.info(f"[FINAL-BEST] loss={loss_b:.4f}, acc={acc_b:.6f}")
+
+                elif self.model_type == "Huggingface":
+                    # 생략: 필요 시 어댑터 파라미터 npz로 덮어쓰기 구현
+                    logging.info("[BEST] Huggingface finalization skipped")
+
+        except Exception as e:
+            logging.error(f"[BEST] finalization error: {e}")
+
+
+    def get_eval_fn(self, model, model_name):
+        """Return an evaluation function for server-side evaluation."""
+        # Load data and model here to avoid the overhead of doing it in `evaluate` itself
+
+        # The `evaluate` function will be called after every round
+        def evaluate(
+                server_round: int,
+                parameters_ndarrays: fl.common.NDArrays,
+                config: Dict[str, fl.common.Scalar],
+        ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
+                        
+            # model path for saving global model snapshot by round
+            gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
+            
+            metrics = None
+            
+            if self.model_type == "Tensorflow":
+                # 먼저 최신 파라미터 로드 후 평가 (순서 수정)
+                model.set_weights(parameters_ndarrays)  # Update model with the latest parameters
+                loss, accuracy = model.evaluate(self.x_val, self.y_val, verbose=0)
+
+                # 저장 확장자 통일: .h5 (업로드 로직과 일관)
+                model.save(gl_model_path + '.h5')
+            
+            elif self.model_type == "Pytorch":
+                import torch
+                keys = [k for k in model.state_dict().keys() if "bn" not in k]
+                params_dict = zip(keys, parameters_ndarrays)
+                state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+                model.load_state_dict(state_dict, strict=True)
+            
+                loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.cfg)
+                
+                # model save
+                torch.save(model.state_dict(), gl_model_path + '.pth')
+
+            elif self.model_type == "Huggingface":
+                logging.warning("Skipping evaluation for Huggingface model")
+                loss, accuracy = 0.0, 0.0
+
+                os.makedirs(gl_model_path, exist_ok=True)
+                np.savez(os.path.join(gl_model_path, "adapter_parameters.npz"), *parameters_ndarrays)
+
+            # === 라운드별 로그/리포팅 ===
+            if self.server.round >= 1:
+                # fit aggregation end time
+                self.server.end_by_round = time.time() - self.server.start_by_round
+                # gl model performance by round
+                if metrics!=None:
+                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
+                                      "run_time_by_round": self.server.end_by_round, **metrics,"gl_model_v":self.server.gl_model_v}
+                else:
+                    server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
+                                      "run_time_by_round": self.server.end_by_round,"gl_model_v":self.server.gl_model_v}
+                json_server_eval = json.dumps(server_eval_result)
+                logging.info(f'server_eval_result - {json_server_eval}')
+
+                # send gl model evaluation to performance pod
+                server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
+            
+            # === 추가: 최고 전역모델 갱신 ===
+            # 기준 메트릭은 accuracy(기본) 또는 metrics 내 self.best_metric_key
+            current_metric = float(accuracy)
+            if metrics is not None and self.best_metric_key in metrics:
+                try:
+                    current_metric = float(metrics[self.best_metric_key])
+                except Exception:
+                    current_metric = float(accuracy)
+
+            if current_metric > self._best["metric"]:
+                # 깊은 복사로 안전 보관
+                best_copy = [np.copy(x) for x in parameters_ndarrays]
+                self._best = {"metric": current_metric, "round": server_round, "params": best_copy}
+                logging.info(f"[BEST] round={server_round} {self.best_metric_key}={current_metric:.6f}")
+
+            if metrics!=None:
+                return loss, {"accuracy": accuracy, **metrics}
+            else:
+                return loss, {"accuracy": accuracy}
+
+        return evaluate
+    
+
+
+    def fit_config(self, rnd: int):
+        """Return training configuration dict for each round.
+        Keep batch size fixed at 32, perform two rounds of training with one
+        local epoch, increase to two local epochs afterwards.
+        """
+        fl_config = {
+            "batch_size": self.batch_size,
+            "local_epochs": self.local_epochs,
+            "num_rounds": self.num_rounds,
+        }
+
+        # increase round
+        self.server.round += 1
+
+        # fit aggregation start time
+        self.server.start_by_round = time.time()
+        logging.info('server start by round')
+
+        return fl_config
+
+
+    def evaluate_config(self, rnd: int):
+        """Return evaluation configuration dict for each round.
+        """
+        return {"batch_size": self.batch_size}
+
+
+    def start(self):
+
+        today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
+
+        # Loaded last global model or no global model in s3
+        self.next_model, self.next_model_name, self.server.last_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
+        
+        # Loaded last global model or no global model in local
+        # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
+
+        # logging.info('Loaded latest global model or no global model')
+
+        # New Global Model Version
+        self.server.gl_model_v = self.server.last_gl_model_v + 1
+
+        # API that sends server status to server manager
+        inform_Payload = {
+            "S3_bucket": "fl-gl-model",  # bucket name
+            "Last_GL_Model": "gl_model_%s_V.h5" % self.server.last_gl_model_v,  # Model Weight File Name
+            "FLServer_start": today_time,
+            "FLSeReady": True,  # server ready status
+            "GL_Model_V": self.server.gl_model_v # Current Global Model Version
+        }
+        server_status_json = json.dumps(inform_Payload)
+        server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
+
+        try:
+            fl_start_time = time.time()
+
+            # Run fl server
+            gl_model_name = self.init_gl_model_registration(self.next_model, self.next_model_name)
+
+            fl_end_time = time.time() - fl_start_time  # FL end time
+
+            server_all_time_result = {"fl_task_id": self.task_id, "server_operation_time": fl_end_time,
+                                      "gl_model_v": self.server.gl_model_v}
+            json_all_time_result = json.dumps(server_all_time_result)
+            logging.info(f'server_operation_time - {json_all_time_result}')
+            
+            # Send server time result to performance pod
+            server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
+            
+            # upload global model (최종 파일은 fl_server_start()에서 BEST로 덮어쓴 상태)
+            if self.model_type == "Tensorflow":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.h5"
+                server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+            elif self.model_type =="Pytorch":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.pth"
+                server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
+            elif self.model_type == "Huggingface":
+                global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}"
+                npz_file_path = f"{global_model_file_name}.npz"
+                # 경로 변경: evaluate에서 저장한 실제 경로
+                # evaluate에서는: ./{gl_model_name}_gl_model_VN/adapter_parameters.npz 로 저장함
+                model_dir = f"{global_model_file_name}"
+                real_npz_path = os.path.join(model_dir, "adapter_parameters.npz")
+                # 파일 이름 통일을 위해 복사 (선택)
+                shutil.copy(real_npz_path, npz_file_path)
+
+                server_utils.upload_model_to_bucket(self.task_id, npz_file_path)
+
+            logging.info(f'upload {global_model_file_name} model in s3')
+
+        # server_status error
+        except Exception as e:
+            logging.error('error: ', e)
+            data_inform = {'FLSeReady': False}
+            server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
+
+        finally:
+            logging.info('server close')
+
+            # Modifying the model version in server manager
+            server_api.ServerAPI(self.task_id).put_fl_round_fin()
+            logging.info('global model version upgrade')
