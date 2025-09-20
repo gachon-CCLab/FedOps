@@ -73,4 +73,5 @@ class ClientServerAPI():
     def put_client_system(self, client_system_json):
         requests.put(f"http://{self.ccl_address}:{self.client_performance_port}/client_perf/client_system/{self.task_id}", data=client_system_json)
 
-
+    def put_client_xai_result(self, xai_result_json):
+        requests.put(f"http://{self.ccl_address}:{self.client_performance_port}/client_perf/xai_result/{self.task_id}", data=xai_result_json)
