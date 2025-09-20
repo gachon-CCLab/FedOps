@@ -1,0 +1,16 @@
+# Core
+fedops
+torch
+torchvision
+scikit-learn
+pandas
+numpy
+tqdm
+
+# NLP
+transformers
+datasets
+
+# Image processing
+Pillow
+requests
