@@ -1,10 +1,11 @@
+#client_fl.py
 from collections import OrderedDict
 import json, logging
 import flwr as fl
 import time
 import os
 from functools import partial
-from . import client_api
+from . import client_api 
 from . import client_utils
 
 # set log format
@@ -100,16 +101,46 @@ class FLClient(fl.client.NumPyClient):
 
     def fit(self, parameters, config):
         """Train parameters on the locally held training set."""
+        # _target_: server.strategy_cluster_optuna.ClusterOptunaFedAvg 설정시
+        has_cluster_id = "cluster_id" in config   # ✨
+        cluster_id = int(config["cluster_id"]) if has_cluster_id else None  # ✨
+        # cluster_id = int(config.get("cluster_id", 0))  
+        if has_cluster_id and (cluster_id is not None):  # ✨
+            try:
+                client_api.ClientServerAPI(self.fl_task_id).put_cluster_assign(self.client_mac, cluster_id)  # ✨
+            except Exception as e:  # ✨
+                logger.warning(f"[cluster-upsert] failed: {e}")  # ✨
 
-        print(f"config: {config}")
+        # try:                                                                                 
+        #     client_api.ClientServerAPI(self.fl_task_id).put_cluster_assign(                  
+        #         self.client_mac, int(cluster_id) if cluster_id is not None else None         
+        #     )                                                                                
+        # except Exception as e:                                                               
+        #     logger.warning(f"[cluster-upsert] failed: {e}")                                  
+
+        # print(f"config: {config}")
+        
         # Get hyperparameters for this round
-        batch_size: int = config["batch_size"]
-        epochs: int = config["local_epochs"]
-        num_rounds: int = config["num_rounds"]
+        batch_size: int = config.get("batch_size", self.cfg.batch_size)
+        epochs: int = config.get("local_epochs", self.cfg.num_epochs)
+        num_rounds: int = config.get("num_rounds", self.cfg.num_rounds)
 
+        # HPO override (서버 전략에서 내려준 값) 하이퍼파라미터 튜닝을 하게되면 바뀌니까.
+        hp_lr = config.get("hp_learning_rate", None) # ✨
+        hp_bs = config.get("hp_batch_size", None) # ✨
+        hp_ep = config.get("hp_local_epochs", None) # ✨
+        if hp_bs is not None: # ✨
+            batch_size = int(hp_bs) # ✨
+        if hp_ep is not None: # ✨
+            epochs = int(hp_ep) # ✨
+ 
         if self.wandb_use:
             # add wandb config
-            self.wandb_run.config.update({"batch_size": batch_size, "epochs": epochs, "num_rounds": num_rounds}, allow_val_change=True)
+            wb_cfg = {"batch_size": batch_size, "epochs": epochs, "num_rounds": num_rounds} 
+            if hp_lr is not None: wb_cfg["hp_learning_rate"] = float(hp_lr) # ✨
+            if hp_bs is not None: wb_cfg["hp_batch_size"] = int(hp_bs) # ✨ 
+            if hp_ep is not None: wb_cfg["hp_local_epochs"] = int(hp_ep) # ✨
+            self.wandb_run.config.update(wb_cfg, allow_val_change=True)
 
         # start round time
         round_start_time = time.time()
@@ -147,19 +178,30 @@ class FLClient(fl.client.NumPyClient):
             parameters_prime = self.model.get_weights()
             num_examples_train = len(self.x_train)
 
-            
             # save local model
             self.model.save(model_path+'.h5')
             
 
         # Training Torch
         elif self.model_type == "Pytorch":
+            from torch.utils.data import DataLoader
+
             # Update local model parameters
             self.set_parameters(parameters)
+
+            # clustering change
+            train_loader = self.train_loader
+            if hp_bs is not None:
+                train_loader = DataLoader(self.train_loader.dataset, batch_size=int(hp_bs), shuffle=True)
+
+            # lr override 전달
+            hp = {}
+            if hp_lr is not None:
+                hp["learning_rate"] = float(hp_lr)
+             # clustering change end
+            trained_model = self.train_torch(self.model, train_loader, epochs, self.cfg, hp=hp)
             
-            trained_model = self.train_torch(self.model, self.train_loader, epochs, self.cfg)
-            
-            train_loss, train_accuracy, train_metrics = self.test_torch(trained_model, self.train_loader, self.cfg)
+            train_loss, train_accuracy, train_metrics = self.test_torch(trained_model, train_loader, self.cfg)
             val_loss, val_accuracy, val_metrics = self.test_torch(trained_model, self.val_loader, self.cfg)
             
             if train_metrics!=None:
@@ -175,7 +217,8 @@ class FLClient(fl.client.NumPyClient):
 
             # Return updated model parameters
             parameters_prime = self.get_parameters()
-            num_examples_train = len(self.train_loader)
+           
+            num_examples_train = len(train_loader.dataset) if hasattr(train_loader, "dataset") else len(train_loader)
             
             # Save model weights
             import torch
@@ -196,7 +239,6 @@ class FLClient(fl.client.NumPyClient):
 
             model_save_path = model_path
             self.model.save_pretrained(model_save_path)
-            # 선택적으로 tokenizer도 함께 저장
             self.tokenizer.save_pretrained(model_save_path)
 
         else:
@@ -217,18 +259,12 @@ class FLClient(fl.client.NumPyClient):
             # Log validation results
             for key, value in val_results_prefixed.items():
                 self.wandb_run.log({key: value, "round": self.fl_round}, step=self.fl_round)
-
-        # if train_metrics!=None:
-        #     # Training: model performance by round
-        #     results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
-        #                 "train_time": round_end_time, **train_results_prefixed, **val_results_prefixed}
-        # else:
-        #     # Training: model performance by round
-        #     results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
-        #                 "train_time": round_end_time}
         
+        # ✨
         results = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round, "gl_model_v": self.gl_model,
-                        **train_results_prefixed, **val_results_prefixed,"train_time": round_end_time, 'wandb_name': self.wandb_name}
+                        **train_results_prefixed, **val_results_prefixed,"train_time": round_end_time, 'wandb_name': self.wandb_name,}
+        if cluster_id is not None:
+            results["cluster_id"] = int(cluster_id)
 
         json_result = json.dumps(results)
         logger.info(f'train_performance - {json_result}')
@@ -241,9 +277,10 @@ class FLClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         """Evaluate parameters on the locally held test set."""
-
+        cluster_id = config.get("cluster_id", None)
+        # cluster_id = int(config.get("cluster_id", 0))
         # Get config values
-        batch_size: int = config["batch_size"]
+        batch_size: int = config.get("batch_size", self.cfg.batch_size)
 
         # Initialize test_loss, test_accuracy
         test_loss = 0.0
@@ -266,10 +303,9 @@ class FLClient(fl.client.NumPyClient):
             
             # Evaluate global model parameters on the local test data and return results
             test_loss, test_accuracy, metrics = self.test_torch(self.model, self.test_loader, self.cfg)
-            num_examples_test = len(self.test_loader)
+            num_examples_test = len(self.test_loader.dataset) if hasattr(self.test_loader, "dataset") else len(self.test_loader)
         
         elif self.model_type == "Huggingface":
-            # 평가는 추후 실행
             test_loss = 0.0
             test_accuracy = 0.0
             num_examples_test = 1
@@ -283,19 +319,13 @@ class FLClient(fl.client.NumPyClient):
             self.wandb_run.log({"test_accuracy": test_accuracy, "round": self.fl_round}, step=self.fl_round)  # acc
             
             if metrics!=None:
-                # Log other metrics dynamically
                 for metric_name, metric_value in metrics.items():
                     self.wandb_run.log({metric_name: metric_value}, step=self.fl_round)
 
-        # Test: model performance by round
-        # if metrics!=None:
-        #     test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-        #                 "test_loss": test_loss, "test_accuracy": test_accuracy, **metrics, "gl_model_v": self.gl_model}
-        # else:
-        #     test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-        #                 "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model}
         test_result = {"fl_task_id": self.fl_task_id, "client_mac": self.client_mac, "client_name": self.client_name, "round": self.fl_round,
-                         "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model, 'wandb_name': self.wandb_name}
+                         "test_loss": test_loss, "test_accuracy": test_accuracy, "gl_model_v": self.gl_model, 'wandb_name': self.wandb_name,}
+        if cluster_id is not None:
+            test_result["cluster_id"] = int(cluster_id)
         json_result = json.dumps(test_result)
         logger.info(f'test - {json_result}')
 

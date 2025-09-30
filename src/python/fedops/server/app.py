@@ -1,3 +1,5 @@
+# server/app.py
+
 import logging
 from typing import Dict, Optional, Tuple
 import flwr as fl
@@ -11,6 +13,9 @@ from . import server_api
 from . import server_utils
 from collections import OrderedDict
 from hydra.utils import instantiate
+
+from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays, NDArrays
+from ..utils.fedco.best_keeper import BestKeeper
 
 # TF warning log filtering
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -43,13 +48,37 @@ class FLServer():
             self.x_val = x_val
             self.y_val = y_val  
                
-
         elif self.model_type == "Pytorch":
             self.gl_val_loader = gl_val_loader
             self.test_torch = test_torch
 
         elif self.model_type == "Huggingface":
             pass
+
+        # ====== 클러스터 전략 여부/메트릭 키 결정 (비클러스터는 영향 없음) ======
+        try:
+            strat_target = str(self.strategy._target_)
+        except Exception:
+            strat_target = ""
+        self.is_cluster = "server.strategy_cluster_optuna.ClusterOptunaFedAvg" in strat_target
+
+        metric_key = "accuracy"
+        if self.is_cluster:
+            # yaml: server.strategy.objective -> maximize_f1 | maximize_acc | minimize_loss
+            try:
+                objective = str(getattr(self.strategy, "objective", "")).lower()
+            except Exception:
+                objective = ""
+            if "maximize_f1" in objective:
+                metric_key = "val_f1_score"
+            elif "minimize_loss" in objective:
+                metric_key = "val_loss"
+            else:
+                metric_key = "accuracy"
+
+        # 클러스터일 때만 BestKeeper 활성화
+        self.best_keeper = BestKeeper(save_dir="./gl_best", metric_key=metric_key) if self.is_cluster else None
+        # ===============================================================
 
 
     def init_gl_model_registration(self, model, gl_model_name) -> None:
@@ -63,7 +92,6 @@ class FLServer():
 
             self.fl_server_start(init_model, model_name)
             return model_name
-
 
         else:
             logging.info('load last global model')
@@ -96,12 +124,53 @@ class FLServer():
             on_evaluate_config_fn=self.evaluate_config,
         )
         
-        # Start Flower server (SSL-enabled) for four rounds of federated learning
+        # Start Flower server
         fl.server.start_server(
             server_address="0.0.0.0:8080",
             config=fl.server.ServerConfig(num_rounds=self.num_rounds),
             strategy=strategy,
         )
+
+        # ===== 학습 종료 후: (클러스터 전략일 때만) 최고 전역모델로 최종 파일 덮어쓰기 =====
+        if self.is_cluster and self.best_keeper is not None:
+            try:
+                best_params = self.best_keeper.load_params()
+                if best_params is not None:
+                    gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
+
+                    if self.model_type == "Pytorch":
+                        import torch
+                        best_nds = parameters_to_ndarrays(best_params)
+                        keys = [k for k in model.state_dict().keys() if "bn" not in k]
+                        state_dict = OrderedDict({k: torch.tensor(v) for k, v in zip(keys, best_nds)})
+                        model.load_state_dict(state_dict, strict=True)
+                        torch.save(model.state_dict(), gl_model_path + '.pth')
+                        logger.info("[BEST] Saved best global model to %s.pth", gl_model_path)
+
+                        # (선택) 중앙 검증 로그
+                        try:
+                            loss_b, acc_b, met_b = self.test_torch(model, self.gl_val_loader, self.cfg)
+                            logger.info(f"[FINAL-BEST] loss={loss_b:.4f}, acc={acc_b:.6f}, extra={met_b}")
+                        except Exception:
+                            pass
+
+                    elif self.model_type == "Tensorflow":
+                        best_nds = parameters_to_ndarrays(best_params)
+                        model.set_weights(best_nds)
+                        model.save(gl_model_path + '.h5')
+                        logger.info("[BEST] Saved best global model to %s.h5", gl_model_path)
+
+                        # (선택) 중앙 검증 로그
+                        try:
+                            loss_b, acc_b = model.evaluate(self.x_val, self.y_val, verbose=0)
+                            logger.info(f"[FINAL-BEST] loss={loss_b:.4f}, acc={acc_b:.6f}")
+                        except Exception:
+                            pass
+
+                    elif self.model_type == "Huggingface":
+                        logger.info("[BEST] (HF) finalization skipped")
+            except Exception as e:
+                logger.error(f"[BEST] finalization error: {e}")
 
 
     def get_eval_fn(self, model, model_name):
@@ -115,19 +184,16 @@ class FLServer():
                 config: Dict[str, fl.common.Scalar],
         ) -> Optional[Tuple[float, Dict[str, fl.common.Scalar]]]:
                         
-            # model path for saving local model
+            # model path for saving global model snapshot by round
             gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
             
             metrics = None
             
             if self.model_type == "Tensorflow":
-                # loss, accuracy, precision, recall, auc, auprc = model.evaluate(x_val, y_val)
-                loss, accuracy = model.evaluate(self.x_val, self.y_val)
-
-                model.set_weights(parameters_ndarrays)  # Update model with the latest parameters
-                
-                # model save
-                model.save(gl_model_path+'.tf')
+                # 먼저 최신 파라미터 로드 후 평가
+                model.set_weights(parameters_ndarrays)
+                loss, accuracy = model.evaluate(self.x_val, self.y_val, verbose=0)
+                model.save(gl_model_path + '.h5')
             
             elif self.model_type == "Pytorch":
                 import torch
@@ -137,21 +203,17 @@ class FLServer():
                 model.load_state_dict(state_dict, strict=True)
             
                 loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.cfg)
-                
-                # model save
-                torch.save(model.state_dict(), gl_model_path+'.pth')
+                torch.save(model.state_dict(), gl_model_path + '.pth')
 
             elif self.model_type == "Huggingface":
                 logging.warning("Skipping evaluation for Huggingface model")
                 loss, accuracy = 0.0, 0.0
-
                 os.makedirs(gl_model_path, exist_ok=True)
                 np.savez(os.path.join(gl_model_path, "adapter_parameters.npz"), *parameters_ndarrays)
 
+            # === 라운드별 로그/리포팅 (원래 로직 유지) ===
             if self.server.round >= 1:
-                # fit aggregation end time
                 self.server.end_by_round = time.time() - self.server.start_by_round
-                # gl model performance by round
                 if metrics!=None:
                     server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
                                       "run_time_by_round": self.server.end_by_round, **metrics,"gl_model_v":self.server.gl_model_v}
@@ -160,10 +222,22 @@ class FLServer():
                                       "run_time_by_round": self.server.end_by_round,"gl_model_v":self.server.gl_model_v}
                 json_server_eval = json.dumps(server_eval_result)
                 logging.info(f'server_eval_result - {json_server_eval}')
-
-                # send gl model evaluation to performance pod
                 server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)
-                
+            
+            # === (클러스터 전략일 때만) BestKeeper 갱신 ===
+            if self.is_cluster and self.best_keeper is not None:
+                merged_metrics = {"accuracy": accuracy}
+                if metrics is not None:
+                    merged_metrics.update(metrics)
+                try:
+                    self.best_keeper.update(
+                        server_round=server_round,
+                        parameters=ndarrays_to_parameters(parameters_ndarrays),
+                        metrics=merged_metrics,
+                    )
+                except Exception as e:
+                    logger.warning(f"[BEST] update skipped: {e}")
+
             if metrics!=None:
                 return loss, {"accuracy": accuracy, **metrics}
             else:
@@ -204,14 +278,11 @@ class FLServer():
 
         today_time = datetime.datetime.today().strftime('%Y-%m-%d %H-%M-%S')
 
-
         # Loaded last global model or no global model in s3
         self.next_model, self.next_model_name, self.server.last_gl_model_v = server_utils.model_download_s3(self.task_id, self.model_type, self.init_model)
         
         # Loaded last global model or no global model in local
         # self.next_model, self.next_model_name, self.server.latest_gl_model_v = server_utils.model_download_local(self.model_type, self.init_model)
-
-        # logging.info('Loaded latest global model or no global model')
 
         # New Global Model Version
         self.server.gl_model_v = self.server.last_gl_model_v + 1
@@ -243,7 +314,7 @@ class FLServer():
             # Send server time result to performance pod
             server_api.ServerAPI(self.task_id).put_server_time_result(json_all_time_result)
             
-            # upload global model
+            # upload global model (최종 파일은 비클러스터는 원래 파일, 클러스터는 BEST로 덮어쓴 파일)
             if self.model_type == "Tensorflow":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}.h5"
                 server_utils.upload_model_to_bucket(self.task_id, global_model_file_name)
@@ -253,13 +324,9 @@ class FLServer():
             elif self.model_type == "Huggingface":
                 global_model_file_name = f"{gl_model_name}_gl_model_V{self.server.gl_model_v}"
                 npz_file_path = f"{global_model_file_name}.npz"
-                # 경로 변경: evaluate에서 저장한 실제 경로
-                # evaluate에서는: ./{gl_model_name}_gl_model_VN/adapter_parameters.npz 로 저장함
                 model_dir = f"{global_model_file_name}"
                 real_npz_path = os.path.join(model_dir, "adapter_parameters.npz")
-                # 파일 이름 통일을 위해 복사 (선택)
                 shutil.copy(real_npz_path, npz_file_path)
-
                 server_utils.upload_model_to_bucket(self.task_id, npz_file_path)
 
             logging.info(f'upload {global_model_file_name} model in s3')

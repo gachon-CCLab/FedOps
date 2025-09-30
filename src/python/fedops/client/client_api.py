@@ -1,3 +1,4 @@
+#client_api.py
 import requests
 import sys
 import logging, os
@@ -60,10 +61,50 @@ class ClientServerAPI():
         else:
             logger.error(f"Failed to get the port for task {self.task_id} from the server at {self.ccl_address}")
 
+   
+        # client_api.py 내부 - 기존 함수만 교체
+    def put_cluster_assign(self, client_mac, cluster_id):
+        url = f"http://{self.ccl_address}:{self.server_manager_port}/FLSe/cluster/{self.task_id}"
+
+        # None 허용, 값 있으면 int로 강제 캐스팅
+        cid = int(cluster_id) if cluster_id is not None else None
+
+        try:
+            resp = requests.put(
+                url,
+                json={"client_mac": client_mac, "cluster_id": cid},
+                timeout=5,
+            )
+            if resp.status_code >= 400:
+                logger.warning(
+                    f"[cluster-upsert] HTTP {resp.status_code} {resp.text} "
+                    f"(task_id={self.task_id}, mac={client_mac}, cluster_id={cid})"
+                )
+            else:
+                # 서버가 {"ok": True}를 주는지 확인 (app.py 그대로면 ok True)
+                try:
+                    body = resp.json()
+                except Exception:
+                    body = {}
+                if not body or body.get("ok") is not True:
+                    logger.warning(
+                        f"[cluster-upsert] unexpected response: {body} "
+                        f"(task_id={self.task_id}, mac={client_mac}, cluster_id={cid})"
+                    )
+                else:
+                    logger.info(
+                        f"[cluster-upsert] success (task_id={self.task_id}, mac={client_mac}, cluster_id={cid})"
+                    )
+        except Exception as e:
+            logger.warning(
+                f"[cluster-upsert] request failed: {e} "
+                f"(task_id={self.task_id}, mac={client_mac}, cluster_id={cid})"
+        )
     def put_train_result(self, train_result_json):
         # send train_result to client_performance pod
         requests.put(f"http://{self.ccl_address}:{self.client_performance_port}/client_perf/train_result/{self.task_id}", data=train_result_json)
-
+        
+        
     def put_test_result(self, test_result_json):
         requests.put(f"http://{self.ccl_address}:{self.client_performance_port}/client_perf/test_result/{self.task_id}", data=test_result_json)
 
@@ -75,3 +116,4 @@ class ClientServerAPI():
 
     def put_client_xai_result(self, xai_result_json):
         requests.put(f"http://{self.ccl_address}:{self.client_performance_port}/client_perf/xai_result/{self.task_id}", data=xai_result_json)
+

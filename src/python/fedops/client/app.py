@@ -255,4 +255,3 @@ class FLClientTask():
                 # close xai
                 GradCAM.close_xai()
 
-
