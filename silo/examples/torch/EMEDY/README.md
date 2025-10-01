@@ -1,7 +1,7 @@
 
-# FedOps Silo (EMEDY)
+# FedOps (EMEDY)
 
-This guide provides step-by-step instructions on executing FedOps Silo, a Federated Learning Lifecycle Management Operations framework.
+This guide provides step-by-step instructions on executing FedOps, a Federated Learning Lifecycle Management Operations framework.
 
 ## Baseline
  
