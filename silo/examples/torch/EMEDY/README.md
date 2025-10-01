@@ -1,5 +1,5 @@
 
-# FedOps Silo
+# FedOps Silo (EMEDY)
 
 This guide provides step-by-step instructions on executing FedOps Silo, a Federated Learning Lifecycle Management Operations framework.
 
@@ -21,9 +21,9 @@ This guide provides step-by-step instructions on executing FedOps Silo, a Federa
 
 1. ***Start by cloning the FedOps.***
 
-- Pytorch (MNIST example)
+- Pytorch (EMEDY example)
    ```shell
-   git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/silo/examples/torch/MNIST . && rm -rf FedOps
+   git clone https://github.com/gachon-CCLab/FedOps.git && mv FedOps/silo/examples/torch/EMEDY . && rm -rf FedOps
    ```
 
 2. ***Customize the FedOps example code.***
