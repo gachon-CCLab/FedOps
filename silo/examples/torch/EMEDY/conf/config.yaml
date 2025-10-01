@@ -1,0 +1,43 @@
+# Common
+random_seed: 42
+
+learning_rate: 0.001 # Input model's learning rate
+
+model_type: 'Pytorch' # This value should be maintained
+model:
+  _target_: models.SleepLSTM
+  input_size: 4
+  hidden_sizes: [128, 64, 32]
+  proj_size: 16
+  dropout: 0.3
+  bidirectional: false
+  output_size: 1 
+dataset:
+    name: 'MNIST' # Input your data name
+    validation_split: 0.2 # Ratio of dividing train data by validation
+
+
+# client
+task_id: 'testss' # Input your Task Name that you register in FedOps Website
+
+wandb: 
+  use: false # Whether to use wandb
+  key: 'your wandb api key' # Input your wandb api key
+  account: 'your wandb account' # Input your wandb account
+  project: '${dataset.name}_${task_id}'
+
+
+# server
+num_epochs: 1 # number of local epochs
+batch_size: 128
+num_rounds: 20 # Number of rounds to perform
+clients_per_round: 1 # Number of clients participating in the round
+
+server:
+  strategy:
+    _target_: flwr.server.strategy.FedAvg # aggregation algorithm (defalut: fedavg)
+    fraction_fit: 0.00001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+    fraction_evaluate: 0.000001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+    min_fit_clients: ${clients_per_round} # Minimum number of clients to participate in training
+    min_available_clients: ${clients_per_round} # Minimum number of clients to participate in a round
+    min_evaluate_clients: ${clients_per_round} # Minimum number of clients to participate in evaluation
