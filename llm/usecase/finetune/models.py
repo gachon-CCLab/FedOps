@@ -27,7 +27,7 @@ def finetune_llm():
             lr_scheduler_type=cfg.finetune.lr_scheduler_type,
             save_strategy="epoch",
             logging_dir="./logs",
-            device_map="auto",
+            # device_map="auto",
             fp16=True if torch.cuda.is_available() else False,
         )
 
