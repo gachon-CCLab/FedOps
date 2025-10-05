@@ -73,7 +73,7 @@ clients_per_round: 3 # Number of clients participating in the round
 
 server:
   strategy:
-	  # clustering/HPO Options : _target_
+# clustering/HPO Options : _target_
     _target_: fedops.server.strategy_cluster_optuna.ClusterOptunaFedAvg
     fraction_fit: 0.00001
     fraction_evaluate: 0.000001
