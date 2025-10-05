@@ -347,5 +347,5 @@ This keeps your pipeline intact, adds clean Non-IID control via env vars, and re
 - Then you can see ui like this
 
 
-![FedOps hypo example result](../docs/images/fedops_hypo_result_example)
+![FedOps hypo example result](../docs/images/fedops_hypo_result_example.png)
 
