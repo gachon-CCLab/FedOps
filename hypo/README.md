@@ -346,4 +346,6 @@ This keeps your pipeline intact, adds clean Non-IID control via env vars, and re
     - Select your clients who are online and press `FL START`.
 - Then you can see ui like this
 
-![image.png](attachment:4d1b359f-d11e-4afd-96c3-5274c92f2b14:image.png)
+
+![FedOps hypo example result](../docs/images/fedops_hypo_result_example)
+
