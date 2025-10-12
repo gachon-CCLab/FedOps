@@ -1,0 +1,35 @@
+# Federated Learning Core
+flwr
+fedops
+
+# Communication & Security
+grpcio
+cryptography
+
+# Config Management
+hydra-core
+omegaconf
+PyYAML
+
+# API / Client Manager
+fastapi
+uvicorn
+pydantic
+requests
+
+# ML / DL Core
+torch
+torchvision
+scikit-learn
+numpy
+pandas
+tqdm
+
+# NLP / Vision
+transformers
+datasets
+Pillow
+
+# Optional but used in repo
+gdown        # for dataset auto-download from Google Drive
+optuna       # for strategy hyperparameter search
