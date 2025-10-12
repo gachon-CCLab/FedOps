@@ -31,10 +31,12 @@ num_epochs: 1
 batch_size: 32
 num_rounds: 20
 clients_per_round: 2
-client_idx: 0
+client_idx: 1
 
 # Flower server binding (FedOps server wraps this)
 server_address: '0.0.0.0:8094'
+# Client manager binding (used by FedOps client API)
+client_manager_addr: "http://localhost:8004"
 
 # Strategy (use FedMAP custom strategy via Hydra)
 server:
