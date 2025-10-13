@@ -1,21 +1,7 @@
 # Federated Learning Core
-flwr
+
 fedops
 
-# Communication & Security
-grpcio
-cryptography
-
-# Config Management
-hydra-core
-omegaconf
-PyYAML
-
-# API / Client Manager
-fastapi
-uvicorn
-pydantic
-requests
 
 # ML / DL Core
 torch
