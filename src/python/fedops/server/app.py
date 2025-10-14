@@ -333,7 +333,7 @@ class FLServer():
 
         # server_status error
         except Exception as e:
-            logging.error('error: ', e)
+            logging.error("error: %s", e)
             data_inform = {'FLSeReady': False}
             server_api.ServerAPI(self.task_id).put_server_status(json.dumps(data_inform))
 
