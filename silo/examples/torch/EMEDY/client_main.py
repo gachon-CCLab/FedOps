@@ -33,10 +33,23 @@ def main(cfg: DictConfig) -> None:
     Client data load function
     After setting model method in data_preparation.py, call the model method.
     """
-    train_loader, val_loader, test_loader= data_preparation.load_partition(dataset=cfg.dataset.name, 
-                                                                        validation_split=cfg.dataset.validation_split, 
-                                                                        batch_size=cfg.batch_size) 
-    
+    seq_len        = getattr(cfg.dataset, "seq_len", 6)
+    test_split     = getattr(cfg.dataset, "test_split", 0.20)
+    restrict_hours = getattr(cfg.dataset, "restrict_hours", None)   # 例: [0,1,2,3,4,5]
+    num_workers    = getattr(cfg, "num_workers", 0)
+    pin_memory     = torch.cuda.is_available()  # GPU 有效时开启
+
+    train_loader, val_loader, test_loader = data_preparation.load_partition(
+        dataset=cfg.dataset.name,
+        validation_split=cfg.dataset.validation_split,
+        batch_size=cfg.batch_size,
+        seq_length=seq_len,
+        test_split=test_split,
+        seed=cfg.random_seed,                 # 与上面 set_seed 保持一致
+        restrict_hours=restrict_hours,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        )
     logger.info('data loaded')
 
     """
