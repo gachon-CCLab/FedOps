@@ -3,7 +3,7 @@ import hydra
 from hydra.utils import instantiate
 import numpy as np
 import torch
-import data_preparatio
+import data_preparation
 import models
 
 from fedops.client import client_utils
