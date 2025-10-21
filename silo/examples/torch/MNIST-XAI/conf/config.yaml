@@ -1,0 +1,44 @@
+# Common
+random_seed: 42
+
+learning_rate: 0.001 # Input model's learning rate
+
+model_type: 'Pytorch' # This value should be maintained
+model:
+  _target_: models.MNISTClassifier # Input your custom model
+  output_size: 10 # Input your model's output size (only classification)
+
+dataset:
+    name: 'MNIST' # Input your data name
+    validation_split: 0.2 # Ratio of dividing train data by validation
+
+xai:
+  enabled: true                  # Whether to enable Grad-CAM
+  run_location: "client"        # Options: client / server / both
+  target_layer_index: -1        # Index of the target convolution layer (e.g., -1 for the last one)
+  output_dir: "outputs/gradcam" # Directory to save Grad-CAM visualizations
+  layer: "conv2" # Name of the target layer for Grad-CAM (e.g., 'conv2' for the second convolutional layer)
+
+# client
+task_id: 'xaotest11' # Input your Task Name that you register in FedOps Website
+wandb: 
+  use: false # Whether to use wandb
+  key: 'your wandb api key' # Input your wandb api key
+  account: 'your wandb account' # Input your wandb account
+  project: '${dataset.name}_${task_id}'
+
+
+# server
+num_epochs: 20 # number of local epochs
+batch_size: 128
+num_rounds: 15 # Number of rounds to perform
+clients_per_round: 1 # Number of clients participating in the round
+
+server:
+  strategy:
+    _target_: flwr.server.strategy.FedAvg # aggregation algorithm (defalut: fedavg)
+    fraction_fit: 0.00001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+    fraction_evaluate: 0.000001 # because we want the number of clients to sample on each round to be solely defined by min_fit_clients
+    min_fit_clients: ${clients_per_round} # Minimum number of clients to participate in training
+    min_available_clients: ${clients_per_round} # Minimum number of clients to participate in a round
+    min_evaluate_clients: ${clients_per_round} # Minimum number of clients to participate in evaluation
