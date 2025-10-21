@@ -6,25 +6,22 @@ import torch.nn.functional as F
 from torch import optim
 
 # =========================
-# 序列模型：LSTM 二分类
+# Sequence Model: LSTM Binary Classifier
 # =========================
-import torch
-import torch.nn as nn
-
 class SleepLSTM(nn.Module):
     """
-    x: [B, T, F]  (默认 T=6, F=4)
-    输出: logits [B]
+    Input:  x [B, T, F]  (default T=6, F=4)
+    Output: logits [B]
     """
     def __init__(
         self,
-        input_size: int = 4,                 # 特征数 F
-        hidden_sizes=(128, 64, 32),          # 三层 LSTM 宽度
-        proj_size: int = 16,                 # 全连接瓶颈
-        dropout: float = 0.3,                # FC 之间的 dropout
-        bidirectional: bool = False,         # 可选：双向 LSTM
-        output_size: int = 1,                # 为兼容上层读取（实际仍输出1个logit）
-        **kwargs                               # 吞掉多余配置字段
+        input_size: int = 4,                 # Number of input features F
+        hidden_sizes=(128, 64, 32),          # Hidden sizes for the 3 LSTM layers
+        proj_size: int = 16,                 # Fully-connected bottleneck dimension
+        dropout: float = 0.3,                # Dropout between FC layers
+        bidirectional: bool = False,         # Optional: bidirectional LSTM
+        output_size: int = 1,                # For compatibility (still outputs a single logit)
+        **kwargs                              # Swallow extra configuration fields
     ):
         super().__init__()
         self.output_size = output_size
@@ -41,16 +38,16 @@ class SleepLSTM(nn.Module):
         feat_last = hs3 * d
         self.fc1  = nn.Linear(feat_last, proj_size)
         self.act1 = nn.ReLU()
-        self.fc2  = nn.Linear(proj_size, 1)  # 二分类：单 logit
+        self.fc2  = nn.Linear(proj_size, 1)  # Binary classification → single logit output
 
-        # 可选：把 forget gate 偏置初始化为正数，提升早期记忆能力
+        # Optional: initialize forget gate bias positively to improve early memory retention
         for lstm in [self.lstm1, self.lstm2, self.lstm3]:
             for names in ["bias_ih_l0", "bias_hh_l0"]:
                 if hasattr(lstm, names):
                     b = getattr(lstm, names)
-                    # bias 排布为 [i,f,g,o] 四块，各占 hidden 大小
+                    # Bias layout: [i, f, g, o], each block has size = hidden_size
                     hidden = lstm.hidden_size
-                    b.data[hidden:2*hidden] += 1.0  # forget gate 偏置 +1
+                    b.data[hidden:2*hidden] += 1.0  # add +1 to forget gate bias
             if bidirectional:
                 for names in ["bias_ih_l0_reverse", "bias_hh_l0_reverse"]:
                     if hasattr(lstm, names):
@@ -58,23 +55,27 @@ class SleepLSTM(nn.Module):
                         hidden = lstm.hidden_size
                         b.data[hidden:2*hidden] += 1.0
 
-    def forward(self, x):                 # x: [B, T, F]
+    def forward(self, x):  # x: [B, T, F]
         x, _ = self.lstm1(x)
         x = self.do1(x)
         x, _ = self.lstm2(x)
         x = self.do2(x)
         x, _ = self.lstm3(x)
-        x = x[:, -1, :]                   # 取最后时刻
+        x = x[:, -1, :]                   # take the last time step
         x = self.act1(self.fc1(x))
-        return self.fc2(x).squeeze(-1)    # [B]
+        return self.fc2(x).squeeze(-1)    # output shape [B]
+
 
 # =========================
-# 计数与指标工具（micro）
+# Counting and Evaluation Utilities
 # =========================
 @torch.no_grad()
 def _counts_from_logits(logits, y_true):
+    """
+    Compute counts for accuracy, TP, FP, FN, total samples.
+    """
     logits = logits.view(-1, 1)                  # [B,1]
-    y_true = y_true.view(-1, 1).long()           # [B,1], {0,1}
+    y_true = y_true.view(-1, 1).long()           # [B,1], values {0,1}
     probs = torch.sigmoid(logits)
     preds = (probs >= 0.5).long()
 
@@ -87,7 +88,10 @@ def _counts_from_logits(logits, y_true):
 
 
 def _estimate_class_weight_from_loader(dl):
-    """从 loader 的标签估算 (w0, w1)，用于处理类别不平衡。"""
+    """
+    Estimate class weights (w0, w1) from loader labels.
+    Used to handle class imbalance.
+    """
     pos = 0
     total = 0
     with torch.no_grad():
@@ -98,12 +102,12 @@ def _estimate_class_weight_from_loader(dl):
     neg = total - pos
     if pos == 0 or neg == 0:
         return (1.0, 1.0)
-    # 令正类权重与负类数量成比例（常见做法）
+    # Make positive class weight proportional to the number of negatives (common heuristic)
     return (1.0, neg / pos)
 
 
 # =========================
-# 训练/验证主循环（参考你的实现）
+# Training / Validation Loop
 # =========================
 def fit_torch_from_loaders(
     model,
@@ -111,20 +115,20 @@ def fit_torch_from_loaders(
     dl_val=None,
     epochs=55,
     lr=1e-3,
-    class_weight=(1.0, 1.0),   # (w0, w1) for {neg,pos}
+    class_weight=(1.0, 1.0),   # (w0, w1) for {negative, positive}
     device=None
 ):
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    # 1) 用 pos_weight 实现 class_weight
+    # 1) Use pos_weight to apply class weighting in BCEWithLogitsLoss
     w0, w1 = map(float, class_weight)
     pos_weight = torch.tensor([w1 / max(w0, 1e-8)], dtype=torch.float32, device=device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     for epoch in range(1, epochs + 1):
-        # -------- Train --------
+        # -------- Training Phase --------
         model.train()
         tr_loss_sum = 0.0
         tr_correct = tr_tp = tr_fp = tr_fn = tr_total = 0
@@ -134,7 +138,7 @@ def fit_torch_from_loaders(
             yb = yb.to(device).float().view(-1, 1)      # [B,1]
 
             logits = model(xb).view(-1, 1)              # [B,1]
-            # 若想严格复刻 Keras 的 class_weight 尺度，可乘以 w0（可选）
+            # Optionally multiply by w0 to match Keras-style class_weight scaling
             loss = criterion(logits, yb) * w0
 
             optimizer.zero_grad(set_to_none=True)
@@ -151,7 +155,7 @@ def fit_torch_from_loaders(
         tr_prec = tr_tp / max(tr_tp + tr_fp, 1) if (tr_tp + tr_fp) > 0 else 0.0
         tr_rec  = tr_tp / max(tr_tp + tr_fn, 1) if (tr_tp + tr_fn) > 0 else 0.0
 
-        # -------- Val（可选） --------
+        # -------- Validation Phase (optional) --------
         if dl_val is not None:
             model.eval()
             va_loss_sum = 0.0
@@ -186,7 +190,11 @@ def fit_torch_from_loaders(
 
 @torch.no_grad()
 def evaluate_loader(model, dl, device=None, class_weight=(1.0, 1.0)):
-    # 评测阶段可固定在 CPU（与原实现一致）；如需 GPU，把这里改回自动选择
+    """
+    Evaluation function.
+    By default runs on CPU (for consistency with original implementation).
+    Use GPU by changing 'device' if needed.
+    """
     device = device or "cpu"
     model.to(device)
     model.eval()
@@ -216,24 +224,24 @@ def evaluate_loader(model, dl, device=None, class_weight=(1.0, 1.0)):
 
 
 # =========================
-# 对接你项目需要的闭包接口
+# Interface Wrappers for Integration with Your Project
 # =========================
 def train_torch():
     """
-    返回: custom_train(model, train_loader, epochs, cfg) -> model
-    - 自动估算类权重 (w0,w1)
-    - 使用 fit_torch_from_loaders 做完整训练
-    - 不强依赖 val_loader（如需可另行调用 evaluate_loader）
+    Returns: custom_train(model, train_loader, epochs, cfg) -> model
+    - Automatically estimates class weights (w0, w1)
+    - Uses fit_torch_from_loaders for full training
+    - Validation loader optional (can call evaluate_loader separately if needed)
     """
     def custom_train(model, train_loader, epochs, cfg):
         lr = float(getattr(cfg, "learning_rate", 1e-3))
-        # 从训练集估算类权重，缓解不平衡
+        # Estimate class weights from the training set to handle imbalance
         class_weight = _estimate_class_weight_from_loader(train_loader)
         device = "cuda" if torch.cuda.is_available() else "cpu"
         model = fit_torch_from_loaders(
             model=model,
             dl_train=train_loader,
-            dl_val=None,                # 如需验证，可在此位置传入 val_loader
+            dl_val=None,                # pass val_loader here if available
             epochs=int(epochs),
             lr=lr,
             class_weight=class_weight,
@@ -245,8 +253,8 @@ def train_torch():
 
 def test_torch():
     """
-    返回: custom_test(model, test_loader, cfg) -> (loss, num_examples, metrics)
-    metrics: {"acc":..., "prec":..., "rec":..., "f1":...}
+    Returns: custom_test(model, test_loader, cfg) -> (loss, num_examples, metrics)
+    metrics = {"acc":..., "prec":..., "rec":..., "f1":...}
     """
     def custom_test(model, test_loader, cfg):
         stats = evaluate_loader(model, test_loader, device="cpu", class_weight=(1.0, 1.0))
@@ -254,10 +262,11 @@ def test_torch():
         acc  = float(stats["acc"])
         prec = float(stats["prec"]); rec = float(stats["rec"])
         f1 = (2*prec*rec / (prec+rec)) if (prec+rec) > 0 else 0.0
-        # 关键：第二个返回值改为样本数（num_examples）
+        # Important: the second return value is the number of samples (num_examples)
         num_examples = int(getattr(getattr(test_loader, "dataset", []), "__len__", lambda: 0)())
         metrics = {"acc": acc, "prec": prec, "rec": rec, "f1": f1}
         return loss, num_examples, metrics
     return custom_test
+
 
 
