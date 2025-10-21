@@ -1,5 +1,5 @@
 # server requirements
-fedops
+fedop
 torchvision
 scikit-learn
 optuna>=3.6
