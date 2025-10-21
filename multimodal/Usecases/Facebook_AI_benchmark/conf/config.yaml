@@ -35,7 +35,7 @@ clients_per_round: 1
 
 server:
   strategy:
-    _target_: fedmap.strategy.ModalityAwareAggregation
+    _target_:fedops.server.fedmap.strategy.ModalityAwareAggregation
     aggregator_path: "aggregator_mlp.pth"
     input_dim: 10
     hidden_dim: 16
