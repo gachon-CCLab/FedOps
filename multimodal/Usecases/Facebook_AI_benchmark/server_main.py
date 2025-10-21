@@ -1,7 +1,7 @@
 import hydra
 from omegaconf import DictConfig
 
-from fedops.server.app import FLServer
+from fedops.server.app import FLServe
 import models
 import data_preparation
 from hydra.utils import instantiate
