@@ -13,12 +13,12 @@ model:
   bidirectional: false
   output_size: 1 
 dataset:
-    name: 'MNIST' # Input your data name
+    name: 'fitbit' # Input your data name
     validation_split: 0.2 # Ratio of dividing train data by validation
 
 
 # client
-task_id: 'testss' # Input your Task Name that you register in FedOps Website
+task_id: 'emdtest11' # Input your Task Name that you register in FedOps Website
 
 wandb: 
   use: false # Whether to use wandb
@@ -30,7 +30,7 @@ wandb:
 # server
 num_epochs: 1 # number of local epochs
 batch_size: 128
-num_rounds: 40 # Number of rounds to perform
+num_rounds: 20 # Number of rounds to perform
 clients_per_round: 1 # Number of clients participating in the round
 
 server:
