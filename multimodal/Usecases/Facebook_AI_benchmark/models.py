@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertModel
-from torchvision import models
+from torchvision import model
 
 
 # ============================================================
