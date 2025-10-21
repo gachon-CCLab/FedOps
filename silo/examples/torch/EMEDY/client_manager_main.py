@@ -71,7 +71,7 @@ class manager_status(BaseModel):
 
     # states
     s3_ready: bool = False
-    GL_Model_V: int = 0  # model version
+    GL_Model_V: int = 2  # model version
     FL_ready: bool = False
     client_online: bool = False  # flower client online
     client_training: bool = False  # flower client learning
@@ -296,3 +296,4 @@ async def start_training():
 # ----------------------------
 if __name__ == "__main__":
     uvicorn.run("client_manager_main:app", host="0.0.0.0", port=8004, reload=True, loop="asyncio")
+
