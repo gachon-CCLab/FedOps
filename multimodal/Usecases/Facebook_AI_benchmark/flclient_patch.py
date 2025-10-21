@@ -1,5 +1,5 @@
 # flclient_patch.py
-from fedops.client.client_fl import FLClient as BaseClient
+from fedops.client.client_fl import FLClient as BaseClien
 import torch
 
 class MyFLClient(BaseClient):
