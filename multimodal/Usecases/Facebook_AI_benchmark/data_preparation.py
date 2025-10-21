@@ -5,7 +5,7 @@ from typing import Tuple, Optional
 
 import torch
 import pandas as pd
-from torch.utils.data import Dataset, DataLoade
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from PIL import Image
 
