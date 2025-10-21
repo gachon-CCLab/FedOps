@@ -97,7 +97,7 @@ def main(cfg: DictConfig) -> None:
         "train_torch" : train_torch,
         "test_torch" : test_torch
     }
-        # XAI Grad-CAM 模块调用（建议只对测试集的一小部分可视化）
+        # XAI Grad-CAM 
     if cfg.xai.enabled:
         logger.info("Running Grad-CAM for interpretability")
 
