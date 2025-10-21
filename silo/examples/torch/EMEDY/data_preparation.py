@@ -1,4 +1,6 @@
 # data_preparation.py
+# -*- coding: utf-8 -*-
+
 import os
 import json
 import logging
@@ -17,7 +19,7 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GroupShuffleSplit, train_test_split
 
-# ============================ 基础配置 & 日志 ============================
+# ============================ Basic Configuration & Logging ============================
 handlers_list = [logging.StreamHandler()]
 logging.basicConfig(
     level=logging.DEBUG,
@@ -26,29 +28,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 统一数据根目录（容器/本地一致）
+# Unified dataset root directory (consistent between container and local)
 DATASET_DIR = Path(os.environ.get("DATASET_DIR", "./dataset")).resolve()
 
-# —— 压缩包下载配置 ——（可只给 ARCHIVE_URL；也兼容你之前的 DATASET_URL）
+# —— Archive download configuration —— (can specify ARCHIVE_URL; also compatible with previous DATASET_URL)
 ARCHIVE_URL = os.environ.get("ARCHIVE_URL") or os.environ.get("DATASET_URL") or ""
 ARCHIVE_NAME = os.environ.get("ARCHIVE_NAME", "archive.zip")
 ARCHIVE_MD5 = os.environ.get("ARCHIVE_MD5", "")
-ARCHIVE_TOP = os.environ.get("ARCHIVE_TOP", "archive")  # 解压后顶层目录名
+ARCHIVE_TOP = os.environ.get("ARCHIVE_TOP", "archive")  # top-level directory name after extraction
 
-# 目录通配（若你的结构不同，可用 env 覆盖）
+# Directory glob patterns (can be overridden via environment variables)
 FITBIT_EXPORT_GLOB = os.environ.get("FITBIT_EXPORT_GLOB", "mturkfitbit_export_*")
-FITBIT_SUBDIR_GLOB = os.environ.get("FITBIT_SUBDIR_GLOB", "Fitabase Data */")  # 若 CSV 在 export 根，设为 "" 空串
+FITBIT_SUBDIR_GLOB = os.environ.get("FITBIT_SUBDIR_GLOB", "Fitabase Data */")  # if CSVs are under export root, set to ""
 
-# 读取用到的列
+# Columns used for reading
 FEATURES = ["Steps", "Calories", "AvgHeartRate", "StressLevel"]
 LABEL = "SleepQuality"
 
-# 为了与原项目的调用保持一致：运行期确定的 CSV 根目录
-FITBIT_BASE_DIR = None  # 运行时由 _ensure_archive_ready() 决定
+# To remain consistent with original project: CSV base directory decided at runtime
+FITBIT_BASE_DIR = None  # determined by _ensure_archive_ready() during runtime
+
+# === NEW: KaggleHub download option and dataset configuration ===
+try:
+    import kagglehub  # pip install kagglehub
+    _HAS_KAGGLEHUB = True
+except Exception:
+    _HAS_KAGGLEHUB = False
+
+USE_KAGGLE = os.environ.get("USE_KAGGLE", "1")           # "1"=use kagglehub by default, "0"=disable
+KAGGLE_DATASET = os.environ.get("KAGGLE_DATASET", "arashnic/fitbit")
+# Map or copy the kagglehub-downloaded directory to DATASET_DIR/ARCHIVE_TOP (or user-specified alias)
+KAGGLE_TARGET_TOP = os.environ.get("KAGGLE_TARGET_TOP", ARCHIVE_TOP)
 
 
-# ============================ 工具函数：下载 & 解压 ============================
+# ============================ Utility Functions: Download & Extract ============================
 def _md5(path: Path) -> str:
+    """Compute MD5 hash of a file."""
     h = hashlib.md5()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -57,19 +72,13 @@ def _md5(path: Path) -> str:
 
 
 def _download_with_progress(url: str, dst: Path):
+    """Download file from URL with a progress indicator."""
     dst.parent.mkdir(parents=True, exist_ok=True)
 
     def _report(blocknum, blocksize, totalsize):
         readsofar = blocknum * blocksize
         if totalsize > 0:
             percent = readsofar / totalsize * 100
-            print(
-                f"\rDownloading {url}  {percent:5.1f}% ({readsofar/1e6:.1f}MB/{totalsize/1e6:.1f}MB)",
-                end="",
-                flush=True,
-            )
-        else:
-            print(f"\rDownloading {url}  {readsofar/1e6:.1f}MB", end="", flush=True)
 
     tmp = dst.with_suffix(dst.suffix + ".part")
     try:
@@ -83,7 +92,7 @@ def _download_with_progress(url: str, dst: Path):
 
 
 def _extract_archive(archive_path: Path, to_dir: Path):
-    """支持 .zip / .tar(.gz|.tgz)"""
+    """Support extraction of .zip / .tar(.gz|.tgz) files."""
     to_dir.mkdir(parents=True, exist_ok=True)
     ap = archive_path.as_posix()
     if zipfile.is_zipfile(ap):
@@ -101,84 +110,124 @@ def _extract_archive(archive_path: Path, to_dir: Path):
 
 def _auto_locate_fitbit_base(root: Path) -> Path:
     """
-    在 root/ARCHIVE_TOP 下自动定位：
-      export 目录：mturkfitbit_export_*（可配 FITBIT_EXPORT_GLOB）
-      子目录：'Fitabase Data */'（可配 FITBIT_SUBDIR_GLOB；设空串表示直接使用 export 根）
-    返回包含 *_merged.csv 的目录路径。
+    Automatically locate the Fitbit base directory under root/ARCHIVE_TOP.
+      Export directory: mturkfitbit_export_* (configurable via FITBIT_EXPORT_GLOB)
+      Subdirectory: 'Fitabase Data */' (configurable via FITBIT_SUBDIR_GLOB; set empty to use export root)
+    Returns the directory containing *_merged.csv files.
     """
     top = root / ARCHIVE_TOP
     export_dirs = sorted(top.glob(FITBIT_EXPORT_GLOB))
     if not export_dirs:
-        raise FileNotFoundError(f"未找到 export 目录：{top}/{FITBIT_EXPORT_GLOB}")
-    export_dir = export_dirs[-1]  # 取最新
+        raise FileNotFoundError(f"No export directory found: {top}/{FITBIT_EXPORT_GLOB}")
+    export_dir = export_dirs[-1]  # use the latest one
 
     if FITBIT_SUBDIR_GLOB == "":
         csv_base = export_dir
     else:
         subdirs = list(export_dir.glob(FITBIT_SUBDIR_GLOB))
         if not subdirs:
-            raise FileNotFoundError(f"未找到子目录：{export_dir}/{FITBIT_SUBDIR_GLOB}")
+            raise FileNotFoundError(f"No subdirectory found: {export_dir}/{FITBIT_SUBDIR_GLOB}")
         csv_base = subdirs[0]
 
     return csv_base.resolve()
 
 
+# === NEW: KaggleHub Downloader ===
+def _prepare_from_kagglehub(dataset_slug: str, target_top: str) -> Path:
+    """
+    Download dataset using kagglehub (usually already extracted),
+    ensure DATASET_DIR/target_top exists (as a symlink or copy),
+    and return the CSV base directory.
+    """
+    if not _HAS_KAGGLEHUB:
+        raise RuntimeError("kagglehub not installed: run `pip install kagglehub` or set USE_KAGGLE=0")
+
+    logger.info(f"[DATA] KaggleHub downloading: {dataset_slug}")
+    src_path = Path(kagglehub.dataset_download(dataset_slug)).resolve()
+    logger.info(f"[DATA] KaggleHub path: {src_path}")
+
+    # Mount downloaded directory as DATASET_DIR/target_top (same as archive structure)
+    top = DATASET_DIR / target_top
+    DATASET_DIR.mkdir(parents=True, exist_ok=True)
+
+    if top.exists():
+        logger.info(f"[DATA] Reusing existing directory: {top}")
+    else:
+        try:
+            if top.is_symlink() or top.exists():
+                top.unlink()
+            top.symlink_to(src_path, target_is_directory=True)
+            logger.info(f"[DATA] Linked {src_path} -> {top}")
+        except Exception as e:
+            logger.warning(f"[DATA] symlink failed, copying instead: {e}")
+            shutil.copytree(src_path, top)
+            logger.info(f"[DATA] Copied {src_path} -> {top}")
+
+    # Kaggle datasets are typically already extracted — auto-locate CSV base
+    csv_base = _auto_locate_fitbit_base(DATASET_DIR)
+    logger.info(f"[DATA] Kaggle ready. CSV base: {csv_base}")
+    return csv_base
+
+
 def _ensure_archive_ready() -> Path:
     """
-    确保 DATASET_DIR 下存在解压后的 ARCHIVE_TOP 目录。
-    - 若已存在则直接用；
-    - 否则下载 ARCHIVE_URL → DATASET_DIR/archive_downloads/ARCHIVE_NAME 并解压到 DATASET_DIR；
-    - 返回 CSV 根目录（包含 *_merged.csv 的目录）。
+    Ensure that DATASET_DIR contains the extracted ARCHIVE_TOP directory.
+    - If it exists, use it directly;
+    - Otherwise, try KaggleHub (if USE_KAGGLE=1 and kagglehub installed);
+    - If that fails, download via ARCHIVE_URL and extract;
+    - Return the CSV base directory (contains *_merged.csv).
     """
     DATASET_DIR.mkdir(parents=True, exist_ok=True)
     top = DATASET_DIR / ARCHIVE_TOP
 
+    # If already exists → use it directly
+    if top.exists():
+        csv_base = _auto_locate_fitbit_base(DATASET_DIR)
+        print(f"[DATA] Ready. CSV base: {csv_base}")
+        return csv_base
+
+    # Try KaggleHub first
+    if USE_KAGGLE == "1":
+        try:
+            return _prepare_from_kagglehub(KAGGLE_DATASET, KAGGLE_TARGET_TOP)
+        except Exception as e:
+            logger.warning(f"[DATA] KaggleHub preparation failed, falling back to URL: {e}")
+
+    # Fallback: URL download + extraction
+    if not ARCHIVE_URL:
+        raise FileNotFoundError(
+            f"Data not ready: {top} missing, and ARCHIVE_URL/DATASET_URL not set (or Kaggle failed)."
+        )
+    downloads = DATASET_DIR / "archive_downloads"
+    downloads.mkdir(parents=True, exist_ok=True)
+    zip_path = downloads / ARCHIVE_NAME
+
+    if not zip_path.exists():
+        print(f"[DATA] Downloading archive from: {ARCHIVE_URL}")
+        _download_with_progress(ARCHIVE_URL, zip_path)
+    else:
+        print(f"[DATA] Using cached archive: {zip_path}")
+
+    if ARCHIVE_MD5:
+        m = _md5(zip_path)
+        if m.lower() != ARCHIVE_MD5.lower():
+            raise ValueError(f"MD5 mismatch: {m} != {ARCHIVE_MD5} ({zip_path})")
+        print(f"[DATA] MD5 OK: {m}")
+
+    print(f"[DATA] Extracting to: {DATASET_DIR}")
+    _extract_archive(zip_path, DATASET_DIR)
+
     if not top.exists():
-        if not ARCHIVE_URL:
-            raise FileNotFoundError(
-                f"数据未就绪：{top} 不存在，且未设置 ARCHIVE_URL/DATASET_URL 提供压缩包下载地址。"
-            )
-        downloads = DATASET_DIR / "archive_downloads"
-        downloads.mkdir(parents=True, exist_ok=True)
-        zip_path = downloads / ARCHIVE_NAME
-
-        if not zip_path.exists():
-            print(f"[DATA] Downloading archive from: {ARCHIVE_URL}")
-            _download_with_progress(ARCHIVE_URL, zip_path)
-        else:
-            print(f"[DATA] Using cached archive: {zip_path}")
-
-        if ARCHIVE_MD5:
-            m = _md5(zip_path)
-            if m.lower() != ARCHIVE_MD5.lower():
-                raise ValueError(f"MD5 不一致：{m} != {ARCHIVE_MD5}  ({zip_path})")
-            print(f"[DATA] MD5 OK: {m}")
-
-        print(f"[DATA] Extracting to: {DATASET_DIR}")
-        _extract_archive(zip_path, DATASET_DIR)
-
-        if not top.exists():
-            raise FileNotFoundError(f"解压后仍未发现 {top}，请检查压缩包内部结构。")
+        raise FileNotFoundError(f"{top} not found after extraction. Check archive structure.")
 
     csv_base = _auto_locate_fitbit_base(DATASET_DIR)
-
-    # 简单检查关键 CSV
-    must_csv = [
-        "sleepDay_merged.csv",
-        "hourlySteps_merged.csv",
-        "hourlyCalories_merged.csv",
-        "heartrate_seconds_merged.csv",
-    ]
-    missing = [f for f in must_csv if not (csv_base / f).exists()]
-    if missing:
-        print(f"[WARN] 缺少文件：{missing}（若文件名/结构不同，可通过通配或在读取处调整）")
-
     print(f"[DATA] Ready. CSV base: {csv_base}")
     return csv_base
 
 
-# ============================ 读取 & 融合 ============================
+# ============================ Data Reading & Merging ============================
 def _binarize_np(y: np.ndarray) -> np.ndarray:
+    """Convert numeric label arrays into binary format {0,1}."""
     u = set(np.unique(y).tolist())
     if u <= {0, 1}:
         return y.astype(int)
@@ -191,31 +240,33 @@ def _binarize_np(y: np.ndarray) -> np.ndarray:
 
 def _load_fitbit_raw() -> pd.DataFrame:
     """
-    读取 Fitabase CSV，按 (UserId, Hour) 对齐步数/卡路里/心率，并与日级睡眠标签合并。
-    产出列：['UserId','Hour','Steps','Calories','AvgHeartRate','StressLevel','SleepQuality']（按时间排序）
+    Read Fitabase CSVs, align (UserId, Hour) for steps/calories/heart rate,
+    and merge with daily sleep labels.
+    Output columns:
+      ['UserId','Hour','Steps','Calories','AvgHeartRate','StressLevel','SleepQuality'] (sorted by time)
     """
     global FITBIT_BASE_DIR
     if FITBIT_BASE_DIR is None:
         FITBIT_BASE_DIR = _ensure_archive_ready().as_posix()
 
-    # 1) 睡眠（日级标签）
+    # 1) Sleep (daily labels)
     sleep_fp = os.path.join(FITBIT_BASE_DIR, "sleepDay_merged.csv")
     sleep_df = pd.read_csv(sleep_fp, parse_dates=["SleepDay"])
-    # 6 小时=360 分钟及以上记为高质量睡眠(1)
+    # Default: ≥360 minutes (6 hours) → high-quality sleep (1)
     sleep_df["SleepQuality"] = (sleep_df["TotalMinutesAsleep"] >= 360).astype(int)
     sleep_df["SleepDate"] = pd.to_datetime(sleep_df["SleepDay"].dt.date)
 
-    # 2) 步数/卡路里（小时级）
+    # 2) Steps / Calories (hourly)
     steps_fp = os.path.join(FITBIT_BASE_DIR, "hourlySteps_merged.csv")
     cals_fp = os.path.join(FITBIT_BASE_DIR, "hourlyCalories_merged.csv")
     steps_df = pd.read_csv(steps_fp, parse_dates=["ActivityHour"])
     cals_df = pd.read_csv(cals_fp, parse_dates=["ActivityHour"])
-    # 注意不同数据集版本中列名可能为 "StepTotal" 或 "Steps"；做个兜底
+    # Compatibility with older dataset versions
     if "StepTotal" in steps_df.columns and "Steps" not in steps_df.columns:
         steps_df = steps_df.rename(columns={"StepTotal": "Steps"})
     activity_df = pd.merge(steps_df, cals_df, on=["Id", "ActivityHour"], how="inner")
 
-    # 3) 心率（秒级 → 小时均值）
+    # 3) Heart rate (seconds → hourly mean)
     hr_fp = os.path.join(FITBIT_BASE_DIR, "heartrate_seconds_merged.csv")
     hr_df = pd.read_csv(hr_fp, parse_dates=["Time"])
     hr_df["Hour"] = hr_df["Time"].dt.floor("H")
@@ -226,10 +277,10 @@ def _load_fitbit_raw() -> pd.DataFrame:
         .rename(columns={"Hour": "ActivityHour", "Value": "AvgHeartRate"})
     )
 
-    # 4) 合并：(Id, ActivityHour)
+    # 4) Merge (Id, ActivityHour)
     merged = pd.merge(activity_df, hr_hourly, on=["Id", "ActivityHour"], how="inner")
 
-    # 5) 用 ActivityHour 的日期与日级睡眠标签合并
+    # 5) Merge with daily sleep labels
     merged["SleepDate"] = pd.to_datetime(merged["ActivityHour"].dt.date)
     final = pd.merge(
         merged,
@@ -238,7 +289,7 @@ def _load_fitbit_raw() -> pd.DataFrame:
         how="inner",
     )
 
-    # 6) StressLevel = AvgHR - RestingHR（每人心率的 25 分位作为静息心率粗估）
+    # 6) Compute StressLevel = AvgHR - RestingHR (25th percentile of HR as baseline)
     resting = (
         final.groupby("Id")["AvgHeartRate"].quantile(0.25).rename("RestingHR").reset_index()
     )
@@ -246,16 +297,14 @@ def _load_fitbit_raw() -> pd.DataFrame:
     final["StressLevel"] = final["AvgHeartRate"] - final["RestingHR"]
     final.drop(columns=["RestingHR"], inplace=True)
 
-    # 7) 整理列名与排序
+    # 7) Reorganize columns and sort chronologically
     final = final[
         ["Id", "ActivityHour", "Steps", "Calories", "AvgHeartRate", "StressLevel", "SleepQuality"]
     ]
     final = final.rename(columns={"Id": "UserId", "ActivityHour": "Hour"}).dropna()
     final = final.sort_values(["UserId", "Hour"]).reset_index(drop=True)
     return final
-
-
-# ============================ 窗口化与数据集 ============================
+# ============================ Windowing and Dataset ============================
 def create_sequences_by_user(
     final_df: pd.DataFrame,
     seq_length: int = 6,
@@ -264,12 +313,18 @@ def create_sequences_by_user(
     restrict_hours=None,
 ):
     """
-    按用户分组做滑窗：X[i]= t..t+T-1 的特征，y[i]= t+T 时刻的 SleepQuality。
-    返回：X:(N,T,F) float32, y:(N,1) float32(0/1), groups:(N,) 记录 userId
+    Create sliding windows grouped by user:
+      X[i] = features from time t .. t+T-1
+      y[i] = SleepQuality at time t+T
+    Returns:
+      X: (N, T, F) float32 — sequence features
+      y: (N, 1) float32 — binary labels (0/1)
+      groups: (N,) — corresponding user IDs
     """
     df = final_df.copy()
     df["Hour"] = pd.to_datetime(df["Hour"])
     if restrict_hours is not None:
+        # Optionally restrict to specific hours of the day
         hod = df["Hour"].dt.hour
         df = df[hod.isin(list(restrict_hours))]
 
@@ -277,16 +332,17 @@ def create_sequences_by_user(
     X, y, groups = [], [], []
 
     for uid, g in df.groupby("UserId", sort=False):
-        f = g[feature_cols].to_numpy(dtype=np.float32)  # [M, F]
-        l = g[label_col].to_numpy()  # [M]
+        f = g[feature_cols].to_numpy(dtype=np.float32)  # [M, F] features
+        l = g[label_col].to_numpy()  # [M] labels
         if len(f) <= seq_length:
             continue
         for i in range(len(f) - seq_length):
             X.append(f[i : i + seq_length])  # [T, F]
-            y.append(l[i + seq_length])  # 下一时刻标签
+            y.append(l[i + seq_length])      # label at next time step
             groups.append(uid)
 
     if len(X) == 0:
+        # Return empty arrays if no valid sequences found
         return (
             np.empty((0, seq_length, len(feature_cols)), np.float32),
             np.empty((0, 1), np.float32),
@@ -300,7 +356,7 @@ def create_sequences_by_user(
 
 
 class SeqDataset(Dataset):
-    """窗口序列数据集：返回 (X, y)，其中 X:(T,F) float32, y:(1,) float32"""
+    """Sequence dataset: returns (X, y) where X:(T,F) float32 and y:(1,) float32"""
 
     def __init__(self, X: np.ndarray, y: np.ndarray):
         self.X = torch.from_numpy(X.astype(np.float32))
@@ -313,7 +369,7 @@ class SeqDataset(Dataset):
         return self.X[i], self.y[i]
 
 
-# ============================ Loader 构建（按用户切分，训练集拟合缩放器） ============================
+# ============================ DataLoader Construction (User Split + Scaler Fit) ============================
 def _build_loaders_windowed(
     final_df: pd.DataFrame,
     seq_length: int = 6,
@@ -327,17 +383,21 @@ def _build_loaders_windowed(
     pin_memory: bool = True,
 ):
     """
-    主入口：窗口化 → 分割 → 仅用训练集拟合 MinMaxScaler → 产出 DataLoader（三分）。
+    Main entry point:
+      - Apply windowing;
+      - Split dataset;
+      - Fit MinMaxScaler using only the training set (to avoid leakage);
+      - Return three DataLoaders (train/val/test).
     """
     X, y, groups = create_sequences_by_user(final_df, seq_length, FEATURES, LABEL, restrict_hours)
 
     N = len(X)
     if N == 0:
-        raise ValueError("没有生成任何序列样本；请检查数据范围/seq_length/restrict_hours。")
+        raise ValueError("No sequence samples generated; check data range, seq_length, or restrict_hours.")
 
     rng = np.random.default_rng(seed)
 
-    # ---- 划分：按用户（推荐）或全局分层 ----
+    # ---- Dataset split: by user (recommended) or global stratified ----
     if split_by_user:
         gss = GroupShuffleSplit(n_splits=1, test_size=(1 - train_ratio), random_state=seed)
         train_idx, hold_idx = next(gss.split(np.arange(N), y.reshape(-1), groups))
@@ -357,7 +417,7 @@ def _build_loaders_windowed(
         test_idx = hold_idx[val_size:]
         train_idx = tr_idx
 
-    # ---- 仅用 train 拟合缩放器（防泄漏） ----
+    # ---- Fit scaler using training set only (to prevent data leakage) ----
     F = X.shape[-1]
     scaler = MinMaxScaler()
     X_train_2d = X[train_idx].reshape(-1, F)
@@ -374,7 +434,7 @@ def _build_loaders_windowed(
     X_test = _apply_scale(X[test_idx])
     y_test = y[test_idx]
 
-    # ---- DataLoader ----
+    # ---- Construct DataLoaders ----
     ds_train = SeqDataset(X_train, y_train)
     ds_val = SeqDataset(X_val, y_val)
     ds_test = SeqDataset(X_test, y_test)
@@ -389,7 +449,7 @@ def _build_loaders_windowed(
         ds_test, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=pin_memory
     )
 
-    # ---- 统计信息 ----
+    # ---- Log summary statistics ----
     pos_ratio = float(y_train.mean()) if len(y_train) else 0.0
     logger.info(
         f"[FITBIT_SLEEP] seq_len={seq_length}, feat_dim={F}, "
@@ -400,7 +460,7 @@ def _build_loaders_windowed(
     return dl_train, dl_val, dl_test
 
 
-# ============================ 对外主接口（与原项目保持一致） ============================
+# ============================ Public Interface (Compatible with Original Project) ============================
 def load_partition(
     dataset: str,
     validation_split: float,
@@ -413,30 +473,31 @@ def load_partition(
     pin_memory: bool = True,
 ):
     """
-    统一入口（兼容你现有调用签名）：
-      - 从 archive.zip（HTTP）或已存在目录准备数据；
-      - 读取 Fitabase CSV，做 T=seq_length 窗口化，按用户分组切分 train/val/test；
-      - 返回 (train_loader, val_loader, test_loader)。
+    Unified entry function (compatible with the original project API):
+      - Prepare dataset via KaggleHub (preferred), archive.zip (HTTP), or pre-existing directory;
+      - Read Fitabase CSV files and apply windowing with T=seq_length;
+      - Split data by user into train/val/test sets;
+      - Return (train_loader, val_loader, test_loader).
     """
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logging.info(f'FL_Task - {json.dumps({"dataset": dataset, "start_execution_time": now_str})}')
 
     final_df = _load_fitbit_raw()
 
-    # 计算各子集比例
+    # Calculate data split ratios
     val_ratio = float(validation_split)
     test_ratio = float(test_split)
     train_ratio = 1.0 - val_ratio - test_ratio
     if train_ratio <= 0:
         raise ValueError(
-            f"train_ratio <= 0（validation_split={val_ratio}, test_split={test_ratio}），请调整比例。"
+            f"train_ratio <= 0 (validation_split={val_ratio}, test_split={test_ratio}), please adjust ratios."
         )
 
     return _build_loaders_windowed(
         final_df=final_df,
         seq_length=seq_length,
         batch_size=batch_size,
-        split_by_user=True,  # 强烈建议按用户切分，避免泄漏
+        split_by_user=True,  # Strongly recommended to split by user to avoid data leakage
         train_ratio=train_ratio,
         val_ratio=val_ratio,
         seed=seed,
@@ -444,3 +505,4 @@ def load_partition(
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
+
