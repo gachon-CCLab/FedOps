@@ -1,5 +1,5 @@
 
-# FedOps (EMEDY)
+# FedOps (FitBit)
 
 This guide provides step-by-step instructions on executing FedOps, a Federated Learning Lifecycle Management Operations framework.
 
