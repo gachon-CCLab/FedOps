@@ -15,8 +15,7 @@ dataset:
   name: 'HATEFUL_MEMES'
   validation_split: 0.0   # unused here but kept for API parity
 
-# identify this client’s split (set differently per client)
-client_id: 0              # ← set to 1 for the first client; 2 for the second, etc.
+
 
 # client
 task_id: 'aqeelfacebook'
@@ -32,6 +31,10 @@ num_epochs: 1
 batch_size: 4           # multimodal batches are heavier than MNIST
 num_rounds: 2
 clients_per_round: 1
+
+
+# This is Fedmap related parameter,and thsi is used to identify this client’s split (set differently per client)
+client_id: 0              # ← set to 1 for the first client; 2 for the second, etc.
 
 server:
   strategy:
