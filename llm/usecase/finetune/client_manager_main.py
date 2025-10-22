@@ -51,7 +51,7 @@ class FLTask(BaseModel):
 class manager_status(BaseModel):
     global today_str, inform_SE
 
-    # FL_client: str = '0.0.0.0:8003'
+    FL_client: str = '0.0.0.0:8003'
     if len(sys.argv) == 1:
         FL_client: str = 'localhost:8003'
     else:
