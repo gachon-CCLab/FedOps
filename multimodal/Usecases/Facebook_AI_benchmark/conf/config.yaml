@@ -30,7 +30,7 @@ wandb:
 num_epochs: 1
 batch_size: 4           # multimodal batches are heavier than MNIST
 num_rounds: 2
-clients_per_round: 1
+clients_per_round: 2
 
 #############################################################################################################################################
 ##### ALL PARAMETERS BELOW ARE FEDMAP RELATED PARAMETERS###########################################################################
