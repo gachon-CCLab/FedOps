@@ -1,114 +1,124 @@
-# FedOps hypo
 
-This guide provides step-by-step instructions on how to implement FedOps clustering + optuna, a federated learning lifecycle management operations framework.
 
-This use case will work just fine without modifying anything.
 
-## Baseline
+
+
+# FedOps Clustering + Optuna  
+### Density-based Client Clustering for Robust Federated Learning under Non-IID Settings
+
+---
+## 💻 Why We Use This Method
+
+Conventional Federated Learning (FL) performs well under IID conditions but fails to generalize efficiently in Non-IID environments due to the following issues:
+
+1. **Single global model aggregation:**  
+   Each client’s local model converges toward a different optimum due to heterogeneous data, causing degraded accuracy and unstable global updates.
+
+2. **Static hyperparameters:**  
+   A single hyperparameter configuration cannot adapt to diverse client characteristics, leading to suboptimal convergence.
+
+To overcome these challenges, this method:
+
+- Analyzes **model update patterns** via a **density-based clustering algorithm (DBSCAN)**.  
+- Groups clients with **similar learning behaviors**.  
+- Performs **Optuna-based hyperparameter optimization (HPO)** within each cluster.  
+- Ensures **stable and adaptive global convergence** across heterogeneous clients.
+
+This guide provides a step-by-step instruction on implementing the **FedOps Clustering + Optuna** workflow.
+
+---
+
+## 📂 Baseline Directory Structure
 
 ```
-- Baseline
-    - client_main.py
-    - client_mananger_main.py
-    - server_main.py
-    - models.py
-    - data_preparation.py
-    - requirements.txt (for server)
-    - conf
-        - config.yaml
 
-```
+* Baseline
 
-## Step
+  * client_main.py
+  * client_manager_main.py
+  * server_main.py
+  * models.py
+  * data_preparation.py
+  * requirements.txt
+  * conf/
 
-1. **Start by cloning the FedOps**
+    * config.yaml
 
-```
-git clone <https://github.com/gachon-CCLab/FedOps.git> \\
-&& mv FedOps/hypo/usecase . \\
+````
+
+---
+## ⚙️ Step 1: Clone FedOps
+
+```bash
+git clone https://github.com/gachon-CCLab/FedOps.git \
+&& mv FedOps/hypo/usecase . \
 && rm -rf FedOps
+````
 
-```
+---
 
-1. **Customize the FedOps Baseline code.**
-- config.yaml
+## ⚡ Step 2: Create a Task (UI)
 
-```yaml
-# Common
+Enable **Clustering** and **Hyperparameter Optimization (HPO)** in your FedOps UI.
 
-#conf/config.yaml
-random_seed: 42
+<p align="center">
+  <img src="../docs/images/fedops_hypo_1.png" width="720" alt="FedOps Hypo Task Example"/>
+</p>
 
-learning_rate: 0.001 # Input model's learning rate
+**Key Parameters**
 
-# clustering/HPO Options 
-hyperparams: 
-- [0.001, 128]
-- [0.005, 64]
-- [0.01, 32]
+| Parameter             | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| `hyperparams`         | Initial hyperparameter candidates as `[learning_rate, batch_size]`.      |
+| `ClusterOptunaFedAvg` | FedAvg variant combining clustering + Optuna HPO.                        |
+| `warmup_rounds`       | Number of rounds before clustering starts.                               |
+| `recluster_every`     | Number of rounds between each re-clustering.                             |
+| `eps`                 | DBSCAN distance threshold for clustering.                                |
+| `min_samples`         | Minimum number of clients to form a cluster.                             |
+| `objective`           | HPO objective (e.g., maximize accuracy/F1 or minimize loss).             |
+| `search_lr_log`       | Log-scale search range for learning rate (e.g., `[-5, -2]` → 1e-5~1e-2). |
+| `search_bs_exp`       | Exponential search range for batch size (e.g., `[3, 7]` → 8~128).        |
+| `search_local_epochs` | Search range for local epochs per client.                                |
 
-model_type: 'Pytorch' # This value should be maintained
-model:
-  _target_: models.MNISTClassifier # Input your custom model
-  output_size: 10 # Input your model's output size (only classification)
+---
 
-dataset:
-    name: 'MNIST' # Input your data name
-    validation_split: 0.2 # Ratio of dividing train data by validation
+## 🧠 Step 3: Set Memory to 10Gi
 
-# client
-task_id: '' # Input your Task Name that you register in FedOps Website
+<p align="center">
+  <img src="../docs/images/fedops_hypo_2.png" width="720" alt="Memory Setting"/>
+</p>
 
-wandb: 
-  use: true # Whether to use wandb
-  key: '38f6cf3c2c37660d42ebfe8ab434b72d34be3b31' # Input your wandb api key
-  account: 'rirakang@gachon.ac.kr' # Input your wandb account
-  project: '${dataset.name}_${task_id}'
+If a **“socket closed”** error occurs:
 
-# server
-num_epochs: 1 # number of local epochs
-batch_size: 128
-num_rounds: 2 # Number of rounds to perform
-clients_per_round: 3 # Number of clients participating in the round
+1. Open **Lens** → **Deployments**.
+2. Find your task’s deployment.
+3. Click **Edit**, search for `memory`.
+4. Change the value from `2Gi` → `10Gi`.
 
-server:
-  strategy:
-# clustering/HPO Options : _target_
-    _target_: fedops.server.strategy_cluster_optuna.ClusterOptunaFedAvg
-    fraction_fit: 0.00001
-    fraction_evaluate: 0.000001
-    min_fit_clients: ${clients_per_round}
-    min_available_clients: ${clients_per_round}
-    min_evaluate_clients: ${clients_per_round}
+<p align="center">
+  <img src="../docs/images/fedops_hypo_6.png" width="720" alt="Lens Memory Edit"/>
+</p>
 
-    # clustering/HPO Options 
-    warmup_rounds: 1        # Number of warmup rounds before clustering
-    recluster_every: 1      # Re-cluster frequency (in rounds)
-    eps: 0.2                # DBSCAN epsilon parameter
-    min_samples: 2          # DBSCAN min_samples parameter
-    objective: "maximize_f1"        # Other options: "maximize_acc" / "minimize_loss"
-    search_lr_log: [-5.0, -2.0]     # Search space for log10(lr), e.g. 1e-5 to 1e-2
-    search_bs_exp: [3, 7]           # Search space for batch size as 2^exp (8~128)
-    search_local_epochs: [1, 3]     # Range of local epochs
+---
 
-```
+## 🧩 Step 4: Create the Server
 
-- **hyperparams**: The initial set of hyperparameter candidates. Specified in the form [learning rate, batch size].
-- **ClusterOptunaFedAvg**: A FedAvg variant that combines clustering with Optuna-based hyperparameter search.
-- **warmup_rounds**: The number of rounds of warm-up training to run before starting clustering.
-- **recluster_every**: Defines how many rounds should pass before re-running clustering.
-- **eps**: The distance threshold for DBSCAN (controls how close clients must be to be grouped in the same cluster).
-- **min_samples**: The minimum number of samples for DBSCAN (the minimum number of clients required to form a valid cluster).
-- **objective**: The optimization target for HPO. Can be set to maximize F1 score, maximize accuracy, or minimize loss.
-- **search_lr_log**: Defines the search range for the learning rate in log scale. For example, [-5, -2] corresponds to 1e-5 to 1e-2.
-- **search_bs_exp**: Defines the search range for batch size in exponential scale. For example, [3, 7] corresponds to 2³–2⁷ = 8–128.
-- **search_local_epochs**: The search range for the number of local epochs each client should use.
+Create the server the same way as a standard FL setup.
+No extra modification is required.
 
-- data_preparation.py
+<p align="center">
+  <img src="../docs/images/fedops_hypo_3.png" width="720" alt="Server Creation"/>
+</p>
 
-```yaml
-# data_preparation.py
+---
 
+## 🧪 Step 5: Non-IID Setup (`data_preparation.py`)
+
+You can keep the same pipeline and simply use environment variables to control Non-IID modes.
+
+Replace `/app/code/data_preparation.py` with the following code:
+
+```python
 import os
 import json
 import logging
@@ -119,36 +129,13 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split, Subset
 from torchvision import datasets, transforms
 
-# Non-IID partition utility (use exactly this import path as requested)
-from fedops.utils.fedco.datasetting import build_parts  # ← keep as-is
+from fedops.utils.fedco.datasetting import build_parts
 
-# Configure logging
 handlers_list = [logging.StreamHandler()]
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)8.8s] %(message)s",
                     handlers=handlers_list)
 logger = logging.getLogger(__name__)
 
-"""
-Create your data loader for training/testing local & global models.
-Return variables must be (train_loader, val_loader, test_loader) for normal operation.
-"""
-
-# === Environment variable mapping ===
-# FEDOPS_PARTITION_CODE: "0"(iid) | "1"(dirichlet) | "2"(label_skew) | "3"(qty_skew)
-#   - if "1": FEDOPS_DIRICHLET_ALPHA (default 0.3)
-#   - if "2": FEDOPS_LABELS_PER_CLIENT (default 2)
-#   - if "3": FEDOPS_QTY_BETA (default 0.5)
-#
-# Common:
-#   FEDOPS_NUM_CLIENTS (default 1)
-#   FEDOPS_CLIENT_ID   (default 0)
-#   FEDOPS_SEED        (default 42)
-#
-# Example:
-#   export FEDOPS_PARTITION_CODE=1
-#   export FEDOPS_DIRICHLET_ALPHA=0.3
-#   export FEDOPS_NUM_CLIENTS=3
-#   export FEDOPS_CLIENT_ID=0
 def _resolve_mode_from_env() -> str:
     code = os.getenv("FEDOPS_PARTITION_CODE", "0").strip()
     if code == "0":
@@ -166,37 +153,22 @@ def _resolve_mode_from_env() -> str:
         logger.warning(f"[partition] Unknown FEDOPS_PARTITION_CODE={code}, fallback to iid")
         return "iid"
 
-# MNIST
 def load_partition(dataset, validation_split, batch_size):
-    """
-    Build per-client partitioned loaders.
-    Returns: train_loader, val_loader, test_loader
-    """
-    # Basic task logging
-    now = datetime.now()
-    now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-    fl_task = {"dataset": dataset, "start_execution_time": now_str}
-    fl_task_json = json.dumps(fl_task)
-    logging.info(f'FL_Task - {fl_task_json}')
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    logging.info(f'FL_Task - {json.dumps({"dataset": dataset, "start_execution_time": now})}')
 
-    # Read Non-IID settings from environment variables
     num_clients = int(os.getenv("FEDOPS_NUM_CLIENTS", "1"))
     client_id   = int(os.getenv("FEDOPS_CLIENT_ID", "0"))
     seed        = int(os.getenv("FEDOPS_SEED", "42"))
     mode_str    = _resolve_mode_from_env()
-
     logging.info(f"[partition] mode={mode_str}, num_clients={num_clients}, client_id={client_id}, seed={seed}")
 
-    # MNIST preprocessing (grayscale normalization)
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
 
-    # Load full MNIST training split (download if needed)
     full_dataset = datasets.MNIST(root='./dataset/mnist', train=True, download=True, transform=transform)
-
-    # Build Non-IID index lists per client, then select only this client's subset
     targets_np = full_dataset.targets.numpy() if torch.is_tensor(full_dataset.targets) else full_dataset.targets
     parts = build_parts(targets_np, num_clients=num_clients, mode_str=mode_str, seed=seed)
 
@@ -204,23 +176,13 @@ def load_partition(dataset, validation_split, batch_size):
         raise ValueError(f"CLIENT_ID must be 0..{num_clients-1}, got {client_id}")
 
     client_indices = parts[client_id]
-    if len(client_indices) == 0:
-        logger.warning(f"[partition] client {client_id} has 0 samples (mode={mode_str})")
-
     subset_for_client = Subset(full_dataset, client_indices)
 
-    # Keep original behavior: split the client subset again into train/val/test
     test_split = 0.2
     total_len = len(subset_for_client)
     train_size = int((1 - validation_split - test_split) * total_len)
     validation_size = int(validation_split * total_len)
     test_size = total_len - train_size - validation_size
-
-    if train_size <= 0:
-        raise ValueError(
-            f"[partition] Not enough samples after partition: total={total_len}, "
-            f"val={validation_size}, test={test_size}"
-        )
 
     train_dataset, val_dataset, test_dataset = random_split(
         subset_for_client,
@@ -228,20 +190,13 @@ def load_partition(dataset, validation_split, batch_size):
         generator=torch.Generator().manual_seed(seed + client_id)
     )
 
-    # DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size) if validation_size > 0 else DataLoader([])
-    test_loader = DataLoader(test_dataset, batch_size=batch_size) if test_size > 0 else DataLoader([])
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
-    # Simple label histogram for sanity check
     def _count_labels(ds):
-        if len(ds) == 0:
-            return {}
-        labels = []
-        for i in range(len(ds)):
-            _, y = ds[i]
-            y = int(y.item()) if torch.is_tensor(y) else int(y)
-            labels.append(y)
+        if len(ds) == 0: return {}
+        labels = [int(y.item()) if torch.is_tensor(y) else int(y) for _, y in ds]
         return dict(Counter(labels))
 
     logging.info(f"[partition] train_size={len(train_dataset)}, val_size={len(val_dataset)}, test_size={len(test_dataset)}")
@@ -250,37 +205,33 @@ def load_partition(dataset, validation_split, batch_size):
     return train_loader, val_loader, test_loader
 
 def gl_model_torch_validation(batch_size):
-    """
-    Build a loader for centralized/global validation (server-side).
-    Uses MNIST test split.
-    """
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5,), (0.5,))
     ])
-
     val_dataset = datasets.MNIST(root='./dataset/mnist', train=False, download=True, transform=transform)
-    gl_val_loader = DataLoader(val_dataset, batch_size=batch_size)
-
-    return gl_val_loader
+    return DataLoader(val_dataset, batch_size=batch_size)
 ```
 
-Pick the Non-IID mode via environment variables—no code changes required.
+---
 
-### Variables
+## 🌐 Environment Variables
 
-- `FEDOPS_PARTITION_CODE`
-    - `"0"` → IID (default)
-    - `"1"` → Dirichlet (use `FEDOPS_DIRICHLET_ALPHA`, default `0.3`)
-    - `"2"` → Label-skew (use `FEDOPS_LABELS_PER_CLIENT`, default `2`)
-    - `"3"` → Quantity-skew (use `FEDOPS_QTY_BETA`, default `0.5`)
-- `FEDOPS_NUM_CLIENTS` — total clients (default `1`)
-- `FEDOPS_CLIENT_ID` — this client’s id (default `0`)
-- `FEDOPS_SEED` — RNG seed (default `42`)
+| Variable                   | Description                                                   | Default |
+| -------------------------- | ------------------------------------------------------------- | ------- |
+| `FEDOPS_PARTITION_CODE`    | `0`: IID, `1`: Dirichlet, `2`: Label-skew, `3`: Quantity-skew | `0`     |
+| `FEDOPS_DIRICHLET_ALPHA`   | Dirichlet α                                                   | `0.3`   |
+| `FEDOPS_LABELS_PER_CLIENT` | Number of labels per client (label-skew)                      | `2`     |
+| `FEDOPS_QTY_BETA`          | Quantity-skew β                                               | `0.5`   |
+| `FEDOPS_NUM_CLIENTS`       | Total number of clients                                       | `1`     |
+| `FEDOPS_CLIENT_ID`         | Current client ID                                             | `0`     |
+| `FEDOPS_SEED`              | Random seed                                                   | `42`    |
 
-### Examples
+---
 
-**IID (even split)**
+## 🔧 Examples
+
+**IID Example**
 
 ```bash
 export FEDOPS_PARTITION_CODE=0
@@ -297,7 +248,7 @@ export FEDOPS_NUM_CLIENTS=3
 export FEDOPS_CLIENT_ID=1
 ```
 
-**Label-skew (2 labels per client)**
+**Label-Skew (2 labels per client)**
 
 ```bash
 export FEDOPS_PARTITION_CODE=2
@@ -306,7 +257,7 @@ export FEDOPS_NUM_CLIENTS=5
 export FEDOPS_CLIENT_ID=3
 ```
 
-**Quantity-skew (β = 0.5)**
+**Quantity-Skew (β = 0.5)**
 
 ```bash
 export FEDOPS_PARTITION_CODE=3
@@ -315,37 +266,32 @@ export FEDOPS_NUM_CLIENTS=4
 export FEDOPS_CLIENT_ID=2
 ```
 
-This keeps your pipeline intact, adds clean Non-IID control via env vars, and relies only on `build_parts` from your existing `fedops.utils.fedco.datasetting`.
+---
 
-- Customize the FedOps hypo code to align with your FL task.
-    - config.yaml
-        - [model.name](http://model.name/): Select from the models of Hugging Face.
-            - The current model is `DeepSeek-R1-Distill-Qwen-1.5B`, which requires about 27 GB of GPU memory.
-        - [dataset.name](http://dataset.name/): Select from the datasets of HuggingFace.
-            - The current dataset is `medical_meadow_medical_flashcards` and is set for medical fine-tuning.
-        - task_id: Your taskname that you register in FedOps Website.
-        - finetune: Modify LoRA hyperparameter settings.
-        - num_epochs: Number of local learnings per round for a client.
-        - num_rounds: Number of rounds.
-        - clients_per_round: Number of clients participating per round.
-    - If you want to change the dataset.
-        - You need to modify the files below.
-            - data_preparation.py
-            - client_main.py
-1. **Make it your own GitHub repository**
-2. **Login to the FedOps Website**
-- Create a Task.
-    - Title: It must be the same as the task_id specified in config.
-    - Client Type: Silo
-    - Description: Your own task description
-    - Server Git Repository Address: Repository address created in step 4
-1. **Start federated learning**
-- Client
-    - start `client_main.py` & `client_manager_main.py`
-- Task window of FedOps Website
-    - Select your clients who are online and press `FL START`.
-- Then you can see ui like this
+## ✅ Result Example
 
+<p align="center">
+  <img src="../docs/images/fedops_hypo_result_example.png" width="720" alt="Result Example"/>
+</p>
 
-![FedOps hypo example result](../docs/images/fedops_hypo_result_example.png)
+---
+
+## 🧭 Notes
+
+* Works out-of-the-box with existing FedOps pipelines.
+* All Non-IID configurations are controlled via environment variables.
+* Recommended: set `warmup_rounds > 0` before clustering begins.
+* Tune `recluster_every` according to data drift frequency.
+
+---
+
+## ⚠️ Troubleshooting
+
+| Issue                | Possible Cause              | Solution                                  |
+| -------------------- | --------------------------- | ----------------------------------------- |
+| Socket closed error  | Insufficient memory         | Set memory to 10Gi in Lens                |
+| Empty client dataset | Too aggressive partitioning | Increase α or β; reduce clients           |
+| Slow HPO             | Large search space          | Narrow `search_lr_log` or `search_bs_exp` |
+
+---
 
