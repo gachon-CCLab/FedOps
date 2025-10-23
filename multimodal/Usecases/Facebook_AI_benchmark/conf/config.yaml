@@ -38,6 +38,7 @@ clients_per_round: 2
 # Yonggyeom, please do avoid this parameter in displaying in fedops task creation UI,as this is not needed for server side,but this is used only in client side
 client_id: 0              # ← set to 0 for the first client; 1 for the second, etc.
 
+# below are FedMAP related parameters,so display all this in Fedops task creation UI along with other config.yaml parameters
 server:
   strategy:
     _target_:fedops.server.fedmap.strategy.ModalityAwareAggregation
