@@ -36,7 +36,7 @@ clients_per_round: 2
 ##### ALL PARAMETERS BELOW ARE FEDMAP RELATED PARAMETERS###########################################################################
 #############################################################################################################################################
 # Yonggyeom, please do avoid this parameter in displaying in fedops task creation UI,as this is not needed for server side,but this is used only in client side
-client_id: 0              # ← set to 1 for the first client; 2 for the second, etc.
+client_id: 0              # ← set to 0 for the first client; 1 for the second, etc.
 
 server:
   strategy:
