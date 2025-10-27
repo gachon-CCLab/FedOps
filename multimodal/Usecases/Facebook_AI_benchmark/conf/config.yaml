@@ -18,7 +18,7 @@ dataset:
 
 
 # client
-task_id: 'aqeelfacebook'
+task_id: 'rira_test_akeel'
 
 wandb:
   use: false
