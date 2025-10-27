@@ -10,11 +10,8 @@ from fedops.client import client_utils
 from fedops.client.app import FLClientTask
 import logging
 from omegaconf import DictConfig, OmegaConf
-from model.esi import ESI
-import xai_utils
-import cv2
-from model.xresnet1d import xresnet1d18
-from transformers import AutoModel, AutoTokenizer
+
+
 
 @hydra.main(config_path="./conf", config_name="config", version_base=None)
 def main(cfg: DictConfig) -> None:
@@ -43,33 +40,7 @@ def main(cfg: DictConfig) -> None:
     
     logger.info('data loaded')
 
-    """
-    Client local model build function
-    Set init local model
-    After setting model method in models.py, call the model method.
-    """
-    dim = 768
-    signal_dim = 128
-    signal_encoder = xresnet1d18(input_channels=12, num_classes=5)
-    batch_size = 16
-    lr = 1e-4
-    text_encoder = AutoModel.from_pretrained('michiyasunaga/BioLinkBERT-base')
-    tokenizer = AutoTokenizer.from_pretrained('michiyasunaga/BioLinkBERT-base')
-    total_tokens = len(tokenizer.vocab)
-    esi = ESI(
-    dim = dim,
-    image_dim = signal_dim,
-    num_tokens = total_tokens,
-    pretrained_text_encoder = text_encoder,
-    unimodal_depth = 6,            # depth of the unimodal transformer
-    multimodal_depth = 6,          # depth of the multimodal transformer
-    dim_head=64,
-    heads=8,
-    ff_mult=4,
-    img_encoder=signal_encoder,
-    caption_loss_weight=1.,
-    contrastive_loss_weight=1.,
-    )
+   
     # torch model
     model = instantiate(cfg.model)
     model_type = cfg.model_type     # Check tensorflow or torch model
@@ -97,7 +68,7 @@ def main(cfg: DictConfig) -> None:
         "train_torch" : train_torch,
         "test_torch" : test_torch
     }
-        # XAI Grad-CAM 
+        # XAI Grad-CAM 模块调用（建议只对测试集的一小部分可视化）
     if cfg.xai.enabled:
         logger.info("Running Grad-CAM for interpretability")
 
@@ -124,4 +95,6 @@ def main(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     main()
+    
+
     
