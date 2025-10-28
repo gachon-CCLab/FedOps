@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 # ------------ Paths ------------
 # Client-side layout (you already have)
-BASE_DATASET_DIR = os.path.abspath("../../dataset")          # contains client_1/, client_2/, ...
-IMG_DIR = os.path.abspath("../../all_in_one_dataset/img")    # all images live here
+BASE_DATASET_DIR = os.path.abspath("/dataset")          # contains client_1/, client_2/, ...
+IMG_DIR = os.path.abspath("/all_in_one_dataset/img")    # all images live here
 
 # Server-side validation layout (downloadable)
 SERVER_DATA_DIR = os.path.abspath("./server_data")
