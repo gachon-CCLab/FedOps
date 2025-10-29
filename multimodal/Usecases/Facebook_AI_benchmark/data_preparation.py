@@ -96,7 +96,7 @@ class HatefulMemesDataset(Dataset):
             img = Image.open(img_path).convert("RGB")
             image = self.transform(img)
         except Exception as e:
-            logger.warning(f"⚠️ Failed to load image: {img_path} ({e}); using zeros")
+            #logger.warning(f"⚠️ Failed to load image: {img_path} ({e}); using zeros")
             image = torch.zeros((3, 224, 224), dtype=torch.float32)
 
         label = int(row["label"])
