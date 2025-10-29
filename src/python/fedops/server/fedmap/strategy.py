@@ -1,5 +1,6 @@
 # fedmap/strategy.py
 import os
+import logging
 from typing import List, Dict, Tuple, Optional, Callable, Any
 
 import torch
@@ -8,6 +9,14 @@ import torch.optim as optim
 import flwr as fl
 from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays
 import optuna
+
+# ---------- logging ----------
+LOGGER = logging.getLogger(__name__)
+# Tip: set level and format in your server entrypoint, e.g.:
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+# )
 
 _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -99,6 +108,20 @@ def _z_clip_1d(x: torch.Tensor, clip: float) -> torch.Tensor:
     return _safe_nan_to_num(z)
 
 
+# --------- small helpers to read env knobs (optional) --------- #
+def _get_int_env(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, default))
+    except Exception:
+        return default
+
+def _get_bool_env(name: str, default: bool) -> bool:
+    v = os.getenv(name)
+    if v is None:
+        return default
+    return v.lower() in ("1", "true", "yes", "y")
+
+
 class ModalityAwareAggregation(fl.server.strategy.Strategy):
     """
     Custom aggregator (teacher-student + Optuna) with safety guards.
@@ -141,9 +164,9 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
         self.aggregator = AggregatorMLP(input_dim=input_dim, hidden_dim=hidden_dim).to(_DEVICE)
         if os.path.exists(self.aggregator_path):
             self.aggregator.load_state_dict(torch.load(self.aggregator_path, map_location=_DEVICE))
-            print(f"✅ Loaded saved aggregator weights from {self.aggregator_path}")
+            LOGGER.info("Aggregator: loaded saved weights from '%s'.", self.aggregator_path)
         else:
-            print("⚠️ No saved aggregator found, starting fresh.")
+            LOGGER.info("Aggregator: no saved weights found at '%s' (starting fresh).", self.aggregator_path)
 
         self.optimizer = optim.Adam(self.aggregator.parameters(), lr=float(aggregator_lr))
         self.loss_fn = nn.KLDivLoss(reduction="batchmean")
@@ -157,6 +180,12 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
         self.alpha_vl   = 0.10
         self.alpha_gn   = 0.05
         self.alpha_bal  = 0.05
+
+        # --- student gating knobs (can be overridden by env) ---
+        self.use_student = _get_bool_env("FEDMAP_USE_STUDENT", True)
+        self.student_warmup = _get_int_env("FEDMAP_STUDENT_WARMUP", 5)      # rounds before student can dominate
+        self.student_win_needed = _get_int_env("FEDMAP_STUDENT_WIN_NEEDED", 3)  # consecutive wins needed
+        self._student_streak = 0  # internal counter
 
     # ---------------- Flower Strategy API ----------------
 
@@ -172,9 +201,10 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
         return [(client, fl.common.EvaluateIns(parameters, cfg)) for client in client_manager.all().values()]
 
     def aggregate_fit(self, server_round, results, failures):
-        print(f"🔗 Aggregating round {server_round} with {len(results)} client updates...")
+        LOGGER.info("Aggregation: round %d — received %d client update(s).", server_round, len(results))
         if not results:
             # No results → keep previous params (Flower will handle), return empty metrics
+            LOGGER.warning("Aggregation: round %d — no client results, keeping previous global parameters.", server_round)
             return None, {}
 
         # -------- collect client params + meta --------
@@ -191,17 +221,17 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
             weights_per_client.append([torch.tensor(arr, dtype=torch.float32, device="cpu") for arr in ndarrays])
 
             # Extract metrics with defaults
-            ck = float(fit_res.metrics.get("c_k", 0.0) or 0.0)
-            pk = float(fit_res.metrics.get("p_k", 0.0) or 0.0)
-            m_img = int(fit_res.metrics.get("m_img", 1) or 1)
-            m_txt = int(fit_res.metrics.get("m_txt", 1) or 1)
+            ck = float(fit_res.metrics.get("c_k", 0.0) or 0.0)                 # client consistency/quality
+            pk = float(fit_res.metrics.get("p_k", 0.0) or 0.0)                 # client performance (e.g., F1/Acc)
+            m_img = int(fit_res.metrics.get("m_img", 1) or 1)                  # has image modality?
+            m_txt = int(fit_res.metrics.get("m_txt", 1) or 1)                  # has text modality?
             n_k = int(getattr(fit_res, "num_examples", 0) or fit_res.metrics.get("n_k", 0) or 0)
-            diversity = float(fit_res.metrics.get("diversity", 0.0) or 0.0)
-            modality_div = float(1.0 if (m_img == 1 and m_txt == 1) else 0.5)
+            diversity = float(fit_res.metrics.get("diversity", 0.0) or 0.0)    # data diversity proxy
+            modality_div = float(1.0 if (m_img == 1 and m_txt == 1) else 0.5)  # multi-modality bonus
 
-            val_loss = float(fit_res.metrics.get("val_loss", 0.0) or 0.0)
-            grad_norm = float(fit_res.metrics.get("grad_norm", 0.0) or 0.0)
-            imbalance_ratio = float(fit_res.metrics.get("imbalance_ratio", 0.0) or 0.0)
+            val_loss = float(fit_res.metrics.get("val_loss", 0.0) or 0.0)      # client val loss
+            grad_norm = float(fit_res.metrics.get("grad_norm", 0.0) or 0.0)    # gradient norm proxy
+            imbalance_ratio = float(fit_res.metrics.get("imbalance_ratio", 0.0) or 0.0)  # class balance (≈0.5 is good)
 
             meta_features.append([ck, pk, m_img, m_txt, n_k, diversity, modality_div, val_loss, grad_norm, imbalance_ratio])
 
@@ -240,9 +270,9 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
         size_feat = _z_clip_1d(torch.log(torch.clamp(nks, min=1.0)), self.z_clip)
         div_feat  = _z_clip_1d(diversity_s, self.z_clip)
         mod_feat  = _z_clip_1d(modality_s, self.z_clip)
-        vl_inv    = -_z_clip_1d(val_losses, self.z_clip)
-        gn_inv    = -_z_clip_1d(grad_norms, self.z_clip)
-        bal_feat  = _z_clip_1d(1.0 - 2.0 * torch.abs(imb_ratios - 0.5), self.z_clip)
+        vl_inv    = -_z_clip_1d(val_losses, self.z_clip)            # lower loss → higher score
+        gn_inv    = -_z_clip_1d(grad_norms, self.z_clip)            # smaller grad norm → higher score (stability)
+        bal_feat  = _z_clip_1d(1.0 - 2.0 * torch.abs(imb_ratios - 0.5), self.z_clip)  # closer to 0.5 is better
 
         teacher_feats = torch.stack([perf_feat, size_feat, div_feat, mod_feat, vl_inv, gn_inv, bal_feat], dim=1)
         teacher_feats = _safe_nan_to_num(teacher_feats)
@@ -271,7 +301,10 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
             logits = self.aggregator(meta_norm).view(-1)
             logits = _safe_nan_to_num(logits)
             attn_student = _safe_softmax(logits)
-        print("👩‍🎓 Student pre-Optuna:", attn_student.detach().cpu().numpy())
+        LOGGER.info(
+            "Student attention (before hyperparameter search): per-client weights = %s",
+            attn_student.detach().cpu().numpy(),
+        )
 
         assert self.evaluate_fn is not None, "evaluate_fn is required (server supplies it)."
 
@@ -336,14 +369,111 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
 
         with torch.no_grad():
             new_attn = _safe_softmax(self.aggregator(meta_norm).view(-1))
-            print("👩‍🎓 Student post-Optuna:", new_attn.detach().cpu().numpy())
-            print("🧑‍🏫 Teacher (best):   ", _safe_nan_to_num(attn_teacher).detach().cpu().numpy())
-            print(f"🌟 Best score this round: {best['score']:.4f}")
+            LOGGER.info(
+                "Student attention (after distillation): %s",
+                new_attn.detach().cpu().numpy(),
+            )
+            LOGGER.info(
+                "Teacher attention (best found this round): %s",
+                _safe_nan_to_num(attn_teacher).detach().cpu().numpy(),
+            )
+            LOGGER.info("Best server metric this round (higher is better): %.4f", best["score"])
 
-        # Convert best NDArrays -> Parameters
-        nds_final = best["nds"]
-        if nds_final is None:
-            # Fallback to uniform averaging (or student attention if valid)
+        # --- evaluate student attention directly (single eval) ---
+        def _metric_score_from_nds(nds):
+            loss, metrics = self.evaluate_fn(server_round, nds, {})
+            return float(metrics.get("test_f1_macro", metrics.get("accuracy", 0.0)) or 0.0)
+
+        score_T = float(best["score"])
+        nds_S = aggregate_with_attention(new_attn)
+        score_S = _metric_score_from_nds(nds_S) if nds_S is not None else -1.0
+        LOGGER.info(
+            "Server evaluation — Teacher vs Student: teacher=%.6f, student=%.6f",
+            score_T, score_S
+        )
+
+        # --------- Decide student vs teacher (KL-bound + probe + blend + streak gate) ---------
+        # Target max drop on server metric (e.g., macro-F1) compared to teacher
+        delta = 0.002  # tighten/loosen as desired
+
+        # Compute KL(teacher || student)
+        def _kl_t_s(p, q):
+            p = _safe_nan_to_num(p.to(_DEVICE))
+            q = _safe_nan_to_num(q.to(_DEVICE))
+            p = torch.clamp(p, 1e-12, 1.0)
+            q = torch.clamp(q, 1e-12, 1.0)
+            return (p * (p.log() - q.log())).sum()
+
+        kl_ts = _kl_t_s(_safe_nan_to_num(attn_teacher), _safe_nan_to_num(new_attn)).item()
+
+        # Small Lipschitz probe toward student to estimate local L
+        alpha = 0.1
+        with torch.no_grad():
+            w_alpha = _safe_nan_to_num((1 - alpha) * attn_teacher + alpha * new_attn)
+            nds_alpha = aggregate_with_attention(w_alpha)
+        score_alpha = _metric_score_from_nds(nds_alpha) if nds_alpha is not None else score_T
+
+        l1_step = torch.sum(torch.abs(w_alpha - attn_teacher)).item()
+        Lhat = abs(score_alpha - score_T) / max(l1_step, 1e-8)
+
+        import math
+        tau = 0.5 * (delta / max(Lhat, 1e-8)) ** 2  # Pinsker + Lipschitz bound
+
+        denom = math.sqrt(max(2.0 * kl_ts, 1e-16))
+        eta = 0.2  # larger → switch faster to student
+        beta = min(1.0, eta / denom) if denom > 0 else 1.0
+
+        # --- streak gate: student must be consistently good ---
+        student_ok = (score_S >= score_T - delta) and (kl_ts <= tau)
+
+        if student_ok:
+            self._student_streak += 1
+        else:
+            self._student_streak = 0
+
+        LOGGER.info(
+            "Student acceptance gate: %s (streak %d/%d, warmup=%d rounds)",
+            "PASSED" if student_ok else "FAILED",
+            self._student_streak, self.student_win_needed, self.student_warmup
+        )
+
+        if not self.use_student:
+            # hard-disable student: stick to teacher
+            w_final = attn_teacher
+            decision = "teacher-only (student disabled via config)"
+        elif server_round < self.student_warmup:
+            # warmup: allow only cautious blend toward student
+            beta_guarded = min(beta, 0.25)
+            w_final = _safe_nan_to_num((1 - beta_guarded) * attn_teacher + beta_guarded * new_attn)
+            decision = "teacher-dominant (warmup period)"
+        elif self._student_streak >= self.student_win_needed:
+            # student has repeatedly matched/beaten teacher with small KL → let it dominate
+            beta_student = max(0.6, min(1.0, beta))  # strong lean to student
+            w_final = _safe_nan_to_num((1 - (1 - beta_student)) * new_attn + (1 - beta_student) * attn_teacher)
+            decision = "student-dominant (gate passed)"
+        else:
+            # default: trust-region blend using KL/Lipschitz logic
+            if kl_ts <= tau:
+                w_final = _safe_nan_to_num((1 - beta) * attn_teacher + beta * new_attn)
+                decision = "blend (KL small: cautious move toward student)"
+            else:
+                beta_guarded = min(beta, 0.25)
+                w_final = _safe_nan_to_num((1 - beta_guarded) * attn_teacher + beta_guarded * new_attn)
+                decision = "teacher-dominant (KL large: trust-region guarded)"
+
+        LOGGER.info(
+            "Trust-region diagnostics: KL(T||S)=%.6f, L̂=%.6f, τ=%.6f, β=%.3f → decision: %s",
+            kl_ts, Lhat, tau, beta, decision
+        )
+
+        nds_blend = aggregate_with_attention(w_final)
+
+        # Prefer blend → then teacher → then student/uniform fallback
+        if nds_blend is not None:
+            nds_final = nds_blend
+        elif best["nds"] is not None:
+            nds_final = best["nds"]
+        else:
             n = len(weights_per_client)
             fallback_attn = new_attn if new_attn.numel() == n else torch.ones(n, device=_DEVICE) / n
             nds_final = aggregate_with_attention(fallback_attn)
@@ -378,11 +508,9 @@ class ModalityAwareAggregation(fl.server.strategy.Strategy):
         return float(weighted_loss), metrics
 
     def evaluate(self, server_round: int, parameters: fl.common.Parameters):
-         
-        
         if self.evaluate_fn is None:
             return None  # Flower will skip
-        
+
         nds = parameters_to_ndarrays(parameters)
         loss, metrics = self.evaluate_fn(server_round, nds, {})
         safe_metrics = {k: (float(v) if isinstance(v, (int, float)) else v) for k, v in metrics.items()}
