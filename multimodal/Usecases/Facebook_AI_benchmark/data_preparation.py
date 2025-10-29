@@ -210,7 +210,7 @@ def _find_server_csv_and_img():
     return server_csv_path, server_img_dir
 
 
-def gl_model_torch_validation(batch_size: int = 16, max_len: int = 128, limit: int = 20):
+def gl_model_torch_validation(batch_size: int = 16, max_len: int = 128, limit: int = 70):
     """
     Build a DataLoader the server uses to validate global parameters.
     Will download a small validation split if not present.
