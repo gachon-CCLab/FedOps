@@ -15,10 +15,11 @@ dataset:
   name: 'HATEFUL_MEMES'
   validation_split: 0.0   # unused here but kept for API parity
 
-
+# identify this client’s split (set differently per client)
+client_id: 0              # ← set to 1 for the first client; 2 for the second, etc.
 
 # client
-task_id: 'rira_test_akeel'
+task_id: 'fedopsmultimodals'
 
 wandb:
   use: false
@@ -28,20 +29,13 @@ wandb:
 
 # server
 num_epochs: 1
-batch_size: 4           # multimodal batches are heavier than MNIST
+batch_size: 8           # multimodal batches are heavier than MNIST
 num_rounds: 2
 clients_per_round: 2
 
-#############################################################################################################################################
-##### ALL PARAMETERS BELOW ARE FEDMAP RELATED PARAMETERS###########################################################################
-#############################################################################################################################################
-# Yonggyeom, please do avoid this parameter in displaying in fedops task creation UI,as this is not needed for server side,but this is used only in client side
-client_id: 0              # ← set to 0 for the first client; 1 for the second, etc.
-
-# below are FedMAP related parameters,so display all this in Fedops task creation UI along with other config.yaml parameters
 server:
   strategy:
-    _target_:fedops.server.fedmap.strategy.ModalityAwareAggregation
+    _target_: fedops.server.fedmap.strategy.ModalityAwareAggregation
     aggregator_path: "aggregator_mlp.pth"
     input_dim: 10
     hidden_dim: 16
@@ -50,3 +44,4 @@ server:
     n_trials_per_round: 4      # Optuna trials cost real eval time here; consider fewer
     perf_mix_lambda: 0.7
     z_clip: 3.0
+
