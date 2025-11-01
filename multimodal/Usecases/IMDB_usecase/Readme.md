@@ -4,7 +4,7 @@
 # FedOps MMIMDb (Multimodal) Federated Learning
 
 Multimodal (text + image) FL example built on **Flower (FLWR)** and **FedOps** using an MM-IMDb–style dataset.  
-Includes robust `server_data/` handling (even when nested) and a simple BERT + ResNet18 fusion model.
+This utilizes fedmap strategy.And includes robust `server_data/` handling (even when nested) and a simple BERT + ResNet18 fusion model.
 
 ---
 
