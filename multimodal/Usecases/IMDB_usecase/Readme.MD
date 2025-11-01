@@ -1,117 +1,83 @@
-FedMAP – Multimodal Federated Learning on MM-IMDb (BERT + ResNet)
+FedMAP: Multimodal Federated Learning on MM-IMDb (BERT + ResNet)
 
-Federated multimodal learning example built on FedOps + Flower, using BERT for text and ResNet-18 for images, fused with a small MLP head for multilabel movie-genre prediction on MM-IMDb.
+Federated multimodal learning built on FedOps + Flower, using BERT (text) and ResNet-18 (image) with a fusion head for multilabel genre prediction on MM-IMDb.
 
-This repo includes:
+Highlights
 
-Robust data preparation that works for both server and clients
+Model: BERT (text) + ResNet-18 (image) → Fusion MLP → multilabel classifier (BCEWithLogitsLoss)
 
-A modality-aware aggregation strategy (FedMAP) on the server
+FL Stack: Flower orchestration with FedOps client/server, Modality-Aware Aggregation (FedMAP)
 
-A PyTorch fusion model (BERT + ResNet-18 → FC → Norm → Classifier)
+Robust I/O: Safe labels.json resolution; handles nested server_data/ after unzip
 
-Hydra configs for clean experiments
+Hydra Configs: Reproducible runs with simple overrides
 
-Fixes for common pitfalls (e.g., labels.json resolution, nested server_data unzips, batch-norm with tiny batches)
+Pitfall Fixes: BatchNorm w/ small batches, Pillow/TV image warnings
 
-TL;DR (Quickstart)
-# 1) Create env
+Repository Layout
+<repo-root>/
+├─ client_main.py                # FL client entry (FastAPI + Flower client)
+├─ server_main.py                # FL server entry (FedMAP strategy)
+├─ data_preparation.py           # Datasets, loaders, path resolvers (client+server)
+├─ models.py                     # MMIMDbFusionModel + train/test loops
+├─ flclient_patch.py             # Client subclass hook (metrics/patches)
+├─ conf/
+│  └─ config.yaml                # Hydra config (batch_size, rounds, etc.)
+├─ all_in_one_dataset/
+│  ├─ mmimdb_posters/            # Poster images
+│  └─ labels.json                # Canonical labels (C=23)
+├─ dataset/
+│  ├─ client_0/{train,val,test}.csv
+│  ├─ client_1/{...}.csv
+│  └─ server/server_test.csv     # (optional) fast-path server eval CSV
+└─ server_data/                  # (optional) server eval (may unzip nested)
+   ├─ server_data.zip
+   └─ ... (possibly server_data/server_data/...)
+
+Installation
 conda create -n fedops_fedmm_env python=3.9 -y
 conda activate fedops_fedmm_env
-
-# 2) Install deps
 pip install -r requirements.txt
-# (FedOps, Flower, Transformers, TorchVision, FastAPI, Uvicorn, Hydra, pandas, Pillow, etc.)
 
-# 3) Prepare data (see “Data Layout” below)
-# - ./all_in_one_dataset/mmimdb_posters
-# - ./all_in_one_dataset/labels.json
-# - ./dataset/client_0/{train,val,test}.csv (and other clients)
-# - Optional server eval set under ./server_data/...
 
-# 4) Start FL server (FedOps/Flower)
-python server_main.py  # runs strategy = ModalityAwareAggregation
+Requirements include: PyTorch/TorchVision, Transformers, Flower, FedOps, Hydra, FastAPI, Uvicorn, pandas, Pillow, (optional) gdown.
 
-# 5) Start one or more clients
-python client_main.py  # uses Hydra ./conf/config.yaml (e.g., batch_size=32)
+Data Preparation
+1) Client CSVs
 
-Features
+Each CSV row must have:
 
-Multimodal architecture: Text via BertModel (pooler output), image via ResNet-18 → fused embedding → classifier (multilabel with BCEWithLogitsLoss).
+img_name – image filename present in posters folder
 
-Federated training: Flower-based orchestration with FedOps client wrapper and ModalityAwareAggregation server strategy.
-
-Robust I/O:
-
-labels.json is auto-resolved from multiple locations or env var.
-
-Handles nested server_data/server_data/... after unzip.
-
-Optional per-client modality masking (modality.json).
-
-Hydra configs for reproducible experiments.
-
-Repo Layout (key pieces)
-<repo-root>/
-├─ server_main.py                   # FL server entry
-├─ client_main.py                   # FL client entry (FastAPI + Flower client)
-├─ data_preparation.py              # Datasets, loaders, robust path resolvers
-├─ models.py                        # MMIMDbFusionModel + train/test loops
-├─ flclient_patch.py                # Client subclass hook for custom logic
-├─ conf/
-│  └─ config.yaml                   # Hydra config (batch size, rounds, etc.)
-├─ all_in_one_dataset/
-│  ├─ mmimdb_posters/               # Poster images (project-wide)
-│  └─ labels.json                   # Canonical genre label list (C=23)
-├─ dataset/
-│  ├─ client_0/{train,val,test}.csv # Client partitions
-│  ├─ client_1/{...}.csv
-│  └─ server/server_test.csv        # (optional) fast-path server eval CSV
-└─ server_data/                      # (optional) server eval zip/unzipped data
-   ├─ server_data.zip               # auto-downloaded if missing (requires gdown)
-   └─ ... (may nest as server_data/server_data/...)
-
-Data Layout
-1) Client splits
-
-CSV columns expected by MMIMDbDataset:
-
-img_name – filename in the posters folder
-
-text – the movie plot/summary
+text – movie plot/summary
 
 labels – pipe-separated labels, e.g. Drama|Romance
 
-Place them under:
+Place under:
 
 ./dataset/client_0/{train,val,test}.csv
 ./dataset/client_1/{train,val,test}.csv
 ...
 
-2) Posters & labels
+2) Posters & Labels
 ./all_in_one_dataset/mmimdb_posters/   # images
-./all_in_one_dataset/labels.json       # list of class names, e.g. ["Action","Comedy",...]
-
-3) Server validation (optional)
-
-Fast path (if you have it):
-
-./dataset/server/server_test.csv
+./all_in_one_dataset/labels.json       # ["Action", "Comedy", ...] (C=23)
 
 
-Otherwise, mount/download into:
+Alternative: set LABELS_JSON_PATH=/abs/path/to/labels.json.
 
-./server_data/
-  server_data.zip
-  server_test.csv
-  mmimdb_posters/ or img/
+3) Server Validation (optional)
 
+Fast path: ./dataset/server/server_test.csv
 
-We added a nested server_data fixer: if your zip expands to server_data/server_data/..., the code auto-walks down to the real root.
+Fallback: place server_test.csv and mmimdb_posters/ or img/ under ./server_data/
+(Auto-download from Drive if gdown available and files missing.)
+
+If unzip creates server_data/server_data/..., this project auto-descends to the true root.
 
 Configuration (Hydra)
 
-conf/config.yaml (typical fields):
+conf/config.yaml (example):
 
 random_seed: 42
 learning_rate: 0.0001
@@ -119,7 +85,7 @@ learning_rate: 0.0001
 model_type: Pytorch
 model:
   _target_: models.MMIMDbFusionModel
-  output_size: 23            # IMPORTANT: set to len(labels.json)
+  output_size: 23            # must match len(labels.json)
 
 dataset:
   name: MM_IMDB
@@ -129,7 +95,7 @@ client_id: 0
 task_id: akeelcustomusecase
 
 num_epochs: 1
-batch_size: 32               # Use 32+ to avoid BN-on-single-sample issues
+batch_size: 32               # keep ≥2 to avoid BN issues
 num_rounds: 2
 clients_per_round: 1
 
@@ -146,102 +112,84 @@ server:
     z_clip: 3.0
 
 
-You can also set LABELS_JSON_PATH=/abs/path/to/labels.json if you keep it elsewhere.
+Override at runtime, e.g.:
+
+python client_main.py batch_size=64 client_id=1 num_epochs=2
 
 Running
-Server
+Start Server
 python server_main.py
 
-
-Uses ModalityAwareAggregation from FedOps.
-
-Exposes a port that clients fetch dynamically.
-
-Client(s)
+Start Client(s)
 python client_main.py
 
 
-Spins up a small FastAPI to coordinate with FedOps/Flower.
+Client discovers server IP:port via FedOps and connects to Flower.
 
-Prints the discovered ccl.gachon.ac.kr:<port> endpoint when ready.
+Expect deprecation warnings from Flower if using legacy start APIs (see below).
 
-Starts Flower NumPyClient (deprecation warnings are expected if you’re on recent Flower; see “Notes & Deprecations”).
-
-Model
+Model Details
 
 MMIMDbFusionModel
 
 Text: BertModel.from_pretrained("bert-base-uncased") → pooler_output (768-d)
 
-Image: torchvision.models.resnet18(weights=IMAGENET1K_V1) → 512-d → Linear(512→image_output_dim)
+Image: ResNet-18 (ImageNet weights) → 512-d → Linear(512 → image_output_dim)
 
-Fusion: concat([text, image]) → Linear(fused→fusion_output_dim) → Norm → ReLU → Linear(fusion_output_dim→C)
+Fusion: cat([text,image]) → Linear → BatchNorm1d → ReLU → Linear(C)
 
 Loss: BCEWithLogitsLoss (multilabel)
 
-Metrics (train/test): micro-F1 (threshold 0.5)
-
-We default to BatchNorm1d in fusion. If you frequently hit micro-batches (B=1), see “Troubleshooting”.
+Metric: micro-F1 @ 0.5 (reported in train/test)
 
 Troubleshooting
-1) labels.json not found
+BatchNorm error on small batches
+ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 256])
 
-We resolve labels.json from:
 
-LABELS_JSON_PATH (env var)
+Fix options:
+
+Use batch_size: 32 (what worked for you), or ensure every training batch has ≥2 samples.
+
+Set drop_last=True for the train DataLoader.
+
+Replace fusion BatchNorm1d with LayerNorm/GroupNorm:
+
+# self.fusion_bn = nn.BatchNorm1d(fusion_output_dim)
+self.fusion_bn = nn.LayerNorm(fusion_output_dim)
+
+labels.json not found
+
+Resolved in this order:
+
+LABELS_JSON_PATH (env; absolute or relative)
 
 ./all_in_one_dataset/labels.json
 
 <normalized server_data root>/labels.json
 
-First labels.json found recursively under <server_data>
+First labels.json found under server_data/
 
-Fix: ensure it exists in one of the above, or set the env var:
+Ensure it exists in one of the above.
 
-export LABELS_JSON_PATH=/abs/path/to/labels.json
+Nested server_data after unzip
 
-2) Nested server_data after unzip
+No action needed; the code auto-walks down nested server_data/server_data/....
 
-Some zips create server_data/server_data/.... We detect and descend automatically. Just keep everything under ./server_data/, and you’re good.
+Notes on Flower Deprecations
 
-3) ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 256])
+You may see warnings about start_numpy_client() / start_client() being deprecated.
+The example remains functional; to modernize, switch to flower-supernode when convenient:
 
-BatchNorm needs at least 2 samples per batch in training mode. You saw this when your last batch size was 1.
-
-Options:
-
-Recommended (what you did): set batch_size: 32 (or any value that keeps batches ≥2).
-
-Or drop the last incomplete batch (only train loader):
-
-DataLoader(..., drop_last=True)
-
-
-Or switch to LayerNorm/GroupNorm in models.py:
-
-# self.fusion_bn = nn.BatchNorm1d(fusion_output_dim)
-self.fusion_bn = nn.LayerNorm(fusion_output_dim)  # robust to B=1
-
-4) Flower deprecation warnings
-
-Recent Flower versions deprecate start_numpy_client() and start_client() in favor of supernode. This example still works but prints warnings. To modernize, migrate to flower-supernode CLI when ready.
-
-Repro Tips
-
-Hydra makes it easy to override parameters:
-
-python client_main.py batch_size=64 num_epochs=2 client_id=1
-
-
-Fix seeds with random_seed (we already set NumPy/PyTorch seeds).
-
-Log your exact commit + conf/config.yaml with each run.
+flower-supernode --insecure --superlink='<IP>:<PORT>'
 
 Requirements
 
 Python 3.9/3.10
 
-PyTorch, TorchVision, Transformers
+PyTorch, TorchVision
+
+Transformers (HuggingFace)
 
 Flower, FedOps
 
@@ -249,18 +197,8 @@ Hydra, FastAPI, Uvicorn
 
 pandas, Pillow
 
-(Optional) gdown if you want auto-download for server_data.zip
+(Optional) gdown (for auto-download of server data)
 
-Install with:
+Install:
 
 pip install -r requirements.txt
-
-Acknowledgements
-
-MM-IMDb dataset by Arevalo et al.
-
-Flower team for the FL framework.
-
-HuggingFace Transformers and TorchVision for models.
-
-FedOps for orchestration utilities and strategy hooks.
