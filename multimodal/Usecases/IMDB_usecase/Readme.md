@@ -223,9 +223,7 @@ ValueError: Expected more than 1 value per channel when training, got input size
 
 Fix: set `batch_size >= 2` (e.g., 32), or replace `BatchNorm1d` with `LayerNorm`/`Identity`.
 
-### Nested `server_data/`
 
-If unzip creates `server_data/server_data/...`, no action needed; the loader normalizes it.
 
 ### Flower deprecations
 
@@ -252,13 +250,4 @@ flwr.client.start_client(
 
 ---
 
-## License
 
-This example follows your project’s license.
-Also check licenses for Flower, FedOps, Transformers, and torchvision.
-
-```
-
-If you want badges or a quick-start snippet at the top, say the word and I’ll add them.
-::contentReference[oaicite:0]{index=0}
-```
