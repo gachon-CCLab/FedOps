@@ -39,14 +39,7 @@ This utilizes fedmap strategy.And includes robust `server_data/` handling (even 
 
 ## Repo Layout
 
-```text
-FedOps/
-  silo/
-    examples/
-      torch/
-        new_hateful_memes_classification/
-          new_hateful_memes/
-            FedMAP/
+
               IMDB_usecase/
                 client_main.py
                 server_main.py
@@ -61,8 +54,8 @@ FedOps/
                 dataset/
                   client_0/{train.csv,val.csv,test.csv,modality.json?}
                   client_1/{...}
-                  server/server_test.csv
-                server_data/            # fallback eval package (may be nested)
+                  
+                
 ````
 
 ---
