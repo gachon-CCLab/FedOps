@@ -102,9 +102,6 @@ dataset/
   client_1/{...}
   server/server_test.csv # (fast path for server eval)
 
-server_data/             # (fallback) contains:
-  server_test.csv
-  mmimdb_posters/ or img/
 ```
 
 CSV columns expected: `img_name`, `text`, `labels` (pipe-separated, e.g., `Drama|Romance`).
