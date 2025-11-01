@@ -1,0 +1,47 @@
+# Common
+random_seed: 42
+learning_rate: 0.0001   # lower LR is typical with BERT
+
+model_type: 'Pytorch'
+model:
+  _target_: models.MMIMDbFusionModel
+  output_size: 23
+  # optional knobs:
+  # freeze_bert: false
+  # pretrained_vision: true
+  # bert_name: bert-base-uncased
+
+dataset:
+  name: 'MM_IMDB'
+  validation_split: 0.0   # unused here but kept for API parity
+
+# identify this client’s split (set differently per client)
+client_id: 0              # ← set to 1 for the first client; 2 for the second, etc.
+
+# client
+task_id: 'customusecase'
+
+wandb:
+  use: false
+  key: 'your wandb api key'
+  account: 'your wandb account'
+  project: '${dataset.name}_${task_id}'
+
+# server
+num_epochs: 1
+batch_size: 32           # multimodal batches are heavier than MNIST
+num_rounds: 2
+clients_per_round: 1
+
+server:
+  strategy:
+    #fedmap.strategy.ModalityAwareAggregation
+    _target_: fedops.server.fedmap.strategy.ModalityAwareAggregation
+    aggregator_path: "aggregator_mlp.pth"
+    input_dim: 10
+    hidden_dim: 16
+    aggregator_lr: 0.001
+    entropy_coeff: 0.01
+    n_trials_per_round: 4      # Optuna trials cost real eval time here; consider fewer
+    perf_mix_lambda: 0.7
+    z_clip: 3.0
