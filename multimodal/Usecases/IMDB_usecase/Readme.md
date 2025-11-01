@@ -40,7 +40,7 @@ This utilizes fedmap strategy.And includes robust `server_data/` handling (even 
 ## Repo Layout
 
 
-              IMDB_usecase/
+IMDB_usecase/
                 client_main.py
                 server_main.py
                 data_preparation.py
