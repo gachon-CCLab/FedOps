@@ -160,7 +160,7 @@ server:
 
 
 ```
-To run server go to Fedops task UI and follow the intructions given in this website --index-url http://210.102.181.208:40007/document/690427da788e28e19c8b2b9b
+To run server go to Fedops task UI and follow the intructions given in this website  <http://210.102.181.208:40007/document/690427da788e28e19c8b2b9b>
 The server prepares central eval from either:
 
 * `dataset/server/server_test.csv` + project posters (fast path), or
