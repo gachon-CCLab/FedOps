@@ -1,4 +1,4 @@
-Yep. Here’s a **clean, GitHub-friendly** `README.md` you can paste directly.
+
 
 ````markdown
 # FedOps MMIMDb (Multimodal) Federated Learning
