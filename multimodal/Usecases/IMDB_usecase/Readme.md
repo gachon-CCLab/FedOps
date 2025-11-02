@@ -108,7 +108,7 @@ dataset/
 
 CSV columns expected: `img_name`, `text`, `labels` (pipe-separated, e.g., `Drama|Romance`).
 
-> If your zip creates `server_data/server_data/...`, the loader auto-normalizes it.
+
 
 ---
 
