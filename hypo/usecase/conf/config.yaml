@@ -20,7 +20,7 @@ dataset:
 
 
 # client
-task_id: 'realreal' # Input your Task Name that you register in FedOps Website
+task_id: '' # Input your Task Name that you register in FedOps Website
 
 wandb: 
   use: true # Whether to use wandb
