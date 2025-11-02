@@ -91,7 +91,9 @@ pip install gdown   # optional, only if you rely on auto-download
 ---
 
 ## Dataset Layout
-
+manually download below datasets Links as below and place it within file structure;
+dataset folder:https://drive.google.com/file/d/1FfpJz1lDt3qI0Lo5zyi-W_oS6PsiJBJr/view?usp=sharing
+all_in_one_dataset folder:https://drive.google.com/file/d/1FdLbq-cvREJ99KjemQC6XzPmcOawzuQq/view?usp=sharing
 ```
 all_in_one_dataset/
   labels.json            # array of class names
