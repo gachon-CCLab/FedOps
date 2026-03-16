@@ -127,8 +127,6 @@ bash run_all_experiments.sh all 2
 bash run_all_experiments.sh all 3
 ```
 
-Results saved to `results/ablation/<name>/seed<N>/result.json` and `results/baselines/`.
-
 To run a single row:
 ```bash
 bash run_all_experiments.sh R4_fedtft 1    # FedTFT (R4), seed 1
@@ -184,7 +182,6 @@ bash experiments/ablation/run_fedtft_hdfp.sh
 | Hidden dimension | 64 |
 | Peak learning rate | 3 × 10⁻⁵ (OneCycleLR) |
 | Local epochs per round | 6 |
-| FL rounds | 50 (early stopping patience = 15) |
 | FedProx μ | 1 × 10⁻⁵ |
 | Batch size | 32 |
 
