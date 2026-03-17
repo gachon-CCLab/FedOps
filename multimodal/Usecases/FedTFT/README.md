@@ -1,5 +1,7 @@
 # FedTFT — Federated Temporal Fusion Transformer for Multi-Horizon Psychiatric Risk Prediction
 
+> **Architecture note:** The manuscript abstract states *"Each horizon uses its own gated residual head to reduce cross-horizon gradient interference."* The precise term used in the contributions section and throughout the paper body is **"linear output projections"** (64→1 each), which matches the implementation in `model_fedtft_hdfp.py`.
+
 ---
 
 ## Overview
@@ -14,7 +16,7 @@ Two core contributions — **neither exists in the federated psychiatric risk pr
 
 **The problem it solves:** Standard multi-horizon models use a single shared output layer (64→3) that simultaneously optimises loss for all three prediction horizons. Because imminent risk at 1 hour is driven by acute physiological signals (e.g., sudden heart rate spikes), risk at 1 day by circadian disruption, and risk at 1 week by longer contextual and behavioural patterns, the gradient signals from each horizon conflict with one another inside the shared layer. This cross-horizon gradient interference degrades the shared backbone's representation, forcing it to compromise between three temporally incompatible objectives.
 
-**What HDFP does:** Replaces the single shared output layer (64→3) with a shared gated residual feature transform (64→64) followed by three independent linear output projections (64→1 each), one per prediction horizon. *(Note: the manuscript abstract uses the shorthand "gated residual head per horizon" to refer collectively to this shared transform + per-horizon linear projection pathway; the precise architecture is as described here and in `model_fedtft_hdfp.py`.)* Each head receives gradients exclusively from its own horizon loss — so the 1h head learns from acute physiological dynamics, the 1d head from circadian patterns, and the 1w head from contextual trends, without any interference. All parameters (backbone + all three heads) remain fully federated across hospitals every round — no personalisation, no parameter exclusion.
+**What HDFP does:** Replaces the single shared output layer (64→3) with three fully federated horizon-specific linear output projections (64→1 each), one per prediction horizon. Each projection receives gradients exclusively from its own horizon loss — so the 1h projection learns from acute physiological dynamics, the 1d projection from circadian patterns, and the 1w projection from contextual trends, without any interference. All parameters (backbone + all three projections) remain fully federated across hospitals every round — no personalisation, no parameter exclusion. *(Note: the manuscript abstract uses the shorthand "gated residual head per horizon" to refer to this per-horizon output pathway; the precise term used in the contributions section and throughout the paper body is "linear output projections", which matches the implementation in `model_fedtft_hdfp.py`.)*
 
 **Why it is novel:** No prior federated learning study in psychiatric risk prediction has applied horizon-decoupled output heads to multi-horizon prediction from continuous wearable sensor streams.
 
