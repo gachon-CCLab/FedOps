@@ -6,9 +6,27 @@
 
 FedTFT is a federated learning framework for predicting imminent dangerous actions (1-hour, 1-day, 1-week horizons) from wearable sensor data collected across multiple hospitals, without sharing patient data.
 
-Two core contributions:
-- **Horizon-Decoupled Federated Prediction (HDFP):** replaces the single shared output head with three independent per-horizon heads, eliminating inter-horizon gradient interference during federation.
-- **Federated Volume-Weighted AUROC Aggregation (FVWA):** server-side aggregation rule `w_k = N_k × AUROC_k` that up-weights clients whose local model generalises well, replacing standard FedAvg.
+Two core contributions — **neither exists in the federated psychiatric risk prediction literature prior to this work**:
+
+---
+
+### 1. Horizon-Decoupled Federated Prediction (HDFP) — *architectural novelty*
+
+**The problem it solves:** Standard multi-horizon models use a single shared output layer (64→3) that simultaneously optimises loss for all three prediction horizons. Because imminent risk at 1 hour is driven by acute physiological signals (e.g., sudden heart rate spikes), risk at 1 day by circadian disruption, and risk at 1 week by longer contextual and behavioural patterns, the gradient signals from each horizon conflict with one another inside the shared layer. This cross-horizon gradient interference degrades the shared backbone's representation, forcing it to compromise between three temporally incompatible objectives.
+
+**What HDFP does:** Replaces the single shared head with three independent linear output heads (64→1 each), one per prediction horizon. Each head receives gradients exclusively from its own horizon loss — so the 1h head learns from acute physiological dynamics, the 1d head from circadian patterns, and the 1w head from contextual trends, without any interference. All parameters (backbone + all three heads) remain fully federated across hospitals every round — no personalisation, no parameter exclusion.
+
+**Why it is novel:** No prior federated learning study in psychiatric risk prediction has applied horizon-decoupled output heads to multi-horizon prediction from continuous wearable sensor streams.
+
+---
+
+### 2. Federated Volume-Weighted AUROC Aggregation (FVWA) — *aggregation novelty*
+
+**The problem it solves:** Standard FedAvg aggregates client updates weighted solely by sample count. In a multi-hospital psychiatric setting, hospitals are highly non-IID — they differ in patient demographics, medication protocols, class imbalance ratios, and positive event rates. A hospital whose local model fits poorly (low AUROC) contributes an update that actively hurts the global model's ability to detect rare dangerous events. Weighting purely by sample size gives such hospitals disproportionate influence simply because they happen to be large.
+
+**What FVWA does:** Replaces the sample-count weight with `w_k = N_k × AUROC_k` — each hospital's contribution is scaled by both its dataset size (volume) and its local validation AUROC on the dangerous-action prediction task (quality). Hospitals that discriminate well between safe and at-risk patients are up-weighted; those with poor local signal are down-weighted. The aggregation remains a single weighted average with no additional communication rounds or messages.
+
+**Why it is novel:** AUROC-weighted federated aggregation has not previously been applied to psychiatric inpatient risk prediction or to any federated clinical monitoring setting.
 
 ---
 
@@ -83,7 +101,6 @@ last_npy_data/
         ├── sequence_train.npy / sequence_val.npy / sequence_test.npy
         └── targets_train.npy / targets_val.npy / targets_test.npy
 ```
-
 ---
 
 ## Requirements
