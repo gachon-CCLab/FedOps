@@ -37,7 +37,7 @@ Two core contributions — **neither exists in the federated psychiatric risk pr
 ## Repository Structure
 
 ```
-Codes/
+Root/
 ├── model_fedtft.py              # Shared-head TFT model (R1–R3 ablations)
 ├── model_fedtft_hdfp.py         # Horizon-decoupled TFT model (R4 / FedTFT)
 ├── fvwa.py                      # FVWA aggregation module (imported by both servers)
