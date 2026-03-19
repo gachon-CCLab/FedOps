@@ -8,7 +8,7 @@
 
 FedTFT is a federated learning framework for predicting imminent dangerous actions (1-hour, 1-day, 1-week horizons) from wearable sensor data collected across multiple hospitals, without sharing patient data.
 
-Two core contributions — **neither exists in the  psychiatric risk prediction literature,and FVWA aggregtaion doesn't exist in Federated learning studies prior to this work**:
+Two core contributions — **neither exists in the  psychiatric risk prediction literature,and FVWA aggregation doesn't exist in Federated learning studies prior to this work**:
 
 ---
 
