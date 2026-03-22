@@ -4,7 +4,7 @@ fl_server_fedtft.py — FedTFT FL Server
 Uses TFTPredictor_FedTFT with 3 horizon-decoupled federated heads.
 
 Aggregation: FVWA (N_k × val_auroc_k weighted) — replaces uniform FedAvg.
-Early stopping: on global val loss improvement — same as original.
+Early stopping: on global val loss improvement .
 All parameters are fully federated each round.
 """
 
