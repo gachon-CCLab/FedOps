@@ -7,10 +7,7 @@
 #   GPU1 port 8190 — Baselines       FEDFormer→iTransformer→PatchTST→DLinear (sequential)
 #   Both groups run in parallel; each group serialises to avoid port conflicts.
 #
-# Result paths — NEVER overwrite (each seed → separate subdir):
-#   results/ablation/<name>/seed<N>/result.json
-#   results/baselines/<model>/seed<N>/result.json
-#   results/sensitivity/<tag>/seed<N>/result.json
+
 #
 # Logs: logs/<name>_seed<N>_<timestamp>.log  (stdout+stderr, server+all clients)
 #
