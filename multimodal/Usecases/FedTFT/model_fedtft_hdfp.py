@@ -24,7 +24,7 @@ NUM_HORIZONS = 3  # 1h, 1d, 1w
 
 
 # ----------------------------
-# Helper Modules (identical to model_fedtft.py)
+# Helper Modules 
 # ----------------------------
 class GLU(nn.Module):
     def __init__(self, input_size):
