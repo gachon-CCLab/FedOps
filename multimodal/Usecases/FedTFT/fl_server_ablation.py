@@ -6,7 +6,7 @@ Toggles:
   --proximal_mu    FedProx mu: 0.0 = FedAvg (R1, Row A), 1e-5 = FedProx (R2–R4, Row B)
   --ablation_name  Label for checkpoint naming (e.g. R1_fedavg, R2_fedprox, R3_fvwa, R4_fedtft, A_fedavg_decoupled)
 
-Note: μ is FIXED per run — no adaptive mu. Grid search selected μ=1e-5 for R2–R4.
+Note: μ is FIXED per run . Grid search selected μ=1e-5 for R2–R4.
 """
 
 import os
