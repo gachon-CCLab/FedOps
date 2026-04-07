@@ -1,7 +1,5 @@
 # FedTFT — Federated Temporal Fusion Transformer for Multi-Horizon Psychiatric Risk Prediction
 
-> **Architecture note:** The abstract states *"Each horizon uses its own gated residual head to reduce cross-horizon gradient interference."* The actual implementation (Section II-C, Section II-E, and `model_fedtft_hdfp.py`) is a shared Gated Residual Network (GRN, 64→64) whose output feeds into three independent sigmoid-activated linear projections (64→1), one per prediction horizon. The abstract's use of "gated residual head" refers to this full output pathway, not a separate GRN per horizon.
-
 ---
 
 ## Overview
