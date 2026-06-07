@@ -1,0 +1,48 @@
+# ============================================================
+# FedOps-WESAD — Hydra configuration
+# Binary stress classification (stress=1 / non-stress=0)
+# 15 subjects = 15 FL clients, one per subject
+# ============================================================
+
+random_seed: 42
+task_id: "fedopswesad"
+model_type: "Pytorch"
+
+model:
+  name: "stress_tft"
+  output_size: 1
+  hidden_dim: 64
+  dropout: 0.1
+  num_heads: 4
+
+dataset:
+  name: "wesad"
+  # Path relative to fedops-wesad-setup/ — points at preprocessed splits
+  data_dir: "../fedops-health-wesad/subject_level_split/data"
+  validation_split: 0.0   # pre-split; FedOps ignores this for Pytorch
+  num_partitions: 2       # how many FL clients; overridden by FEDOPS_NUM_PARTITIONS
+
+train:
+  learning_rate: 1.0e-3
+  weight_decay:  1.0e-4
+  pos_weight:    3.0      # BCEWithLogitsLoss weight for the minority stress class
+
+batch_size:  32
+num_epochs:  3
+num_rounds:  10
+
+server:
+  strategy:
+    _target_: flwr.server.strategy.FedAvg
+    fraction_fit: 1.0
+    fraction_evaluate: 0.0
+    min_fit_clients: 1
+    min_evaluate_clients: 0
+    min_available_clients: 1
+
+wandb:
+  use: false
+  key: ""
+  account: ""
+  project: "fedops-wesad"
+  name: "fedops-wesad-run"
