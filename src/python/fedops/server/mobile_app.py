@@ -5,6 +5,9 @@ import datetime
 import os
 import json
 import time
+import threading
+import signal
+import re
 from pathlib import Path
 from . import server_api
 from . import server_utils
@@ -44,6 +47,8 @@ class FLMobileServer():
         self.sba_run_id = f"{safe_task_id}_{run_stamp}"
         self.sba_run_started_at = None
         self.sba_run_finished_at = None
+        self.sba_global_model_version_number = None
+        self.sba_auto_shutdown_scheduled = False
 
 
     def init_gl_model_registration(self) -> None:
@@ -111,7 +116,12 @@ class FLMobileServer():
             metric["evaluate_failures"] = len(failures)
             metric["distributed_loss"] = loss
             metric["evaluate_metrics"] = metrics or {}
-            self._write_sba_history_file()
+            if int(server_round) >= self.num_rounds:
+                self.sba_run_finished_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+                self._write_sba_history_file(finished=True)
+                self._schedule_sba_auto_shutdown()
+            else:
+                self._write_sba_history_file()
             return aggregated
 
         strategy.aggregate_fit = aggregate_fit_with_artifact
@@ -148,6 +158,33 @@ class FLMobileServer():
             ("fc3.bias", [1]),
         ]
 
+    def _next_sba_global_model_version_number(self):
+        self.models_dir.mkdir(parents=True, exist_ok=True)
+        pattern = re.compile(r"global_model_latest_v(\d+)\.json$")
+        max_version = 0
+        for path in self.models_dir.glob("global_model_latest_v*.json"):
+            match = pattern.match(path.name)
+            if match:
+                max_version = max(max_version, int(match.group(1)))
+        return max_version + 1
+
+    def _sba_versioned_latest_path(self):
+        if self.sba_global_model_version_number is None:
+            self.sba_global_model_version_number = self._next_sba_global_model_version_number()
+        return self.models_dir / f"global_model_latest_v{self.sba_global_model_version_number}.json"
+
+    def _schedule_sba_auto_shutdown(self, delay_seconds=2.0):
+        if self.sba_auto_shutdown_scheduled:
+            return
+        self.sba_auto_shutdown_scheduled = True
+
+        def request_shutdown():
+            time.sleep(delay_seconds)
+            logging.info("SBA_FL_AUTO_SHUTDOWN_REQUESTED after final round evaluation")
+            os.kill(os.getpid(), signal.SIGINT)
+
+        threading.Thread(target=request_shutdown, daemon=True).start()
+
     def _save_sba_global_model(self, server_round, parameters):
         self.models_dir.mkdir(parents=True, exist_ok=True)
         arrays = parameters_to_ndarrays(parameters)
@@ -162,11 +199,22 @@ class FLMobileServer():
             })
 
         saved_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+        is_final_round = int(server_round) >= self.num_rounds
+        version_number = None
+        version_label = None
+        versioned_latest_path = None
+        if is_final_round:
+            versioned_latest_path = self._sba_versioned_latest_path()
+            version_number = self.sba_global_model_version_number
+            version_label = f"v{version_number}"
+
         root = {
             "modelType": "weight_lstm_parameters",
             "source": "fedops_sba_fl_global",
             "taskId": self.task_id,
             "runId": self.sba_run_id,
+            "globalModelVersion": version_label,
+            "globalModelVersionNumber": version_number,
             "round": int(server_round),
             "sequenceLength": 7,
             "featureCount": 3,
@@ -182,10 +230,12 @@ class FLMobileServer():
         snapshot_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         round_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         latest_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
+        if versioned_latest_path is not None:
+            versioned_latest_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         logging.info(
-            f"SBA_FL_GLOBAL_MODEL_SAVED round={server_round} path={snapshot_path} tensor_count={len(tensors)} latest_path={latest_path}"
+            f"SBA_FL_GLOBAL_MODEL_SAVED round={server_round} path={snapshot_path} tensor_count={len(tensors)} latest_path={latest_path} versioned_latest_path={versioned_latest_path}"
         )
-        return snapshot_path
+        return versioned_latest_path or snapshot_path
 
     def _write_sba_history_file(self, hist=None, finished=False, duration_seconds=None):
         self.logs_dir.mkdir(parents=True, exist_ok=True)

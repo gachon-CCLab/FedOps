@@ -1,2 +1,2 @@
 # mobile server requirements
-fedops==1.1.30.9
+fedops==1.1.30.10
