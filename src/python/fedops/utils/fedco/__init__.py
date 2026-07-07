@@ -14,8 +14,9 @@
 # ==============================================================================
 """FedOps fedco Package."""
 
-from . import best_keeper
+from . import best_keeper, datasetting
 
 __all__ = [
-    "best_keeper"
+    "best_keeper",
+    "datasetting",
 ]

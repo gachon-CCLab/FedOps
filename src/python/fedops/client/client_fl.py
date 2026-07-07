@@ -1,4 +1,4 @@
-#client_fl.py
+#client/client_fl.py
 from collections import OrderedDict
 import json, logging
 import flwr as fl
@@ -121,9 +121,12 @@ class FLClient(fl.client.NumPyClient):
         # print(f"config: {config}")
         
         # Get hyperparameters for this round
-        batch_size: int = config.get("batch_size", self.cfg.batch_size)
-        epochs: int = config.get("local_epochs", self.cfg.num_epochs)
-        num_rounds: int = config.get("num_rounds", self.cfg.num_rounds)
+        default_bs = self.cfg.batch_size if self.cfg and hasattr(self.cfg, "batch_size") else 32
+        default_epochs = self.cfg.num_epochs if self.cfg and hasattr(self.cfg, "num_epochs") else 1
+        default_rounds = self.cfg.num_rounds if self.cfg and hasattr(self.cfg, "num_rounds") else 1
+        batch_size: int = config.get("batch_size", default_bs)
+        epochs: int = config.get("local_epochs", default_epochs)
+        num_rounds: int = config.get("num_rounds", default_rounds)
 
         # HPO override (서버 전략에서 내려준 값) 하이퍼파라미터 튜닝을 하게되면 바뀌니까.
         hp_lr = config.get("hp_learning_rate", None) # ✨
@@ -199,7 +202,10 @@ class FLClient(fl.client.NumPyClient):
             if hp_lr is not None:
                 hp["learning_rate"] = float(hp_lr)
              # clustering change end
-            trained_model = self.train_torch(self.model, train_loader, epochs, self.cfg, hp=hp)
+            if hp:
+                trained_model = self.train_torch(self.model, train_loader, epochs, self.cfg, hp=hp)
+            else:
+                trained_model = self.train_torch(self.model, train_loader, epochs, self.cfg)
             
             train_loss, train_accuracy, train_metrics = self.test_torch(trained_model, train_loader, self.cfg)
             val_loss, val_accuracy, val_metrics = self.test_torch(trained_model, self.val_loader, self.cfg)
@@ -280,7 +286,8 @@ class FLClient(fl.client.NumPyClient):
         cluster_id = config.get("cluster_id", None)
         # cluster_id = int(config.get("cluster_id", 0))
         # Get config values
-        batch_size: int = config.get("batch_size", self.cfg.batch_size)
+        default_bs = self.cfg.batch_size if self.cfg and hasattr(self.cfg, "batch_size") else 32
+        batch_size: int = config.get("batch_size", default_bs)
 
         # Initialize test_loss, test_accuracy
         test_loss = 0.0

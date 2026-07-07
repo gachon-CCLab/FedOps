@@ -21,7 +21,8 @@ class FLMobileServer():
     def __init__(self, cfg):
         
         self.task_id = os.environ.get('TASK_ID') # Set FL Task ID
-        self.client_device = cfg.client_device
+        self.client_device = cfg.get("client_device", "android")
+        self.sba_fl = cfg.get("sba_fl", {})
 
         self.server = server_utils.FLServerStatus() # Set FLServerStatus class
         self.strategy = cfg.server.strategy
@@ -33,6 +34,9 @@ class FLMobileServer():
 
     def init_gl_model_registration(self) -> None:
         logging.info(f'FL Mobile Server Start')
+        logging.info(f'client_device: {self.client_device}')
+        if self.sba_fl:
+            logging.info(f'sba_fl config: {self.sba_fl}')
 
         self.fl_server_start()
 
