@@ -5,9 +5,11 @@ import datetime
 import os
 import json
 import time
+from pathlib import Path
 from . import server_api
 from . import server_utils
 from hydra.utils import instantiate
+from flwr.common import parameters_to_ndarrays
 
 # TF warning log filtering
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -30,6 +32,10 @@ class FLMobileServer():
         self.batch_size = int(cfg.batch_size)
         self.local_epochs = int(cfg.num_epochs)
         self.num_rounds = int(cfg.num_rounds)
+        self.models_dir = Path("/app/data/models")
+        self.logs_dir = Path("/app/data/logs")
+        self.sba_round_metrics = []
+        self.latest_global_model_path = None
 
 
     def init_gl_model_registration(self) -> None:
@@ -59,6 +65,8 @@ class FLMobileServer():
             self.strategy,
             on_fit_config_fn=self.fit_config,
         )
+        if self.sba_fl:
+            self._attach_sba_fl_artifact_hooks(strategy)
         
         # Start Flower server (SSL-enabled) for four rounds of federated learning
         hist = fl.server.start_server(
@@ -66,7 +74,129 @@ class FLMobileServer():
             config=fl.server.ServerConfig(num_rounds=self.num_rounds),
             strategy=strategy,
         )
+        if self.sba_fl:
+            self._save_sba_fl_history(hist)
 
+    def _attach_sba_fl_artifact_hooks(self, strategy):
+        original_aggregate_fit = strategy.aggregate_fit
+        original_aggregate_evaluate = strategy.aggregate_evaluate
+
+        def aggregate_fit_with_artifact(server_round, results, failures):
+            aggregated = original_aggregate_fit(server_round, results, failures)
+            parameters, metrics = aggregated
+            metric = self._ensure_sba_round_metric(server_round)
+            metric["fit_results"] = len(results)
+            metric["fit_failures"] = len(failures)
+            metric["fit_metrics"] = metrics or {}
+            if parameters is not None:
+                model_path = self._save_sba_global_model(server_round, parameters)
+                metric["model_path"] = str(model_path)
+                self.latest_global_model_path = str(model_path)
+            self._write_sba_history_file()
+            return aggregated
+
+        def aggregate_evaluate_with_artifact(server_round, results, failures):
+            aggregated = original_aggregate_evaluate(server_round, results, failures)
+            loss, metrics = aggregated
+            metric = self._ensure_sba_round_metric(server_round)
+            metric["evaluate_results"] = len(results)
+            metric["evaluate_failures"] = len(failures)
+            metric["distributed_loss"] = loss
+            metric["evaluate_metrics"] = metrics or {}
+            self._write_sba_history_file()
+            return aggregated
+
+        strategy.aggregate_fit = aggregate_fit_with_artifact
+        strategy.aggregate_evaluate = aggregate_evaluate_with_artifact
+
+    def _ensure_sba_round_metric(self, server_round):
+        for metric in self.sba_round_metrics:
+            if metric["round"] == server_round:
+                return metric
+        metric = {
+            "round": int(server_round),
+            "fit_results": None,
+            "fit_failures": None,
+            "evaluate_results": None,
+            "evaluate_failures": None,
+            "distributed_loss": None,
+            "model_path": None,
+        }
+        self.sba_round_metrics.append(metric)
+        self.sba_round_metrics.sort(key=lambda item: item["round"])
+        return metric
+
+    def _sba_weight_layout(self):
+        return [
+            ("lstm.weight_ih_l0", [128, 3]),
+            ("lstm.weight_hh_l0", [128, 32]),
+            ("lstm.bias_ih_l0", [128]),
+            ("lstm.bias_hh_l0", [128]),
+            ("fc1.weight", [32, 32]),
+            ("fc1.bias", [32]),
+            ("fc2.weight", [16, 32]),
+            ("fc2.bias", [16]),
+            ("fc3.weight", [1, 16]),
+            ("fc3.bias", [1]),
+        ]
+
+    def _save_sba_global_model(self, server_round, parameters):
+        self.models_dir.mkdir(parents=True, exist_ok=True)
+        arrays = parameters_to_ndarrays(parameters)
+        layout = self._sba_weight_layout()
+        tensors = []
+        for idx, array in enumerate(arrays):
+            name, expected_shape = layout[idx] if idx < len(layout) else (f"tensor_{idx}", list(array.shape))
+            tensors.append({
+                "name": name,
+                "shape": list(array.shape) if list(array.shape) else expected_shape,
+                "values": array.astype("float32").reshape(-1).tolist(),
+            })
+
+        root = {
+            "modelType": "weight_lstm_parameters",
+            "source": "fedops_sba_fl_global",
+            "taskId": self.task_id,
+            "round": int(server_round),
+            "sequenceLength": 7,
+            "featureCount": 3,
+            "tensorCount": len(tensors),
+            "tensors": tensors,
+            "createdAt": datetime.datetime.utcnow().isoformat() + "Z",
+        }
+
+        round_path = self.models_dir / f"global_model_round_{server_round}.json"
+        latest_path = self.models_dir / "global_model_latest.json"
+        round_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
+        latest_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
+        logging.info(
+            f"SBA_FL_GLOBAL_MODEL_SAVED round={server_round} path={latest_path} tensor_count={len(tensors)}"
+        )
+        return latest_path
+
+    def _write_sba_history_file(self, hist=None, finished=False, duration_seconds=None):
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "task_id": self.task_id,
+            "sba_fl": dict(self.sba_fl) if hasattr(self.sba_fl, "items") else self.sba_fl,
+            "summary": {
+                "finished": bool(finished),
+                "totalRounds": self.num_rounds,
+                "durationSeconds": duration_seconds,
+                "globalModelSaved": self.latest_global_model_path is not None,
+                "latestModelPath": self.latest_global_model_path,
+            },
+            "rounds": self.sba_round_metrics,
+        }
+        if hist is not None:
+            payload["history"] = {
+                "lossesDistributed": getattr(hist, "losses_distributed", []),
+                "metricsDistributed": getattr(hist, "metrics_distributed", {}),
+            }
+        (self.logs_dir / "sba_fl_history.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+
+    def _save_sba_fl_history(self, hist):
+        self._write_sba_history_file(hist=hist, finished=True)
 
     def start(self):
 
@@ -95,6 +225,8 @@ class FLMobileServer():
             self.init_gl_model_registration()
 
             fl_end_time = time.time() - fl_start_time  # FL end time
+            if self.sba_fl:
+                self._write_sba_history_file(finished=True, duration_seconds=fl_end_time)
 
             server_all_time_result = {"fl_task_id": self.task_id, "server_operation_time": fl_end_time,
                                       "gl_model_v": None}
