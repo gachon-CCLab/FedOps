@@ -5,7 +5,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="fedops",
-    version="1.1.30.11",
+    version="1.1.30.12",
     author="Semo Yang",
     author_email="tpah20@gmail.com",
     description="FL Lifecycle Operations Management Platform",
