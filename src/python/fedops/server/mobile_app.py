@@ -144,6 +144,48 @@ class FLMobileServer():
         self.sba_round_metrics.sort(key=lambda item: item["round"])
         return metric
 
+    def _sba_target(self):
+        cfg_target = ""
+        if hasattr(self.sba_fl, "get"):
+            cfg_target = str(self.sba_fl.get("target", "") or "")
+        env_target = os.environ.get("FL_SBA_TARGET", "")
+        target = (cfg_target or env_target or "weight").strip().lower()
+        return "steps" if target == "steps" else "weight"
+
+    def _sba_layout(self):
+        if self._sba_target() == "steps":
+            return [
+                ("linear.weight", [1, 7]),
+                ("linear.bias", [1]),
+            ]
+        return [
+            ("lstm.weight_ih_l0", [128, 3]),
+            ("lstm.weight_hh_l0", [128, 32]),
+            ("lstm.bias_ih_l0", [128]),
+            ("lstm.bias_hh_l0", [128]),
+            ("fc1.weight", [32, 32]),
+            ("fc1.bias", [32]),
+            ("fc2.weight", [16, 32]),
+            ("fc2.bias", [16]),
+            ("fc3.weight", [1, 16]),
+            ("fc3.bias", [1]),
+        ]
+
+    def _sba_model_metadata(self):
+        if self._sba_target() == "steps":
+            return {
+                "modelType": "steps_linear_parameters",
+                "parameterLayout": "sba_steps_linear_v1",
+                "sequenceLength": 48,
+                "featureCount": 7,
+            }
+        return {
+            "modelType": "weight_lstm_parameters",
+            "parameterLayout": "sba_weight_lstm_v1",
+            "sequenceLength": 5,
+            "featureCount": 3,
+        }
+
     def _sba_weight_layout(self):
         return [
             ("lstm.weight_ih_l0", [128, 3]),
@@ -188,7 +230,8 @@ class FLMobileServer():
     def _save_sba_global_model(self, server_round, parameters):
         self.models_dir.mkdir(parents=True, exist_ok=True)
         arrays = parameters_to_ndarrays(parameters)
-        layout = self._sba_weight_layout()
+        layout = self._sba_layout()
+        metadata = self._sba_model_metadata()
         tensors = []
         for idx, array in enumerate(arrays):
             name, expected_shape = layout[idx] if idx < len(layout) else (f"tensor_{idx}", list(array.shape))
@@ -209,15 +252,17 @@ class FLMobileServer():
             version_label = f"v{version_number}"
 
         root = {
-            "modelType": "weight_lstm_parameters",
+            "modelType": metadata["modelType"],
             "source": "fedops_sba_fl_global",
             "taskId": self.task_id,
+            "sbaFlTarget": self._sba_target(),
+            "parameterLayout": metadata["parameterLayout"],
             "runId": self.sba_run_id,
             "globalModelVersion": version_label,
             "globalModelVersionNumber": version_number,
             "round": int(server_round),
-            "sequenceLength": 7,
-            "featureCount": 3,
+            "sequenceLength": metadata["sequenceLength"],
+            "featureCount": metadata["featureCount"],
             "tensorCount": len(tensors),
             "tensors": tensors,
             "createdAt": saved_at,
