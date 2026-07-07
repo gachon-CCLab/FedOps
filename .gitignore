@@ -169,3 +169,7 @@ src/python/setup.py
 shap_value_1.png
 shap_value_KTAS.png
 shap_value_no_ KTAS.png
+
+# PyPI packaging metadata
+!src/python/setup.py
+!src/python/setup.cfg
