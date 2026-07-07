@@ -36,6 +36,14 @@ class FLMobileServer():
         self.logs_dir = Path("/app/data/logs")
         self.sba_round_metrics = []
         self.latest_global_model_path = None
+        safe_task_id = "".join(
+            ch if ch.isalnum() or ch in ("-", "_") else "_"
+            for ch in str(self.task_id or "task")
+        )
+        run_stamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        self.sba_run_id = f"{safe_task_id}_{run_stamp}"
+        self.sba_run_started_at = None
+        self.sba_run_finished_at = None
 
 
     def init_gl_model_registration(self) -> None:
@@ -153,26 +161,31 @@ class FLMobileServer():
                 "values": array.astype("float32").reshape(-1).tolist(),
             })
 
+        saved_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         root = {
             "modelType": "weight_lstm_parameters",
             "source": "fedops_sba_fl_global",
             "taskId": self.task_id,
+            "runId": self.sba_run_id,
             "round": int(server_round),
             "sequenceLength": 7,
             "featureCount": 3,
             "tensorCount": len(tensors),
             "tensors": tensors,
-            "createdAt": datetime.datetime.utcnow().isoformat() + "Z",
+            "createdAt": saved_at,
+            "savedAtIso": saved_at,
         }
 
+        snapshot_path = self.models_dir / f"global_model_{self.sba_run_id}_round_{server_round}.json"
         round_path = self.models_dir / f"global_model_round_{server_round}.json"
         latest_path = self.models_dir / "global_model_latest.json"
+        snapshot_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         round_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         latest_path.write_text(json.dumps(root, ensure_ascii=False, indent=2))
         logging.info(
-            f"SBA_FL_GLOBAL_MODEL_SAVED round={server_round} path={latest_path} tensor_count={len(tensors)}"
+            f"SBA_FL_GLOBAL_MODEL_SAVED round={server_round} path={snapshot_path} tensor_count={len(tensors)} latest_path={latest_path}"
         )
-        return latest_path
+        return snapshot_path
 
     def _write_sba_history_file(self, hist=None, finished=False, duration_seconds=None):
         self.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -185,6 +198,9 @@ class FLMobileServer():
                 "durationSeconds": duration_seconds,
                 "globalModelSaved": self.latest_global_model_path is not None,
                 "latestModelPath": self.latest_global_model_path,
+                "runId": self.sba_run_id,
+                "startedAtIso": self.sba_run_started_at,
+                "finishedAtIso": self.sba_run_finished_at,
             },
             "rounds": self.sba_round_metrics,
         }
@@ -219,6 +235,7 @@ class FLMobileServer():
         server_api.ServerAPI(self.task_id).put_server_status(server_status_json)
 
         try:
+            self.sba_run_started_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
             fl_start_time = time.time()
 
             # Run fl server
@@ -226,6 +243,7 @@ class FLMobileServer():
 
             fl_end_time = time.time() - fl_start_time  # FL end time
             if self.sba_fl:
+                self.sba_run_finished_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
                 self._write_sba_history_file(finished=True, duration_seconds=fl_end_time)
 
             server_all_time_result = {"fl_task_id": self.task_id, "server_operation_time": fl_end_time,
