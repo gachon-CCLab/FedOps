@@ -11,10 +11,10 @@ import numpy as np
 import shutil
 from . import server_api
 from . import server_utils
-from collections import OrderedDict
 from hydra.utils import instantiate
 
 from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays, NDArrays
+from ..client.parameter_contract import get_parameters, set_parameters
 from ..utils.fedco.best_keeper import BestKeeper
 
 # TF warning log filtering
@@ -111,7 +111,7 @@ class FLServer():
         if self.model_type == "Tensorflow":
             model_parameters = model.get_weights()
         elif self.model_type == "Pytorch":
-            model_parameters = [val.cpu().detach().numpy() for _, val in model.state_dict().items()]
+            model_parameters = get_parameters(model, self.model_type)
         elif self.model_type == "Huggingface":
             json_path = "./parameter_shapes.json"
             model_parameters = server_utils.load_initial_parameters_from_shape(json_path)
@@ -141,9 +141,7 @@ class FLServer():
                     if self.model_type == "Pytorch":
                         import torch
                         best_nds = parameters_to_ndarrays(best_params)
-                        keys = [k for k in model.state_dict().keys() if "bn" not in k]
-                        state_dict = OrderedDict({k: torch.tensor(v) for k, v in zip(keys, best_nds)})
-                        model.load_state_dict(state_dict, strict=True)
+                        set_parameters(model, self.model_type, best_nds)
                         torch.save(model.state_dict(), gl_model_path + '.pth')
                         logger.info("[BEST] Saved best global model to %s.pth", gl_model_path)
 
@@ -197,10 +195,7 @@ class FLServer():
             
             elif self.model_type == "Pytorch":
                 import torch
-                keys = [k for k in model.state_dict().keys() if "bn" not in k]
-                params_dict = zip(keys, parameters_ndarrays)
-                state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-                model.load_state_dict(state_dict, strict=True)
+                set_parameters(model, self.model_type, parameters_ndarrays)
             
                 loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.cfg)
                 torch.save(model.state_dict(), gl_model_path + '.pth')

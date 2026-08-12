@@ -1,5 +1,4 @@
 #client/client_fl.py
-from collections import OrderedDict
 import json, logging
 import flwr as fl
 import time
@@ -7,6 +6,8 @@ import os
 from functools import partial
 from . import client_api 
 from . import client_utils
+from .parameter_contract import get_parameters as get_model_parameters
+from .parameter_contract import set_parameters as set_model_parameters
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -70,30 +71,11 @@ class FLClient(fl.client.NumPyClient):
 
 
     def set_parameters(self, parameters):
-        if self.model_type in ["Tensorflow"]:
-            raise Exception("Not implemented")
-        
-        elif self.model_type in ["Pytorch"]:
-            keys = [k for k in self.model.state_dict().keys() if "bn" not in k] # Excluding parameters of BN layers
-            params_dict = zip(keys, parameters)
-            state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-            # self.model.load_state_dict(state_dict, strict=True)
-            self.model.load_state_dict(state_dict, strict=False)
-
-        elif self.model_type in ["Huggingface"]:
-            client_utils.set_parameters_for_llm(self.model, parameters)
+        set_model_parameters(self.model, self.model_type, parameters)
     
     def get_parameters(self):
         """Get parameters of the local model."""
-        if self.model_type == "Tensorflow":
-            raise Exception("Not implemented (server-side parameter initialization)")
-        
-        elif self.model_type == "Pytorch":
-            # Excluding parameters of BN layers
-            return [val.cpu().numpy() for name, val in self.model.state_dict().items() if "bn" not in name]
-        
-        elif self.model_type == "Huggingface":
-            return client_utils.get_parameters_for_llm(self.model)
+        return get_model_parameters(self.model, self.model_type)
 
     def get_properties(self, config):
         """Get properties of client."""

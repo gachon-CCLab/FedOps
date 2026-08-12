@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""FedOps Client."""
+"""FedOps Client.
 
-from . import client_utils as client_utils
-from . import app as app
-from . import client_fl as client_fl
-from . import client_api as client_api
-from . import client_wandb as client_wandb
+Client submodules are loaded lazily so model-contract tooling does not import
+the full networking and monitoring stack.
+"""
+
+import importlib
 
 
 __all__ = [
@@ -27,4 +27,13 @@ __all__ = [
     "client_fl",
     "client_api",
     "client_wandb",
+    "parameter_contract",
 ]
+
+
+def __getattr__(name):
+    if name in __all__:
+        module = importlib.import_module(f"{__name__}.{name}")
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
