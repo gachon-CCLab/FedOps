@@ -69,7 +69,7 @@ class FLClientTask():
     async def fl_client_start(self):
         emit_runtime_event(
             "waiting_round",
-            task_id=self.task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
             round_number=self.status.gl_model + 1,
             message="FedOps Client is waiting for a federated round.",
         )
@@ -154,7 +154,7 @@ class FLClientTask():
             logging.info('fl learning finished')
             emit_runtime_event(
                 "completed",
-                task_id=self.task_id,
+                task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
                 round_number=self.status.gl_model,
                 progress=100,
                 message="FedOps Client completed its federated session.",
@@ -216,7 +216,7 @@ class FLClientTask():
             logging.info('[E][PC0002] learning', e)
             emit_runtime_event(
                 "failed",
-                task_id=self.task_id,
+                task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
                 round_number=self.status.gl_model,
                 message=str(e),
                 errorType=type(e).__name__,
@@ -257,7 +257,7 @@ class FLClientTask():
             # self.status.server_IP = "0.0.0.0:8080"
             emit_runtime_event(
                 "connecting",
-                task_id=self.task_id,
+                task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
                 round_number=self.status.gl_model + 1,
                 message="Connecting to the assigned aggregation server.",
                 aggregationServer=self.status.server_IP,

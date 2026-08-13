@@ -86,7 +86,7 @@ class FLClient(fl.client.NumPyClient):
         """Train parameters on the locally held training set."""
         emit_runtime_event(
             "downloading_global",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=100,
             message="Global Model parameters were received from the aggregation transport.",
@@ -140,7 +140,7 @@ class FLClient(fl.client.NumPyClient):
         round_start_time = time.time()
         emit_runtime_event(
             "training",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=0,
             message="Local Training started.",
@@ -275,7 +275,7 @@ class FLClient(fl.client.NumPyClient):
         logger.info(f'train_performance - {json_result}')
         emit_runtime_event(
             "preparing_update",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=100,
             message="Local Training completed and the Model Update is ready for transport.",
@@ -289,7 +289,7 @@ class FLClient(fl.client.NumPyClient):
 
         emit_runtime_event(
             "uploading",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             message="The Model Update was handed to the Flower transport.",
             acknowledgement="transport_handoff",
@@ -302,7 +302,7 @@ class FLClient(fl.client.NumPyClient):
         """Evaluate parameters on the locally held test set."""
         emit_runtime_event(
             "evaluating",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=0,
             message="Local evaluation of the server-provided Global Model started.",
@@ -362,7 +362,7 @@ class FLClient(fl.client.NumPyClient):
         logger.info(f'test - {json_result}')
         emit_runtime_event(
             "global_model_updated",
-            task_id=self.fl_task_id,
+            task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=100,
             message="Global Model evaluation completed for this round.",
