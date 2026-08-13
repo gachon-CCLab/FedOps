@@ -1,4 +1,5 @@
 import logging, json
+import os
 import socket
 import time
 from fastapi import FastAPI, BackgroundTasks
@@ -10,6 +11,7 @@ from . import client_utils
 from . import client_fl
 from . import client_wandb
 from . import client_api
+from .runtime_events import emit_runtime_event
 from ..utils.fedxai.gradcam import MNISTGradCAM
 
 
@@ -18,7 +20,7 @@ class FLClientTask():
         self.app = FastAPI()
         self.status = client_utils.FLClientStatus()
         self.cfg = cfg
-        self.client_port = 8003
+        self.client_port = int(os.environ.get("FEDOPS_CLIENT_PORT", "8003"))
         self.task_id = cfg.task_id
         self.dataset_name = cfg.dataset.name
         self.output_size = cfg.model.output_size
@@ -65,6 +67,12 @@ class FLClientTask():
                     
 
     async def fl_client_start(self):
+        emit_runtime_event(
+            "waiting_round",
+            task_id=self.task_id,
+            round_number=self.status.gl_model + 1,
+            message="FedOps Client is waiting for a federated round.",
+        )
         logging.info('FL learning ready')
 
         logging.info(f'fl_task_id: {self.task_id}')
@@ -144,6 +152,13 @@ class FLClientTask():
             await loop.run_in_executor(None, client_start)
 
             logging.info('fl learning finished')
+            emit_runtime_event(
+                "completed",
+                task_id=self.task_id,
+                round_number=self.status.gl_model,
+                progress=100,
+                message="FedOps Client completed its federated session.",
+            )
 
             # FL client end time
             fl_end_time = time.time() - fl_start_time
@@ -199,6 +214,13 @@ class FLClientTask():
 
         except Exception as e:
             logging.info('[E][PC0002] learning', e)
+            emit_runtime_event(
+                "failed",
+                task_id=self.task_id,
+                round_number=self.status.gl_model,
+                message=str(e),
+                errorType=type(e).__name__,
+            )
             self.status.client_fail = True
             self.status.client_start = await client_utils.notify_fail()
             raise e
@@ -233,6 +255,13 @@ class FLClientTask():
             # get the FL server IP
             self.status.server_IP = client_api.ClientServerAPI(self.task_id).get_port()
             # self.status.server_IP = "0.0.0.0:8080"
+            emit_runtime_event(
+                "connecting",
+                task_id=self.task_id,
+                round_number=self.status.gl_model + 1,
+                message="Connecting to the assigned aggregation server.",
+                aggregationServer=self.status.server_IP,
+            )
 
             # start FL Client
             background_tasks.add_task(self.fl_client_start)
@@ -254,4 +283,3 @@ class FLClientTask():
             if self.xai == True:
                 # close xai
                 GradCAM.close_xai()
-

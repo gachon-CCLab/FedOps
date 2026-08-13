@@ -8,6 +8,7 @@ from . import client_api
 from . import client_utils
 from .parameter_contract import get_parameters as get_model_parameters
 from .parameter_contract import set_parameters as set_model_parameters
+from .runtime_events import emit_runtime_event
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -83,6 +84,14 @@ class FLClient(fl.client.NumPyClient):
 
     def fit(self, parameters, config):
         """Train parameters on the locally held training set."""
+        emit_runtime_event(
+            "downloading_global",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            progress=100,
+            message="Global Model parameters were received from the aggregation transport.",
+            globalModelVersion=self.gl_model,
+        )
         # _target_: server.strategy_cluster_optuna.ClusterOptunaFedAvg 설정시
         has_cluster_id = "cluster_id" in config   # ✨
         cluster_id = int(config["cluster_id"]) if has_cluster_id else None  # ✨
@@ -129,6 +138,14 @@ class FLClient(fl.client.NumPyClient):
 
         # start round time
         round_start_time = time.time()
+        emit_runtime_event(
+            "training",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            progress=0,
+            message="Local Training started.",
+            training={"batchSize": batch_size, "localEpochs": epochs},
+        )
 
         # model path for saving local model
         model_path = f'./local_model/{self.fl_task_id}/{self.model_name}_local_model_V{self.gl_model}'
@@ -256,15 +273,41 @@ class FLClient(fl.client.NumPyClient):
 
         json_result = json.dumps(results)
         logger.info(f'train_performance - {json_result}')
+        emit_runtime_event(
+            "preparing_update",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            progress=100,
+            message="Local Training completed and the Model Update is ready for transport.",
+            metrics={**train_results_prefixed, **val_results_prefixed, "train_time": round_end_time},
+            sampleCount=num_examples_train,
+            globalModelVersion=self.gl_model,
+        )
 
         # send train_result to client_performance pod
         client_api.ClientServerAPI(self.fl_task_id).put_train_result(json_result)
+
+        emit_runtime_event(
+            "uploading",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            message="The Model Update was handed to the Flower transport.",
+            acknowledgement="transport_handoff",
+        )
 
         return parameters_prime, num_examples_train, {**train_results_prefixed, **val_results_prefixed}
 
 
     def evaluate(self, parameters, config):
         """Evaluate parameters on the locally held test set."""
+        emit_runtime_event(
+            "evaluating",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            progress=0,
+            message="Local evaluation of the server-provided Global Model started.",
+            globalModelVersion=self.gl_model,
+        )
         cluster_id = config.get("cluster_id", None)
         # cluster_id = int(config.get("cluster_id", 0))
         # Get config values
@@ -317,6 +360,16 @@ class FLClient(fl.client.NumPyClient):
             test_result["cluster_id"] = int(cluster_id)
         json_result = json.dumps(test_result)
         logger.info(f'test - {json_result}')
+        emit_runtime_event(
+            "global_model_updated",
+            task_id=self.fl_task_id,
+            round_number=self.fl_round,
+            progress=100,
+            message="Global Model evaluation completed for this round.",
+            metrics={"test_loss": test_loss, "test_accuracy": test_accuracy, **(metrics or {})},
+            sampleCount=num_examples_test,
+            globalModelVersion=self.gl_model,
+        )
 
         # send test_result to client_performance pod
         client_api.ClientServerAPI(self.fl_task_id).put_test_result(json_result)
