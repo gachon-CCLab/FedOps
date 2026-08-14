@@ -47,11 +47,27 @@ class AgentStudioCliTest(unittest.TestCase):
             nvidia=False,
         )
 
-        self.assertIn("127.0.0.1:24368:24368", command)
-        self.assertIn("127.0.0.1:24400-24499:24400-24499", command)
+        self.assertIn("0.0.0.0:24368:24368", command)
+        self.assertIn("0.0.0.0:24400-24499:24400-24499", command)
         self.assertIn("/tmp/fedops-workspace:/workspace", command)
         self.assertIn("/tmp/host-token:/run/secrets/agent-studio-host-token:ro", command)
         self.assertNotIn("--gpus", command)
+
+    def test_local_only_bind_address_remains_available(self):
+        command = agent_studio_runner.build_container_command(
+            "docker",
+            image="image",
+            container_name="studio",
+            workspace=Path("/tmp/workspace"),
+            studio_port=24368,
+            token_file=None,
+            bridge_port=5602,
+            nvidia=False,
+            bind_address="127.0.0.1",
+        )
+
+        self.assertIn("127.0.0.1:24368:24368", command)
+        self.assertIn("127.0.0.1:24400-24499:24400-24499", command)
 
     def test_nvidia_command_exposes_all_gpus(self):
         command = agent_studio_runner.build_container_command(

@@ -21,6 +21,7 @@ from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 DEFAULT_IMAGE = "gachonccl/fedops-agent-studio:latest"
 DEFAULT_CONTAINER = "fedops-agent-studio"
 DEFAULT_STUDIO_PORT = 24368
+DEFAULT_BIND_ADDRESS = "0.0.0.0"
 AGENT_PORT_START = 24400
 AGENT_PORT_END = 24499
 DEFAULT_BRIDGE_PORT = 5602
@@ -337,6 +338,7 @@ def build_container_command(
     token_file: Optional[Path],
     bridge_port: int,
     nvidia: bool,
+    bind_address: str = DEFAULT_BIND_ADDRESS,
 ) -> Sequence[str]:
     command = [
         docker,
@@ -347,10 +349,14 @@ def build_container_command(
         "--restart",
         "unless-stopped",
         "-p",
-        "127.0.0.1:{}:24368".format(studio_port),
+        "{}:{}:24368".format(bind_address, studio_port),
         "-p",
-        "127.0.0.1:{}-{}:{}-{}".format(
-            AGENT_PORT_START, AGENT_PORT_END, AGENT_PORT_START, AGENT_PORT_END
+        "{}:{}-{}:{}-{}".format(
+            bind_address,
+            AGENT_PORT_START,
+            AGENT_PORT_END,
+            AGENT_PORT_START,
+            AGENT_PORT_END,
         ),
         "-v",
         "{}:/workspace".format(workspace),
@@ -485,6 +491,12 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--container-name", default=DEFAULT_CONTAINER)
     parser.add_argument("--workspace", default=str(DEFAULT_WORKSPACE))
     parser.add_argument("--port", type=int, default=DEFAULT_STUDIO_PORT)
+    parser.add_argument(
+        "--bind-address",
+        choices=("0.0.0.0", "127.0.0.1"),
+        default=DEFAULT_BIND_ADDRESS,
+        help="Docker host bind address; 0.0.0.0 supports localhost and host-network access.",
+    )
     parser.add_argument("--gpu", choices=("auto", "cpu", "nvidia"), default="auto")
     parser.add_argument("--no-pull", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
@@ -543,6 +555,7 @@ def run_agent_studio(args: argparse.Namespace) -> int:
             token_file=token_file,
             bridge_port=active_bridge_port,
             nvidia=nvidia,
+            bind_address=args.bind_address,
         )
         _replace_container(docker, args.container_name, args.dry_run)
         if args.dry_run:

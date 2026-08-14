@@ -52,6 +52,15 @@ fedops run agent-studio
 NVIDIA Container Runtime이 준비된 Linux/Windows 환경에서는 GPU를 자동 사용하고,
 그 외 환경에서는 CPU 모드로 실행합니다.
 
+기본 Docker bind address는 `0.0.0.0`입니다. 따라서 같은 실행으로
+`localhost`, `127.0.0.1`, 호스트의 LAN IP에서 접속할 수 있습니다. 호스트
+네트워크에 공개되므로 OS firewall에서 허용 범위를 관리해야 합니다. 로컬 장치에서만
+접속하려면 다음 옵션을 사용합니다.
+
+```bash
+fedops run agent-studio --bind-address 127.0.0.1
+```
+
 실제 컨테이너를 변경하지 않고 실행 구성을 먼저 확인할 수 있습니다.
 
 ```bash
