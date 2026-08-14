@@ -37,6 +37,40 @@ FedOps has developed a web service to manage the lifecycle operations of federat
 ```bash
 $ pip install fedops
 ```
+
+### Run FedOps Agent Studio
+
+Docker Desktop 또는 Docker Engine이 설치된 환경에서 다음 명령으로 실행합니다.
+
+```bash
+fedops run agent-studio
+```
+
+이 명령은 현재 OS와 CPU architecture에 맞는
+`gachonccl/fedops-agent-studio:latest` 이미지를 확인하고,
+`~/fedops-workspace`를 로컬 Workspace로 연결한 뒤 브라우저를 엽니다.
+NVIDIA Container Runtime이 준비된 Linux/Windows 환경에서는 GPU를 자동 사용하고,
+그 외 환경에서는 CPU 모드로 실행합니다.
+
+실제 컨테이너를 변경하지 않고 실행 구성을 먼저 확인할 수 있습니다.
+
+```bash
+fedops run agent-studio --dry-run
+```
+
+Workspace, Studio port 또는 GPU 모드를 명시하려면 다음 옵션을 사용합니다.
+
+```bash
+fedops run agent-studio --workspace ~/fedops-workspace --port 24368 --gpu auto
+```
+
+Agent Studio와 로컬 Host integration을 종료하고 결과를 확인하려면 다음 명령을
+사용합니다.
+
+```bash
+fedops stop agent-studio
+```
+
 ### Real Devices
 * [Start FedOps Silo](https://github.com/gachon-CCLab/FedOps/tree/main/silo/examples/torch)
 * [Start FedOps Mobile](https://github.com/gachon-CCLab/FedOps/tree/main/mobile/examples)

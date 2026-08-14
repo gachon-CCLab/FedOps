@@ -14,9 +14,9 @@
 # ==============================================================================
 """FedOps main package.
 
-The CLI should stay lightweight, so client/server subpackages are imported lazily.
-This allows commands such as fedops run fedops-launcher to run before the
-full FL dependency stack is imported.
+The CLI stays lightweight, so client/server subpackages are imported lazily.
+This allows Agent Studio lifecycle commands to run before the full federated
+learning dependency stack is imported.
 """
 
 import importlib

@@ -13,6 +13,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/gachon-CCLab/FedOps.git",
     packages=find_packages(),
+    package_data={"fedops": ["assets/*.txt"]},
     install_requires=[
         "flwr>=1.0.0",
         "flwr[simulation]",
