@@ -8,7 +8,11 @@ from . import client_api
 from . import client_utils
 from .parameter_contract import get_parameters as get_model_parameters
 from .parameter_contract import set_parameters as set_model_parameters
-from .runtime_events import emit_runtime_event
+from .runtime_events import (
+    aggregated_model_details,
+    emit_runtime_event,
+    received_model_details,
+)
 
 # set log format
 handlers_list = [logging.StreamHandler()]
@@ -90,7 +94,7 @@ class FLClient(fl.client.NumPyClient):
             round_number=self.fl_round,
             progress=100,
             message="Global Model parameters were received from the aggregation transport.",
-            globalModelVersion=self.gl_model,
+            **received_model_details(self.gl_model, self.fl_round),
         )
         # _target_: server.strategy_cluster_optuna.ClusterOptunaFedAvg 설정시
         has_cluster_id = "cluster_id" in config   # ✨
@@ -281,7 +285,7 @@ class FLClient(fl.client.NumPyClient):
             message="Local Training completed and the Model Update is ready for transport.",
             metrics={**train_results_prefixed, **val_results_prefixed, "train_time": round_end_time},
             sampleCount=num_examples_train,
-            globalModelVersion=self.gl_model,
+            targetGlobalModelVersion=self.gl_model,
         )
 
         # send train_result to client_performance pod
@@ -300,13 +304,21 @@ class FLClient(fl.client.NumPyClient):
 
     def evaluate(self, parameters, config):
         """Evaluate parameters on the locally held test set."""
+        total_rounds = int(
+            self.cfg.num_rounds if self.cfg and hasattr(self.cfg, "num_rounds") else 1
+        )
+        aggregate_details = aggregated_model_details(
+            self.gl_model,
+            self.fl_round,
+            total_rounds,
+        )
         emit_runtime_event(
             "evaluating",
             task_id=os.environ.get("FEDOPS_TASK_ID", self.fl_task_id),
             round_number=self.fl_round,
             progress=0,
             message="Local evaluation of the server-provided Global Model started.",
-            globalModelVersion=self.gl_model,
+            **aggregate_details,
         )
         cluster_id = config.get("cluster_id", None)
         # cluster_id = int(config.get("cluster_id", 0))
@@ -368,7 +380,7 @@ class FLClient(fl.client.NumPyClient):
             message="Global Model evaluation completed for this round.",
             metrics={"test_loss": test_loss, "test_accuracy": test_accuracy, **(metrics or {})},
             sampleCount=num_examples_test,
-            globalModelVersion=self.gl_model,
+            **aggregate_details,
         )
 
         # send test_result to client_performance pod

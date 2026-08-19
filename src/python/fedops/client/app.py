@@ -11,7 +11,7 @@ from . import client_utils
 from . import client_fl
 from . import client_wandb
 from . import client_api
-from .runtime_events import emit_runtime_event
+from .runtime_events import aggregated_model_details, emit_runtime_event
 from ..utils.fedxai.gradcam import MNISTGradCAM
 
 
@@ -30,6 +30,7 @@ class FLClientTask():
         self.model = fl_task["model"]
         self.model_name = fl_task["model_name"]
         self.xai = xai
+        self.num_rounds = int(getattr(cfg, "num_rounds", 1) or 1)
         
         self.status.client_name = socket.gethostname()
         self.status.task_id = self.task_id
@@ -70,8 +71,9 @@ class FLClientTask():
         emit_runtime_event(
             "waiting_round",
             task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
-            round_number=self.status.gl_model + 1,
+            round_number=1,
             message="FedOps Client is waiting for a federated round.",
+            targetGlobalModelVersion=self.status.gl_model or None,
         )
         logging.info('FL learning ready')
 
@@ -155,9 +157,14 @@ class FLClientTask():
             emit_runtime_event(
                 "completed",
                 task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
-                round_number=self.status.gl_model,
+                round_number=self.num_rounds,
                 progress=100,
                 message="FedOps Client completed its federated session.",
+                **aggregated_model_details(
+                    self.status.gl_model,
+                    self.num_rounds,
+                    self.num_rounds,
+                ),
             )
 
             # FL client end time
@@ -258,9 +265,10 @@ class FLClientTask():
             emit_runtime_event(
                 "connecting",
                 task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
-                round_number=self.status.gl_model + 1,
+                round_number=1,
                 message="Connecting to the assigned aggregation server.",
                 aggregationServer=self.status.server_IP,
+                targetGlobalModelVersion=self.status.gl_model,
             )
 
             # start FL Client

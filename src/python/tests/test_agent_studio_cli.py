@@ -50,6 +50,11 @@ class AgentStudioCliTest(unittest.TestCase):
         self.assertIn("0.0.0.0:24368:24368", command)
         self.assertIn("0.0.0.0:24400-24499:24400-24499", command)
         self.assertIn("/tmp/fedops-workspace:/workspace", command)
+        self.assertIn(
+            "type=volume,source=fedops-agent-studio-uv,target=/var/cache/fedops-uv",
+            command,
+        )
+        self.assertIn("UV_CACHE_DIR=/var/cache/fedops-uv/cache", command)
         self.assertIn("/tmp/host-token:/run/secrets/agent-studio-host-token:ro", command)
         self.assertNotIn("--gpus", command)
 

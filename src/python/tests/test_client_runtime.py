@@ -6,7 +6,11 @@ import unittest
 from unittest.mock import patch
 
 from fedops.client.client_api import ClientMangerAPI, ClientServerAPI
-from fedops.client.runtime_events import emit_runtime_event
+from fedops.client.runtime_events import (
+    aggregated_model_details,
+    emit_runtime_event,
+    received_model_details,
+)
 
 
 class ClientRuntimeConfigurationTest(unittest.TestCase):
@@ -57,6 +61,21 @@ class ClientRuntimeConfigurationTest(unittest.TestCase):
             self.assertEqual(stored, event)
             self.assertEqual(stored["clientInstanceId"], "client-opaque")
             self.assertEqual(stored["metrics"]["loss"], 0.5)
+
+    def test_first_campaign_uses_initiative_then_global_v1(self):
+        received = received_model_details(1, 1)
+        self.assertEqual(received["modelRole"], "initiative")
+        self.assertEqual(received["modelLabel"], "Initiative Model")
+        self.assertNotIn("globalModelVersion", received)
+
+        intermediate = aggregated_model_details(1, 1, 2)
+        self.assertEqual(intermediate["modelLabel"], "Round 1 Aggregate")
+        self.assertEqual(intermediate["aggregationScope"], "round")
+
+        final = aggregated_model_details(1, 2, 2)
+        self.assertEqual(final["modelLabel"], "Global Model v1")
+        self.assertEqual(final["globalModelVersion"], 1)
+        self.assertEqual(final["aggregationScope"], "campaign-final")
 
 
 if __name__ == "__main__":

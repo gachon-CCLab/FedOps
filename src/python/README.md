@@ -49,6 +49,10 @@ fedops run agent-studio
 이 명령은 현재 OS와 CPU architecture에 맞는
 `gachonccl/fedops-agent-studio:latest` 이미지를 확인하고,
 `~/fedops-workspace`를 로컬 Workspace로 연결한 뒤 브라우저를 엽니다.
+Task별 Python 환경과 데이터는 Workspace에 유지하고, 반복 환경 Sync에 사용하는 uv
+package/Python cache는 `fedops-agent-studio-uv` Docker volume에 보존합니다. 따라서
+컨테이너와 이미지가 교체되어도 cache를 재사용하며, 특히 Windows Docker Desktop에서
+불필요한 재다운로드와 압축 해제 비용을 줄입니다.
 NVIDIA Container Runtime이 준비된 Linux/Windows 환경에서는 GPU를 자동 사용하고,
 그 외 환경에서는 CPU 모드로 실행합니다.
 

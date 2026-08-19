@@ -26,6 +26,7 @@ AGENT_PORT_START = 24400
 AGENT_PORT_END = 24499
 DEFAULT_BRIDGE_PORT = 5602
 DEFAULT_WORKSPACE = Path.home() / "fedops-workspace"
+UV_CACHE_VOLUME = "fedops-agent-studio-uv"
 
 
 class AgentStudioError(RuntimeError):
@@ -360,12 +361,14 @@ def build_container_command(
         ),
         "-v",
         "{}:/workspace".format(workspace),
+        "--mount",
+        "type=volume,source={},target=/var/cache/fedops-uv".format(UV_CACHE_VOLUME),
         "-e",
         "UV_LINK_MODE=copy",
         "-e",
-        "UV_CACHE_DIR=/workspace/.fedops-studio/uv/cache",
+        "UV_CACHE_DIR=/var/cache/fedops-uv/cache",
         "-e",
-        "UV_PYTHON_INSTALL_DIR=/workspace/.fedops-studio/uv/python",
+        "UV_PYTHON_INSTALL_DIR=/var/cache/fedops-uv/python",
         "-e",
         "STUDIO_HOST_WORKSPACE_DIR={}".format(workspace),
     ]
