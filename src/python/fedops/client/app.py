@@ -213,7 +213,7 @@ class FLClientTask():
             logging.info('FL Client Learning Finish')
 
         except Exception as e:
-            logging.info('[E][PC0002] learning', e)
+            logging.exception('[E][PC0002] learning failed: %s', e)
             emit_runtime_event(
                 "failed",
                 task_id=os.environ.get("FEDOPS_TASK_ID", self.task_id),
