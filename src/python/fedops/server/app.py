@@ -84,7 +84,10 @@ class FLServer():
     def init_gl_model_registration(self, model, gl_model_name) -> None:
         logging.info(f'last_gl_model_v: {self.server.last_gl_model_v}')
 
-        if not model:
+        # An empty S3 prefix returns the Owner's Initiative Model together with
+        # no Global Model name. The name, rather than model truthiness, is the
+        # reliable boundary between the first Campaign and a continuation.
+        if not gl_model_name:
 
             logging.info('init global model making')
             init_model, model_name = self.init_model, self.init_model_name
@@ -215,6 +218,9 @@ class FLServer():
                 else:
                     server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
                                       "run_time_by_round": self.server.end_by_round,"gl_model_v":self.server.gl_model_v}
+                campaign_run_id = os.environ.get("FEDOPS_CAMPAIGN_RUN_ID")
+                if campaign_run_id:
+                    server_eval_result["campaign_run_id"] = campaign_run_id
                 json_server_eval = json.dumps(server_eval_result)
                 logging.info(f'server_eval_result - {json_server_eval}')
                 server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json_server_eval)

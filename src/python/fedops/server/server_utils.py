@@ -41,15 +41,14 @@ def upload_model_to_bucket(task_id, global_model_name):
 
 # Download the latest global model stored in s3
 def model_download_s3(task_id, model_type, model=None):
-    # bucket_name = os.environ.get('BUCKET_NAME')
-    bucket_name = "global-model"
+    bucket_name = os.environ.get('BUCKET_NAME') or "global-model"
     # print('bucket_name: ', bucket_name)
 
     try:
         session = aws_session()
         s3_resource = session.client('s3')
         bucket_list = s3_resource.list_objects_v2(Bucket=bucket_name, Prefix=f'{task_id}/')
-        content_list = bucket_list['Contents']
+        content_list = bucket_list.get('Contents', [])
 
         # Inquiry global model file in s3 bucket
         file_list = []
@@ -62,13 +61,22 @@ def model_download_s3(task_id, model_type, model=None):
         logging.info(f'model_file_list: {file_list}')
         
         # File name pattern
-        pattern = r"([A-Za-z]+)_gl_model_V(\d+)\.(h5|pth|npz)"
+        pattern = re.compile(r"^(.+)_gl_model_V(\d+)\.(h5|pth|pt|npz)$", re.IGNORECASE)
 
-        if file_list:
-            latest_gl_model_file = sorted(file_list, key=lambda x: int(re.findall(pattern, x)[0][1]), reverse=True)[0]
-            gl_model_name = re.findall(pattern, latest_gl_model_file)[0][0]
-            gl_model_version = int(latest_gl_model_file.split('_V')[1].split('.')[0])
-            gl_model_path = os.path.join(f"{task_id}/", latest_gl_model_file)
+        matching_files = [
+            (file_name, pattern.match(file_name))
+            for file_name in file_list
+            if pattern.match(file_name)
+        ]
+        if not matching_files:
+            return model, None, 0
+        latest_gl_model_file, latest_match = max(
+            matching_files,
+            key=lambda item: int(item[1].group(2)),
+        )
+        gl_model_name = latest_match.group(1)
+        gl_model_version = int(latest_match.group(2))
+        gl_model_path = f"{task_id}/{latest_gl_model_file}"
 
         gl_model_save_path = f'./{latest_gl_model_file}'
         s3_resource.download_file(bucket_name, gl_model_path, gl_model_save_path)
@@ -81,7 +89,7 @@ def model_download_s3(task_id, model_type, model=None):
 
         elif model_type == "Pytorch":
             import torch
-            model.load_state_dict(torch.load(gl_model_save_path))
+            model.load_state_dict(torch.load(gl_model_save_path, map_location="cpu", weights_only=True))
 
         elif model_type == "Huggingface":
             pass
