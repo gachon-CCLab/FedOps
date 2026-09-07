@@ -84,6 +84,23 @@ Agent Studio와 로컬 Host integration을 종료하고 결과를 확인하려�
 fedops stop agent-studio
 ```
 
+폴더 열기만 실패하면 **Docker가 실행 중인 컴퓨터**의 터미널에서 다음 명령으로
+호스트 연결을 복구하고 컨테이너 내부에서 연결을 확인합니다. 이미지 다운로드나
+Studio 재시작 없이 현재 Workspace와 포트를 사용합니다.
+
+```bash
+fedops run agent-studio --repair-host
+```
+
+`--repair-host`는 FedOps 패키지 1.1.30.18부터 지원합니다.
+이 옵션이 없다면 해당 버전 배포 후 `python -m pip install -U fedops`로 호스트의 FedOps를 업데이트합니다.
+Docker 이미지 업데이트와 호스트에 설치된 FedOps 업데이트는 별개입니다.
+PC 재부팅 후 Docker에서 컨테이너만 자동 시작됐다면 위 복구 명령이나
+`fedops run agent-studio`로 호스트 프로그램도 시작해야 합니다.
+원격 브라우저로 접속한 경우 폴더는 브라우저 컴퓨터가 아니라 Docker 호스트에서 열립니다.
+연결 시간 초과가 계속되면 해당 호스트의 방화벽/VPN 설정을 확인합니다.
+Linux에서 폴더 창을 열려면 그래픽 데스크톱과 `xdg-open`이 필요합니다.
+
 ### Real Devices
 * [Start FedOps Silo](https://github.com/gachon-CCLab/FedOps/tree/main/silo/examples/torch)
 * [Start FedOps Mobile](https://github.com/gachon-CCLab/FedOps/tree/main/mobile/examples)

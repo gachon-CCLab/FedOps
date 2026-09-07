@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import webbrowser
 from pathlib import Path
@@ -227,7 +228,8 @@ def _bridge_payload(token_file: Path, bridge_port: int) -> Optional[Dict[str, An
             "http://127.0.0.1:{}/health".format(bridge_port),
             headers={"Authorization": "Bearer {}".format(token)},
         )
-        with urllib.request.urlopen(request, timeout=1.5) as response:
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        with opener.open(request, timeout=1.5) as response:
             if response.status != 200:
                 return None
             payload = json.loads(response.read().decode("utf-8"))
@@ -275,11 +277,14 @@ def _port_available(port: int) -> bool:
 
 
 def _prepare_host_bridge(
-    workspace: Path, dry_run: bool, bridge_port: int
+    workspace: Path, dry_run: bool, bridge_port: int, *,
+    runtime_dir: Optional[Path] = None,
+    token_file: Optional[Path] = None,
+    allow_fallback: bool = True,
 ) -> Tuple[Optional[Path], int]:
     workspace = workspace.expanduser().resolve()
-    runtime_dir = _runtime_directory()
-    token_file = runtime_dir / "host-token"
+    runtime_dir = runtime_dir or _runtime_directory()
+    token_file = token_file or runtime_dir / "host-token"
     pid_file = runtime_dir / "host.pid"
     log_file = runtime_dir / "host.log"
     if dry_run:
@@ -287,7 +292,7 @@ def _prepare_host_bridge(
         return token_file, bridge_port
     runtime_dir.mkdir(parents=True, exist_ok=True)
     payload = _bridge_payload(token_file, bridge_port)
-    if payload and payload.get("workspace") == str(workspace):
+    if payload and payload.get("workspace") == str(workspace) and payload.get("protocolVersion") == 2:
         _status("Host integration", "folder opener and hardware bridge running")
         return token_file, bridge_port
     if pid_file.is_file():
@@ -300,7 +305,7 @@ def _prepare_host_bridge(
     candidates.extend(
         candidate
         for candidate in range(DEFAULT_BRIDGE_PORT, DEFAULT_BRIDGE_PORT + 20)
-        if candidate != bridge_port
+        if allow_fallback and candidate != bridge_port
     )
     for candidate in candidates:
         if not _port_available(candidate):
@@ -325,8 +330,104 @@ def _prepare_host_bridge(
                 workspace, token_file, pid_file, log_file, candidate, stop=True
             )
         )
-    _status("Host integration", "bridge unavailable; using container fallback", "WARN")
+    _status(
+        "Host integration",
+        "folder opening is unavailable; inspect {} and run "
+        "fedops run agent-studio --repair-host".format(log_file),
+        "WARN",
+    )
     return None, bridge_port
+
+
+def _verify_container_bridge(docker: str, container_name: str) -> bool:
+    # Keep tokens inside the container; report only a categorized result.
+    probe = """
+import json, os, socket, urllib.error, urllib.request
+from pathlib import Path
+url = os.environ.get('STUDIO_FOLDER_OPENER_URL', '')
+try:
+    if not url:
+        raise ValueError('not configured')
+    token = Path(os.environ['STUDIO_FOLDER_OPENER_TOKEN_FILE']).read_text().strip()
+    req = urllib.request.Request(url.rstrip('/') + '/health', headers={'Authorization': 'Bearer ' + token})
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(req, timeout=4) as response:
+        if response.status != 200 or json.load(response).get('status') != 'ok':
+            raise ValueError('invalid health response')
+    print('ok')
+except urllib.error.HTTPError as error:
+    print('authentication' if error.code in (401, 403) else 'http-error')
+except (OSError, ValueError, KeyError) as error:
+    reason = getattr(error, 'reason', error)
+    print('dns' if isinstance(reason, socket.gaierror) else
+          'timeout' if isinstance(reason, TimeoutError) else
+          'refused' if isinstance(reason, ConnectionRefusedError) else 'unavailable')
+"""
+    try:
+        result = subprocess.run(
+            [docker, "exec", container_name, "python", "-c", probe],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12,
+            check=False,
+        )
+        code = (result.stdout or "").strip() if result.returncode == 0 else "unavailable"
+    except (OSError, subprocess.TimeoutExpired):
+        code = "unavailable"
+    if code == "ok":
+        _status("Host connection", "verified from inside the Studio container")
+        return True
+    reasons = {
+        "authentication": "host token was rejected; rerun fedops run agent-studio",
+        "dns": "Docker could not resolve host.docker.internal",
+        "timeout": "host connection timed out; check the host firewall or VPN",
+        "refused": "host connection was refused; the host bridge may have stopped",
+        "http-error": "host bridge returned an HTTP error",
+    }
+    _status("Host connection", reasons.get(code, "host bridge could not be reached"), "WARN")
+    _status("Repair command", "fedops run agent-studio --repair-host", "INFO")
+    return False
+
+
+def _repair_host_bridge(docker: str, container_name: str, dry_run: bool) -> int:
+    result = _run([docker, "container", "inspect", container_name])
+    if result.returncode != 0:
+        raise AgentStudioError("Studio container was not found. Run fedops run agent-studio first.")
+    try:
+        container = json.loads(result.stdout)[0]
+        if not container.get("State", {}).get("Running"):
+            raise AgentStudioError("Studio is stopped. Start it with fedops run agent-studio.")
+        settings = dict(item.split("=", 1) for item in container["Config"]["Env"] if "=" in item)
+        mounts = {item["Destination"]: item for item in container["Mounts"]}
+        url = urllib.parse.urlsplit(settings.get("STUDIO_FOLDER_OPENER_URL", ""))
+        port = url.port
+        if url.scheme != "http" or url.hostname != "host.docker.internal" or not port:
+            raise ValueError("unsupported bridge URL")
+        workspace_mount = mounts["/workspace"]
+        token_mount = mounts[settings["STUDIO_FOLDER_OPENER_TOKEN_FILE"]]
+        if workspace_mount["Type"] != "bind" or token_mount["Type"] != "bind":
+            raise ValueError("bridge mounts must be host directories")
+        # Docker Desktop can return VM paths in Mounts.Source. The host display
+        # path and canonical host token path survive macOS/Windows translation.
+        workspace = Path(settings.get("STUDIO_HOST_WORKSPACE_DIR") or workspace_mount["Source"])
+        canonical_token = _runtime_directory() / "host-token"
+        token = canonical_token if token_mount["Destination"] == "/run/secrets/agent-studio-host-token" else Path(token_mount["Source"])
+        if not workspace.is_dir() or not token.is_file():
+            raise ValueError("host workspace or token is missing")
+    except (ValueError, KeyError, TypeError, IndexError) as error:
+        raise AgentStudioError(
+            "This container's host integration cannot be repaired in place. "
+            "Rerun fedops run agent-studio to recreate its host connection."
+        ) from error
+    _status("Workspace", str(workspace))
+    token_file, _ = _prepare_host_bridge(
+        workspace, dry_run, port, runtime_dir=token.parent, token_file=token,
+        allow_fallback=False,
+    )
+    if dry_run:
+        return 0
+    if token_file is None or not _verify_container_bridge(docker, container_name):
+        raise AgentStudioError("Host connection is still unavailable. Check the host bridge log and firewall/VPN.")
+    _status("Host integration", "repaired; retry Open Folder in Agent Studio")
+    return 0
 
 
 def build_container_command(
@@ -478,7 +579,8 @@ def _wait_for_studio(port: int, timeout: int = 45) -> None:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            with urllib.request.urlopen(url, timeout=1.5) as response:
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(url, timeout=1.5) as response:
                 if response.status == 200:
                     _status("Agent Studio", "ready at http://localhost:{}".format(port))
                     return
@@ -506,6 +608,10 @@ def add_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--no-start-docker", action="store_true")
     parser.add_argument("--docker-timeout", type=int, default=120)
     parser.add_argument("--bridge-port", type=int, default=DEFAULT_BRIDGE_PORT)
+    parser.add_argument(
+        "--repair-host", action="store_true",
+        help="Repair and check host folder opening for the running container without restarting Studio.",
+    )
     parser.add_argument("--dry-run", action="store_true")
 
 
@@ -537,11 +643,13 @@ def run_agent_studio(args: argparse.Namespace) -> int:
             platform.system(), platform.release(), platform.machine()
         )
         _status("Host", system)
+        docker = _docker_cli()
+        _ensure_daemon(docker, not args.no_start_docker, args.docker_timeout)
+        if args.repair_host:
+            return _repair_host_bridge(docker, args.container_name, args.dry_run)
         _status("Workspace", str(workspace))
         if not args.dry_run:
             workspace.mkdir(parents=True, exist_ok=True)
-        docker = _docker_cli()
-        _ensure_daemon(docker, not args.no_start_docker, args.docker_timeout)
         previous, current = _prepare_image(
             docker, args.image, not args.no_pull, args.dry_run
         )
@@ -579,6 +687,8 @@ def run_agent_studio(args: argparse.Namespace) -> int:
                 _status("Container logs", detail, "ERROR")
             raise
         _remove_previous_image(docker, previous, current)
+        if token_file is not None:
+            _verify_container_bridge(docker, args.container_name)
         url = "http://localhost:{}".format(args.port)
         if not args.no_browser:
             webbrowser.open(url)

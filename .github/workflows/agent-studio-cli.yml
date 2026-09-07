@@ -1,0 +1,38 @@
+name: Agent Studio host integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/python/fedops/agent_studio_*.py'
+      - 'src/python/fedops/cli.py'
+      - 'src/python/tests/test_agent_studio_cli.py'
+      - '.github/workflows/agent-studio-cli.yml'
+  pull_request:
+    paths:
+      - 'src/python/fedops/agent_studio_*.py'
+      - 'src/python/fedops/cli.py'
+      - 'src/python/tests/test_agent_studio_cli.py'
+      - '.github/workflows/agent-studio-cli.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  host:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Test host bridge and launcher without the ML stack
+        working-directory: src/python
+        env:
+          PYTHONPATH: '.'
+          PYTHONUTF8: '1'
+        run: python -m unittest discover -s tests -p test_agent_studio_cli.py

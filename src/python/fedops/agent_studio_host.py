@@ -14,6 +14,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -244,7 +245,16 @@ class HostBridgeServer(ThreadingHTTPServer):
         super().__init__(address, HostBridgeHandler)
         self.workspace = workspace.resolve()
         self.token = token
-        self.hardware = collect_hardware()
+        self.hardware = None
+        # GPU discovery can take tens of seconds on Windows. Folder opening and
+        # /health must be available while that optional information is collected.
+        threading.Thread(target=self._load_hardware, daemon=True).start()
+
+    def _load_hardware(self) -> None:
+        try:
+            self.hardware = collect_hardware()
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+            print("[agent-studio-host] hardware information is unavailable", flush=True)
 
 
 class HostBridgeHandler(BaseHTTPRequestHandler):
@@ -257,9 +267,12 @@ class HostBridgeHandler(BaseHTTPRequestHandler):
             return
         server = self.server  # type: HostBridgeServer
         if self.path == "/hardware":
+            if server.hardware is None:
+                self._json(503, {"error": "hardware information is still loading"})
+                return
             self._json(200, server.hardware)
             return
-        self._json(200, {"status": "ok", "workspace": str(server.workspace)})
+        self._json(200, {"status": "ok", "workspace": str(server.workspace), "protocolVersion": 2})
 
     def do_POST(self) -> None:
         if self.path != "/open":
@@ -345,12 +358,18 @@ def _stop(pid_file: Path) -> None:
         return
     try:
         pid = int(pid_file.read_text(encoding="utf-8").strip())
+        if pid <= 1:
+            raise ValueError("invalid host bridge pid")
         os.kill(pid, signal.SIGTERM)
     except (OSError, ValueError, ProcessLookupError):
         _remove_pid_file(pid_file)
         return
     deadline = time.monotonic() + 3
     while time.monotonic() < deadline:
+        if sys.platform == "win32":
+            # os.kill(pid, 0) on Windows calls TerminateProcess; it is NOT a
+            # POSIX-style liveness probe. SIGTERM above already requested stop.
+            break
         try:
             os.kill(pid, 0)
         except ProcessLookupError:
@@ -409,11 +428,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         with log_file.open("ab") as log:
             process = subprocess.Popen(
                 command,
+                stdin=subprocess.DEVNULL,
                 stdout=log,
                 stderr=subprocess.STDOUT,
+                close_fds=True,
                 start_new_session=sys.platform != "win32",
                 creationflags=(
                     getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+                    | getattr(subprocess, "DETACHED_PROCESS", 0)
                     if sys.platform == "win32"
                     else 0
                 ),
