@@ -71,6 +71,25 @@ class EvaluationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 evaluation_policy({"server_evaluation": {"enabled": value}})
 
+    def test_same_release_can_switch_campaign_modes_without_mutating_defaults(self):
+        config = OmegaConf.create({"batch_size": 8, "server_evaluation": {"enabled": False}})
+        factory = Mock(return_value=[1])
+        with patch.dict(os.environ, {"FEDOPS_CAMPAIGN_CONFIG": json.dumps({
+                "serverEvaluation": {"enabled": True, "dataPath": "holdout-v1"}})}):
+            policy = evaluation_policy(config)
+            self.assertTrue(policy['enabled'])
+            self.assertEqual(policy['data_root'], '/app/data/server-validation/holdout-v1')
+            with patch('fedops.server.evaluation.validation_directory', return_value=Path(policy['data_root'])):
+                prepare_validation_loader(config, factory)
+            factory.assert_called_once_with(batch_size=8, data_root=policy['data_root'], download=False)
+        factory.reset_mock()
+        with patch.dict(os.environ, {"FEDOPS_CAMPAIGN_CONFIG": json.dumps({
+                "serverEvaluation": {"enabled": False}})}):
+            self.assertIsNone(prepare_validation_loader(config, factory))
+        factory.assert_not_called()
+        self.assertFalse(config.server_evaluation.enabled)
+        self.assertNotIn('data_root', config.server_evaluation)
+
     def test_weighted_loss_accuracy_not_simple_average(self):
         summary = aggregate_client_evaluations([result('a', 10, 2., .5), result('b', 30, 4., 1.)])
         self.assertEqual(summary['gl_loss'], 3.5)
