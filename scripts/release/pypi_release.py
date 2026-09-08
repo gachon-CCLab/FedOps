@@ -49,7 +49,9 @@ def wheel_identity(content):
 
 def release_info(version):
     try:
-        with urlopen(f'https://pypi.org/pypi/fedops/{version}/json', timeout=30) as response:
+        # Avoid a pre-publication 404 cached by an intermediary/CDN when the
+        # immediately following verify reads the newly published version.
+        with urlopen(f'https://pypi.org/pypi/fedops/{version}/json?verify={time.time_ns()}', timeout=30) as response:
             return json.load(response)
     except HTTPError as error:
         if error.code == 404:
