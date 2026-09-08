@@ -64,8 +64,17 @@ else
   "$PYTHON" scripts/release/pypi_release.py verify
 fi
 "$PYTHON" -m venv "$checkout/pypi-smoke"
-"$checkout/pypi-smoke/bin/python" -m pip install --no-deps --no-cache-dir \
-  --index-url https://pypi.org/simple "fedops==$version"
+# PyPI JSON/files and the Simple index can become visible at different times.
+installed=false
+for attempt in $(seq 1 20); do
+  if "$checkout/pypi-smoke/bin/python" -m pip install --no-deps --no-cache-dir \
+      --index-url https://pypi.org/simple "fedops==$version"; then
+    installed=true
+    break
+  fi
+  sleep 15
+done
+[[ "$installed" == true ]] || { echo 'PyPI install verification timed out'; exit 1; }
 "$checkout/pypi-smoke/bin/fedops" --help
 "$checkout/pypi-smoke/bin/fedops" run agent-studio --help
 printf '%s\n' "$revision" > "$STATE/last-successful-revision.tmp"
