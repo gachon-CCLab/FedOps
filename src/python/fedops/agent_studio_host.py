@@ -272,7 +272,7 @@ class HostBridgeHandler(BaseHTTPRequestHandler):
                 return
             self._json(200, server.hardware)
             return
-        self._json(200, {"status": "ok", "workspace": str(server.workspace), "protocolVersion": 2})
+        self._json(200, {"status": "ok", "workspace": str(server.workspace), "protocolVersion": 3})
 
     def do_POST(self) -> None:
         if self.path != "/open":
@@ -305,7 +305,7 @@ class HostBridgeHandler(BaseHTTPRequestHandler):
                 and relative.parts[2] == ".local-data"
                 and relative.parts[3] == "federated-tasks"
                 and not relative.parts[4].startswith(".")
-                and relative.parts[5] == "dataset"
+                and relative.parts[5] in {"dataset", "validation"}
             )
             if not workspace_project and not task_data:
                 raise ValueError("only account-scoped project and Task data directories can be opened")

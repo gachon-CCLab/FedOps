@@ -22,7 +22,7 @@ class AgentStudioCliTest(unittest.TestCase):
                 patch.object(
                     agent_studio_runner,
                     "_bridge_payload",
-                    return_value={"workspace": str(root), "protocolVersion": 2},
+                    return_value={"workspace": str(root), "protocolVersion": 3},
                 ),
                 patch.object(agent_studio_runner, "_run") as run,
             ):
@@ -41,8 +41,8 @@ class AgentStudioCliTest(unittest.TestCase):
                     agent_studio_runner,
                     "_bridge_payload",
                     side_effect=[
-                        {"workspace": str(root)},
                         {"workspace": str(root), "protocolVersion": 2},
+                        {"workspace": str(root), "protocolVersion": 3},
                     ],
                 ),
                 patch.object(agent_studio_runner, "_port_available", return_value=True),
@@ -207,7 +207,7 @@ class AgentStudioCliTest(unittest.TestCase):
                             token, server.server_port
                         )
                     self.assertEqual(payload["workspace"], str(root.resolve()))
-                    self.assertEqual(payload["protocolVersion"], 2)
+                    self.assertEqual(payload["protocolVersion"], 3)
                 finally:
                     release.set()
                     server.shutdown()

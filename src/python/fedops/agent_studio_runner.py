@@ -292,7 +292,7 @@ def _prepare_host_bridge(
         return token_file, bridge_port
     runtime_dir.mkdir(parents=True, exist_ok=True)
     payload = _bridge_payload(token_file, bridge_port)
-    if payload and payload.get("workspace") == str(workspace) and payload.get("protocolVersion") == 2:
+    if payload and payload.get("workspace") == str(workspace) and payload.get("protocolVersion") == 3:
         _status("Host integration", "folder opener and hardware bridge running")
         return token_file, bridge_port
     if pid_file.is_file():
