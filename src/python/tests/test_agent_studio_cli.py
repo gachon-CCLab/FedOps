@@ -303,6 +303,17 @@ class AgentStudioCliTest(unittest.TestCase):
                     self.assertEqual(os.getsid(child_pid), child_pid)
             finally:
                 agent_studio_host._stop(pid)
+                # Windows TerminateProcess returns before inherited log handles
+                # close. Do not race TemporaryDirectory cleanup against that.
+                if sys.platform == "win32":
+                    for attempt in range(50):
+                        try:
+                            (root / "host.log").unlink(missing_ok=True)
+                            break
+                        except PermissionError:
+                            if attempt == 49:
+                                raise
+                            agent_studio_runner.time.sleep(0.1)
 
     def test_cli_registers_agent_studio(self):
         parser = build_parser()

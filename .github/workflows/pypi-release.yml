@@ -46,7 +46,8 @@ jobs:
           python-version: '3.12'
       - name: Install runtime test dependencies
         run: |
-          python -m pip install build twine
+          python -m venv /tmp/fedops-packaging
+          /tmp/fedops-packaging/bin/python -m pip install build twine
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
           python -m pip install 'numpy==1.26.4' flwr requests hydra-core boto3 optuna scikit-learn
       - name: Test release guard
@@ -59,8 +60,8 @@ jobs:
       - name: Embed source identity and build once
         run: |
           python scripts/release/pypi_release.py stamp
-          python -m build src/python --outdir dist
-          python -m twine check dist/*
+          /tmp/fedops-packaging/bin/python -m build src/python --outdir dist
+          /tmp/fedops-packaging/bin/python -m twine check dist/*
       - name: Install built wheel and smoke test CLI
         run: |
           python -m venv /tmp/fedops-wheel-smoke
