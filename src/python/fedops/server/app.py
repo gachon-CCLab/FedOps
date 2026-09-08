@@ -9,6 +9,7 @@ import json
 import time
 import numpy as np
 import shutil
+import math
 from . import server_api
 from . import server_utils
 from hydra.utils import instantiate
@@ -16,6 +17,7 @@ from hydra.utils import instantiate
 from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays, NDArrays
 from ..client.parameter_contract import get_parameters, set_parameters
 from ..utils.fedco.best_keeper import BestKeeper
+from .evaluation import evaluation_policy
 
 # TF warning log filtering
 # os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -33,6 +35,8 @@ class FLServer():
         self.server = server_utils.FLServerStatus() # Set FLServerStatus class
         self.model_type = model_type
         self.cfg = cfg
+        self.evaluation_policy = evaluation_policy(cfg)
+        self.client_evaluation = self.evaluation_policy.get("enabled") is False
         self.strategy = cfg.server.strategy
         
         self.batch_size = int(cfg.batch_size)
@@ -78,6 +82,8 @@ class FLServer():
 
         # 클러스터일 때만 BestKeeper 활성화
         self.best_keeper = BestKeeper(save_dir="./gl_best", metric_key=metric_key) if self.is_cluster else None
+        if self.client_evaluation and (self.is_cluster or self.model_type == "Huggingface"):
+            raise ValueError("Client-aggregated evaluation is not supported by this runtime/strategy yet")
         # ===============================================================
 
 
@@ -126,6 +132,11 @@ class FLServer():
             on_fit_config_fn=self.fit_config,
             on_evaluate_config_fn=self.evaluate_config,
         )
+        if self.client_evaluation:
+            from .evaluation_strategy import ReportingStrategy
+            if getattr(strategy, "fraction_evaluate", 0) <= 0:
+                raise ValueError("Client evaluation requires fraction_evaluate > 0")
+            strategy = ReportingStrategy(strategy, self.report_client_evaluation)
         
         # Start Flower server
         fl.server.start_server(
@@ -174,6 +185,31 @@ class FLServer():
                 logger.error(f"[BEST] finalization error: {e}")
 
 
+    def save_global_snapshot(self, model, model_name, parameters):
+        """Persist model parameters independently from evaluation availability."""
+        path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
+        if self.model_type == "Pytorch":
+            import torch
+            set_parameters(model, self.model_type, parameters)
+            torch.save(model.state_dict(), path + '.pth')
+        elif self.model_type == "Tensorflow":
+            model.set_weights(parameters)
+            model.save(path + '.h5')
+        elif self.model_type == "Huggingface":
+            os.makedirs(path, exist_ok=True)
+            np.savez(os.path.join(path, "adapter_parameters.npz"), *parameters)
+
+    def report_client_evaluation(self, server_round, summary):
+        if server_round < 1:
+            return
+        payload = {
+            **summary, "fl_task_id": self.task_id, "round": server_round,
+            "gl_model_v": self.server.gl_model_v,
+            "run_time_by_round": time.time() - self.server.start_by_round,
+            "campaign_run_id": os.environ.get("FEDOPS_CAMPAIGN_RUN_ID"),
+        }
+        server_api.ServerAPI(self.task_id).put_gl_model_evaluation(json.dumps(payload, allow_nan=False))
+
     def get_eval_fn(self, model, model_name):
         """Return an evaluation function for server-side evaluation."""
         # Load data and model here to avoid the overhead of doing it in `evaluate` itself
@@ -189,27 +225,28 @@ class FLServer():
             gl_model_path = f'./{model_name}_gl_model_V{self.server.gl_model_v}'
             
             metrics = None
+            self.save_global_snapshot(model, model_name, parameters_ndarrays)
+            if self.client_evaluation:
+                return None
             
             if self.model_type == "Tensorflow":
                 # 먼저 최신 파라미터 로드 후 평가
                 model.set_weights(parameters_ndarrays)
                 loss, accuracy = model.evaluate(self.x_val, self.y_val, verbose=0)
-                model.save(gl_model_path + '.h5')
             
             elif self.model_type == "Pytorch":
                 import torch
                 set_parameters(model, self.model_type, parameters_ndarrays)
             
                 loss, accuracy, metrics = self.test_torch(model, self.gl_val_loader, self.cfg)
-                torch.save(model.state_dict(), gl_model_path + '.pth')
 
             elif self.model_type == "Huggingface":
                 logging.warning("Skipping evaluation for Huggingface model")
                 loss, accuracy = 0.0, 0.0
-                os.makedirs(gl_model_path, exist_ok=True)
-                np.savez(os.path.join(gl_model_path, "adapter_parameters.npz"), *parameters_ndarrays)
 
             # === 라운드별 로그/리포팅 (원래 로직 유지) ===
+            if "enabled" in self.evaluation_policy and not all(math.isfinite(float(v)) for v in (loss, accuracy)):
+                raise ValueError("Server Validation returned non-finite metrics")
             if self.server.round >= 1:
                 self.server.end_by_round = time.time() - self.server.start_by_round
                 if metrics!=None:
@@ -219,6 +256,11 @@ class FLServer():
                     server_eval_result = {"fl_task_id": self.task_id, "round": self.server.round, "gl_loss": loss, "gl_accuracy": accuracy,
                                       "run_time_by_round": self.server.end_by_round,"gl_model_v":self.server.gl_model_v}
                 campaign_run_id = os.environ.get("FEDOPS_CAMPAIGN_RUN_ID")
+                if "enabled" in self.evaluation_policy:
+                    server_eval_result.update({
+                        "evaluation_source": "server_validation",
+                        "evaluation_status": "evaluated",
+                    })
                 if campaign_run_id:
                     server_eval_result["campaign_run_id"] = campaign_run_id
                 json_server_eval = json.dumps(server_eval_result)
@@ -260,7 +302,7 @@ class FLServer():
         }
 
         # increase round
-        self.server.round += 1
+        self.server.round = rnd
 
         # fit aggregation start time
         self.server.start_by_round = time.time()
