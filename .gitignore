@@ -1,4 +1,5 @@
 *.local_model
+/src/python/fedops/_release.json
 # /examples/wandb
 *wandb
 *local_model
