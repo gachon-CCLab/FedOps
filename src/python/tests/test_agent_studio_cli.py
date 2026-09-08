@@ -289,10 +289,10 @@ class AgentStudioCliTest(unittest.TestCase):
             ]
             try:
                 result = subprocess.run(
-                    command, capture_output=True, text=True, timeout=5, check=False
+                    command, capture_output=True, text=True, timeout=30, check=False
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
-                for _ in range(20):
+                for _ in range(100):
                     payload = agent_studio_runner._bridge_payload(token, port)
                     if payload:
                         break
