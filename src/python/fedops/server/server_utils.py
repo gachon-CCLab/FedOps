@@ -1,6 +1,7 @@
 
 #server/server_utils.py
 import boto3
+from .object_storage_config import s3_options
 import os, logging, re
 import zipfile
 import json
@@ -19,7 +20,7 @@ class FLServerStatus:
 def aws_session(region_name='ap-northeast-2'):
     return boto3.session.Session(aws_access_key_id=os.environ.get('ACCESS_KEY_ID'),
                                  aws_secret_access_key=os.environ.get('ACCESS_SECRET_KEY'),
-                                 region_name=region_name)
+                                 region_name=os.getenv('REGION_NAME') or region_name)
 
 
 # Global model upload in S3
@@ -29,7 +30,7 @@ def upload_model_to_bucket(task_id, global_model_name):
     logging.info(f'bucket_name: {bucket_name}')
 
     session = aws_session()
-    s3_resource = session.resource('s3')
+    s3_resource = session.resource('s3', **s3_options())
     bucket = s3_resource.Bucket(bucket_name)
     bucket.upload_file(
         Filename=f'./{global_model_name}',
@@ -46,7 +47,7 @@ def model_download_s3(task_id, model_type, model=None):
 
     try:
         session = aws_session()
-        s3_resource = session.client('s3')
+        s3_resource = session.client('s3', **s3_options())
         bucket_list = s3_resource.list_objects_v2(Bucket=bucket_name, Prefix=f'{task_id}/')
         content_list = bucket_list.get('Contents', [])
 
